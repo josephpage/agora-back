@@ -478,3 +478,87 @@ func ReplaceDiacritics(s string) string {
 		return r
 	}, d)
 }
+
+// KotlinLowercase reproduces String.lowercase() = toLowerCase(Locale.ROOT):
+// per-char Character.toLowerCase plus the two special cases of the JDK
+// (U+0130 → "i̇", final sigma → ς).
+func KotlinLowercase(s string) string {
+	rs := []rune(s)
+	var b strings.Builder
+	for i, r := range rs {
+		switch {
+		case r == 0x130:
+			b.WriteString("i̇")
+		case r == 0x3A3:
+			// final sigma: preceded by a cased letter, not followed by one
+			prevLetter := i > 0 && unicode.IsLetter(rs[i-1])
+			nextLetter := i+1 < len(rs) && unicode.IsLetter(rs[i+1])
+			if prevLetter && !nextLetter {
+				b.WriteRune(0x3C2)
+			} else {
+				b.WriteRune(0x3C3)
+			}
+		default:
+			b.WriteRune(unicode.ToLower(r))
+		}
+	}
+	return b.String()
+}
+
+// JavaStringHashCode reproduces java.lang.String.hashCode (UTF-16 based).
+func JavaStringHashCode(s string) int32 {
+	var h int32
+	for _, u := range utf16.Encode([]rune(s)) {
+		h = 31*h + int32(u)
+	}
+	return h
+}
+
+// JavaHashMapOrder returns the iteration order of a java.util.HashMap (or
+// HashSet) after inserting keys in the given order (duplicates ignored),
+// default capacity 16 and load factor 0.75. Use it only when the Kotlin code
+// iterated a HashMap/HashSet whose order leaks into an output (Kotlin's
+// mapOf/mutableMapOf/groupBy/toSet are LinkedHash* and keep insertion order).
+func JavaHashMapOrder(keys []string) []string {
+	type entry struct {
+		key  string
+		hash int32
+	}
+	capacity := 16
+	buckets := make([][]entry, capacity)
+	size := 0
+	spread := func(h int32) int32 { return h ^ int32(uint32(h)>>16) }
+	seen := map[string]bool{}
+	for _, k := range keys {
+		if seen[k] {
+			continue
+		}
+		seen[k] = true
+		h := spread(JavaStringHashCode(k))
+		idx := int(h) & (capacity - 1)
+		buckets[idx] = append(buckets[idx], entry{k, h})
+		size++
+		if size > capacity*3/4 {
+			// resize: split each bucket preserving relative order (lo then hi)
+			newCap := capacity * 2
+			nb := make([][]entry, newCap)
+			for i, b := range buckets {
+				for _, e := range b {
+					if int(e.hash)&capacity == 0 {
+						nb[i] = append(nb[i], e)
+					} else {
+						nb[i+capacity] = append(nb[i+capacity], e)
+					}
+				}
+			}
+			buckets, capacity = nb, newCap
+		}
+	}
+	out := make([]string, 0, size)
+	for _, b := range buckets {
+		for _, e := range b {
+			out = append(out, e.key)
+		}
+	}
+	return out
+}
