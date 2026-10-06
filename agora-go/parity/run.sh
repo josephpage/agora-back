@@ -91,6 +91,13 @@ EOT
     cat "$PARITY_EXTRA_ENV" >> "$RUN/ref.env"
     cat "$PARITY_EXTRA_ENV" >> "$RUN/go.env"
   fi
+  # side-specific extras ({REF_PORT}/{GO_PORT} placeholders are substituted)
+  if [ -n "${PARITY_EXTRA_ENV_REF:-}" ] && [ -f "$PARITY_EXTRA_ENV_REF" ]; then
+    sed -e "s/{REF_PORT}/$REF_PORT/g" -e "s/{GO_PORT}/$GO_PORT/g" "$PARITY_EXTRA_ENV_REF" >> "$RUN/ref.env"
+  fi
+  if [ -n "${PARITY_EXTRA_ENV_GO:-}" ] && [ -f "$PARITY_EXTRA_ENV_GO" ]; then
+    sed -e "s/{REF_PORT}/$REF_PORT/g" -e "s/{GO_PORT}/$GO_PORT/g" "$PARITY_EXTRA_ENV_GO" >> "$RUN/go.env"
+  fi
   local here="$PWD"
   cat > "$RUN/start-ref.sh" <<EOT
 #!/bin/bash
