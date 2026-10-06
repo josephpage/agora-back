@@ -1,5 +1,8 @@
 module agora
 
+// +scalingo install ./cmd/agora
+// +heroku install ./cmd/agora
+
 go 1.26.0
 
 require (

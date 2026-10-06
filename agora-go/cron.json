@@ -1,0 +1,13 @@
+{
+  "jobs": [
+    {
+      "command": "0 0 * * * bin/agora --run-custom-command=dailyTasks"
+    },
+    {
+      "command": "0 1 * * * bin/agora --run-custom-command=acmeCertificateRenewalTasks"
+    },
+    {
+      "command": "0 8 * * MON bin/agora --run-custom-command=weeklyTasks"
+    }
+  ]
+}
