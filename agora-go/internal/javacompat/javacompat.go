@@ -26,10 +26,10 @@ type UUID struct{ Hi, Lo uint64 }
 var NotFoundUUID = UUID{}
 
 const (
-	NotFoundUUIDString       = "00000000-0000-0000-0000-000000000000"
-	SkipQuestionChoiceUUID   = NotFoundUUIDString
-	NotApplicableChoiceUUID  = "11111111-1111-1111-1111-111111111111"
-	hexDigits                = "0123456789abcdef"
+	NotFoundUUIDString      = "00000000-0000-0000-0000-000000000000"
+	SkipQuestionChoiceUUID  = NotFoundUUIDString
+	NotApplicableChoiceUUID = "11111111-1111-1111-1111-111111111111"
+	hexDigits               = "0123456789abcdef"
 )
 
 // String formats like java.util.UUID#toString (lowercase, 8-4-4-4-12).

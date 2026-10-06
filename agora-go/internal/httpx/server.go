@@ -295,7 +295,14 @@ func (s *Server) finish(w http.ResponseWriter, r *http.Request, st *responseStat
 			switch resp.Kind {
 			case BodyValue:
 				if format == "xml" {
-					body = xmlMarshal(resp.Value)
+					b, err := xmlMarshalChecked(resp.Value)
+					if err != nil {
+						// HttpMessageNotWritableException → 500 error page
+						status = 500
+						body, contentType = s.renderError(500, rawPath, now, format)
+						break
+					}
+					body = b
 					contentType = "application/xml;charset=UTF-8"
 				} else {
 					if resp.PrecomputedJSON != nil {

@@ -97,7 +97,9 @@ func TestOracleLoginTokenInterop(t *testing.T) {
 	}
 	for _, bad := range []string{"", "abc", "!!!!", "AAAAAAAAAAAAAAAAAAAAAA==", "AAAAAAAAAAAAAAAAAAAAAA", "AAAAAAAAAAAAAAAAAAAAAA=", " AAAAAAAAAAAAAAAAAAAAAA=="} {
 		_, gerr := lt.Decode(bad)
-		var r struct{ UserID string `json:"userId"` }
+		var r struct {
+			UserID string `json:"userId"`
+		}
 		jerr := oracle.Call("loginTokenDecode", map[string]any{"token": bad}, &r)
 		if (gerr == nil) != (jerr == nil) {
 			t.Errorf("decode(%q): go err=%v java err=%v", bad, gerr, jerr)

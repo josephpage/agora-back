@@ -55,7 +55,9 @@ func Unit(status int) *Response { return JSON(status, jsonjava.Unit{}) }
 func Empty(status int) *Response { return &Response{Status: status, Kind: BodyNone} }
 
 // String is a Kotlin String body (ResponseEntity<String>).
-func String(status int, s string) *Response { return &Response{Status: status, Kind: BodyString, Str: s} }
+func String(status int, s string) *Response {
+	return &Response{Status: status, Kind: BodyString, Str: s}
+}
 
 // Bytes writes raw bytes with an explicit content type.
 func Bytes(status int, contentType string, b []byte) *Response {

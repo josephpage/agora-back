@@ -12,6 +12,7 @@
 package xmljava
 
 import (
+	"errors"
 	"reflect"
 	"strconv"
 	"strings"
@@ -114,6 +115,21 @@ func Marshal(v any) []byte {
 	rv := reflect.ValueOf(v)
 	return appendElement(b, root, rv, false)
 }
+
+// MarshalChecked is Marshal but fails like Woodstox when the output would
+// contain characters invalid in XML 1.0 (control characters other than
+// TAB/LF/CR): Jackson throws, Spring answers 500.
+func MarshalChecked(v any) ([]byte, error) {
+	b := Marshal(v)
+	for _, c := range b {
+		if c < 0x20 && c != '\t' && c != '\n' && c != '\r' {
+			return nil, errInvalidXMLChar
+		}
+	}
+	return b, nil
+}
+
+var errInvalidXMLChar = errors.New("JsonMappingException: Invalid white space character in text to output")
 
 func isNilValue(v reflect.Value) bool {
 	if !v.IsValid() {
@@ -250,8 +266,9 @@ func scalarText(v reflect.Value) string {
 	return string(jsonjava.Marshal(v.Interface()))
 }
 
-// appendEscapedText escapes like Woodstox BufferingXmlWriter.writeCharacters:
-// '&' and '<' always, '>' always (Woodstox escapes it for safety), '\r' as &#13;.
+// appendEscapedText escapes like Woodstox BufferingXmlWriter.writeCharacters
+// (verified with the JVM oracle): '&' and '<' always, '>' only after "]]",
+// '\r' as &#xd;.
 func appendEscapedText(b []byte, s string) []byte {
 	for i := 0; i < len(s); i++ {
 		c := s[i]
@@ -261,9 +278,13 @@ func appendEscapedText(b []byte, s string) []byte {
 		case '<':
 			b = append(b, "&lt;"...)
 		case '>':
-			b = append(b, "&gt;"...)
+			if i >= 2 && s[i-1] == ']' && s[i-2] == ']' {
+				b = append(b, "&gt;"...)
+			} else {
+				b = append(b, c)
+			}
 		case '\r':
-			b = append(b, "&#13;"...)
+			b = append(b, "&#xd;"...)
 		default:
 			b = append(b, c)
 		}
@@ -282,11 +303,11 @@ func appendEscapedAttr(b []byte, s string) []byte {
 		case '"':
 			b = append(b, "&quot;"...)
 		case '\r':
-			b = append(b, "&#13;"...)
+			b = append(b, "&#xd;"...)
 		case '\n':
-			b = append(b, "&#10;"...)
+			b = append(b, "&#xa;"...)
 		case '\t':
-			b = append(b, "&#9;"...)
+			b = append(b, "&#x9;"...)
 		default:
 			b = append(b, c)
 		}

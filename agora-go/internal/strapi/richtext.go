@@ -250,8 +250,8 @@ func decodeContainer(kind string, obj map[string]any) (RichNode, error) {
 
 // MediaPicture is StrapiMediaPicture.
 type MediaPicture struct {
-	Formats               *MediaPictureFormats `json:"formats"`
-	PictureURLNotOptimized string              `json:"url"`
+	Formats                *MediaPictureFormats `json:"formats"`
+	PictureURLNotOptimized string               `json:"url"`
 }
 
 // MediaURL is mediaUrl(): formats.medium.url, else url.

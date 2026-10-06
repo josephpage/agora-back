@@ -41,17 +41,17 @@ type Config struct {
 	StrapiSuspended bool   // strapi.suspended (STRAPI_SUSPENDED), default false
 
 	// Business settings
-	UniversalLinkURL                        string
-	RequiredIOSVersion                      string
-	RequiredAndroidVersion                  string
-	RequiredWebVersion                      string
-	ErrorTextQagDisabled                    *string
-	TrendingScoreExponent                   float64
-	ThemeHebdoCacheEnabled                  bool
-	OpenQuestionMaxTextLength               int
-	ConsultationResponseRateLimitPerHour    int
-	ConsultationDocumentIDsWithoutDemoAsk   string
-	FirebaseCredentialsJSON                 string
+	UniversalLinkURL                      string
+	RequiredIOSVersion                    string
+	RequiredAndroidVersion                string
+	RequiredWebVersion                    string
+	ErrorTextQagDisabled                  *string
+	TrendingScoreExponent                 float64
+	ThemeHebdoCacheEnabled                bool
+	OpenQuestionMaxTextLength             int
+	ConsultationResponseRateLimitPerHour  int
+	ConsultationDocumentIDsWithoutDemoAsk string
+	FirebaseCredentialsJSON               string
 
 	// Go-only operational settings (no Kotlin equivalent, documented in DIVERGENCES.md)
 	Coexistence      bool          // AGORA_COEXISTENCE: also evict Kotlin cache keys, cap Go caches

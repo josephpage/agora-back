@@ -95,7 +95,7 @@ type Pagination struct {
 
 // Envelope is StrapiDTO<T>.
 type Envelope[T any] struct {
-	Data []T `json:"data"`
+	Data []T  `json:"data"`
 	Meta Meta `json:"meta"`
 }
 

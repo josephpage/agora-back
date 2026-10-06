@@ -48,9 +48,9 @@ type Step struct {
 	Path        string            `yaml:"path"` // may contain a raw query string
 	Query       map[string]string `yaml:"query"`
 	Headers     map[string]string `yaml:"headers"`
-	As          string            `yaml:"as"`    // seeded user id (or {{var}}) to authenticate with a minted JWT
+	As          string            `yaml:"as"`     // seeded user id (or {{var}}) to authenticate with a minted JWT
 	Bearer      string            `yaml:"bearer"` // explicit token (template)
-	Body        any               `yaml:"body"`  // JSON body (object/array/scalar)
+	Body        any               `yaml:"body"`   // JSON body (object/array/scalar)
 	BodyRaw     *string           `yaml:"bodyRaw"`
 	ContentType string            `yaml:"contentType"`
 	Capture     map[string]string `yaml:"capture"` // var → JSON path ($.a.b[0])
