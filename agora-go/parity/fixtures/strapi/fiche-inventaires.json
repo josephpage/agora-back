@@ -1,0 +1,988 @@
+[
+  {
+    "id": 1,
+    "documentId": "fi0000000000000000000001",
+    "etape_1_lancement": [
+      {
+        "type": "heading",
+        "children": [
+          {
+            "type": "text",
+            "text": "Lancement"
+          }
+        ],
+        "level": 1
+      },
+      {
+        "type": "heading",
+        "children": [
+          {
+            "type": "text",
+            "text": "Titre niveau 2"
+          }
+        ],
+        "level": 2
+      },
+      {
+        "type": "heading",
+        "children": [
+          {
+            "type": "text",
+            "text": "Titre niveau 3 avec "
+          },
+          {
+            "type": "link",
+            "url": "https://www.agora.gouv.fr/titre",
+            "children": [
+              {
+                "type": "text",
+                "text": "un lien"
+              }
+            ]
+          }
+        ],
+        "level": 3
+      },
+      {
+        "type": "heading",
+        "children": [
+          {
+            "type": "text",
+            "text": "Titre niveau 4"
+          }
+        ],
+        "level": 4
+      },
+      {
+        "type": "heading",
+        "children": [
+          {
+            "type": "text",
+            "text": "Titre niveau 5"
+          }
+        ],
+        "level": 5
+      },
+      {
+        "type": "heading",
+        "children": [
+          {
+            "type": "text",
+            "text": "Titre niveau 6"
+          }
+        ],
+        "level": 6
+      },
+      {
+        "type": "heading",
+        "children": [
+          {
+            "type": "text",
+            "text": "Titre de niveau invalide (7)"
+          }
+        ],
+        "level": 7
+      },
+      {
+        "type": "heading",
+        "children": [
+          {
+            "type": "text",
+            "text": "Titre sans niveau"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Texte simple, "
+          },
+          {
+            "type": "text",
+            "text": "gras",
+            "bold": true
+          },
+          {
+            "type": "text",
+            "text": ", "
+          },
+          {
+            "type": "text",
+            "text": "italique",
+            "italic": true
+          },
+          {
+            "type": "text",
+            "text": ", "
+          },
+          {
+            "type": "text",
+            "text": "souligné",
+            "underline": true
+          },
+          {
+            "type": "text",
+            "text": ", "
+          },
+          {
+            "type": "text",
+            "text": "barré",
+            "strikethrough": true
+          },
+          {
+            "type": "text",
+            "text": ", "
+          },
+          {
+            "type": "text",
+            "text": "code",
+            "code": true
+          },
+          {
+            "type": "text",
+            "text": ", "
+          },
+          {
+            "type": "text",
+            "text": "tout à la fois",
+            "bold": true,
+            "italic": true,
+            "underline": true,
+            "strikethrough": true,
+            "code": true
+          },
+          {
+            "type": "text",
+            "text": ", "
+          },
+          {
+            "type": "text",
+            "text": "marques à false",
+            "bold": false,
+            "italic": false,
+            "underline": false,
+            "strikethrough": false,
+            "code": false
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Un paragraphe avec "
+          },
+          {
+            "type": "link",
+            "url": "https://www.agora.gouv.fr/page?a=1&b=2",
+            "children": [
+              {
+                "type": "text",
+                "text": "un lien "
+              },
+              {
+                "type": "text",
+                "text": "en gras",
+                "bold": true
+              },
+              {
+                "type": "text",
+                "text": " et italique",
+                "italic": true
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " puis du texte accentué : éàüçœ — « guillemets » … 🙂 & Tom <3 \"quoted\" \\ backslash."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": ""
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "format": "unordered",
+        "children": [
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Premier point"
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Deuxième point avec "
+              },
+              {
+                "type": "link",
+                "url": "https://example.org",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "lien"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Troisième point en gras",
+                "bold": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "format": "ordered",
+        "children": [
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Étape un"
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Étape deux"
+              }
+            ]
+          },
+          {
+            "type": "list",
+            "format": "unordered",
+            "children": [
+              {
+                "type": "list-item",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Sous-point A"
+                  }
+                ]
+              },
+              {
+                "type": "list-item",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Sous-point B"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "quote",
+        "children": [
+          {
+            "type": "text",
+            "text": "« La participation citoyenne est un droit. »"
+          }
+        ]
+      },
+      {
+        "type": "quote",
+        "children": [
+          {
+            "type": "text",
+            "text": "Citation en italique",
+            "italic": true
+          },
+          {
+            "type": "text",
+            "text": " avec "
+          },
+          {
+            "type": "link",
+            "url": "https://example.org/q",
+            "children": [
+              {
+                "type": "text",
+                "text": "lien"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "code",
+        "children": [
+          {
+            "type": "text",
+            "text": "fmt.Println(\"bloc inconnu\")"
+          }
+        ]
+      },
+      {
+        "type": "image",
+        "image": {
+          "url": "https://cdn.parity.example/uploads/inline.png",
+          "alternativeText": "image inline"
+        },
+        "children": [
+          {
+            "type": "text",
+            "text": ""
+          }
+        ]
+      }
+    ],
+    "etape_2_analyse": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Analyse de « Grande consultation sur l'environnement »."
+          }
+        ]
+      }
+    ],
+    "etape_3_suivi": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Suivi : "
+          },
+          {
+            "type": "link",
+            "url": "https://suivi.parity.example/1",
+            "children": [
+              {
+                "type": "text",
+                "text": "tableau de bord"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "format": "ordered",
+        "children": [
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Action 1"
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Action 2"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "titre": "Grande consultation sur l'environnement",
+    "debut": "2024-03-01",
+    "fin": "2024-06-30",
+    "porteur": "Ministère n°1",
+    "lien_site": "https://fiche.parity.example/1",
+    "condition_participation": "Ouvert à tous",
+    "modalite_participation": "En ligne",
+    "thematique": {
+      "id": 1,
+      "documentId": "th0000000000000000000001",
+      "label": "Environnement",
+      "pictogramme": "🌳",
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "locale": null
+    },
+    "illustration": {
+      "id": 701,
+      "documentId": "pc0000000000000000000701",
+      "name": "fiche-1.jpg",
+      "alternativeText": null,
+      "width": 1600,
+      "height": 900,
+      "url": "https://cdn.parity.example/uploads/fiche-1.jpg",
+      "mime": "image/jpeg",
+      "ext": ".jpg",
+      "size": 123.45,
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "formats": {
+        "thumbnail": {
+          "name": "thumbnail_fiche-1.jpg",
+          "url": "https://cdn.parity.example/uploads/thumbnail_fiche-1.jpg",
+          "width": 245,
+          "height": 138
+        },
+        "medium": {
+          "name": "medium_fiche-1.jpg",
+          "url": "https://cdn.parity.example/uploads/medium_fiche-1.jpg",
+          "width": 750,
+          "height": 422
+        }
+      }
+    },
+    "etape": "Lancement",
+    "annee_de_lancement": "2024",
+    "type": "Consultation",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 2,
+    "documentId": "fi0000000000000000000002",
+    "etape_1_lancement": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Lancement de « Convention citoyenne sur la santé »."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Détails du lancement."
+          }
+        ]
+      }
+    ],
+    "etape_2_analyse": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Analyse de « Convention citoyenne sur la santé »."
+          }
+        ]
+      }
+    ],
+    "etape_3_suivi": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Suivi : "
+          },
+          {
+            "type": "link",
+            "url": "https://suivi.parity.example/2",
+            "children": [
+              {
+                "type": "text",
+                "text": "tableau de bord"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "format": "ordered",
+        "children": [
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Action 1"
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Action 2"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "titre": "Convention citoyenne sur la santé",
+    "debut": "2023-06-15",
+    "fin": "2023-12-15",
+    "porteur": "Ministère n°2",
+    "lien_site": "https://fiche.parity.example/2",
+    "condition_participation": "Sur inscription",
+    "modalite_participation": "En présentiel",
+    "thematique": {
+      "id": 2,
+      "documentId": "th0000000000000000000002",
+      "label": "Santé",
+      "pictogramme": "🏥",
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "locale": null
+    },
+    "illustration": {
+      "id": 702,
+      "documentId": "pc0000000000000000000702",
+      "name": "fiche-2.jpg",
+      "alternativeText": null,
+      "width": 1600,
+      "height": 900,
+      "url": "https://cdn.parity.example/uploads/fiche-2.jpg",
+      "mime": "image/jpeg",
+      "ext": ".jpg",
+      "size": 123.45,
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "formats": {
+        "thumbnail": {
+          "name": "thumbnail_fiche-2.jpg",
+          "url": "https://cdn.parity.example/uploads/thumbnail_fiche-2.jpg",
+          "width": 245,
+          "height": 138
+        }
+      }
+    },
+    "etape": "Analyse",
+    "annee_de_lancement": "2023",
+    "type": "Convention citoyenne",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 3,
+    "documentId": "fi0000000000000000000003",
+    "etape_1_lancement": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Lancement de « Débat public sur les transports »."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Détails du lancement."
+          }
+        ]
+      }
+    ],
+    "etape_2_analyse": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Analyse de « Débat public sur les transports »."
+          }
+        ]
+      }
+    ],
+    "etape_3_suivi": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Suivi : "
+          },
+          {
+            "type": "link",
+            "url": "https://suivi.parity.example/3",
+            "children": [
+              {
+                "type": "text",
+                "text": "tableau de bord"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "format": "ordered",
+        "children": [
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Action 1"
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Action 2"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "titre": "Débat public sur les transports",
+    "debut": "2024-09-10",
+    "fin": "{{date:now+30d}}",
+    "porteur": "Ministère n°3",
+    "lien_site": "https://fiche.parity.example/3",
+    "condition_participation": "Ouvert à tous",
+    "modalite_participation": "Hybride",
+    "thematique": {
+      "id": 4,
+      "documentId": "th0000000000000000000004",
+      "label": "Transports",
+      "pictogramme": "🚆",
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "locale": null
+    },
+    "illustration": {
+      "id": 703,
+      "documentId": "pc0000000000000000000703",
+      "name": "fiche-3.jpg",
+      "alternativeText": null,
+      "width": 1600,
+      "height": 900,
+      "url": "https://cdn.parity.example/uploads/fiche-3.jpg",
+      "mime": "image/jpeg",
+      "ext": ".jpg",
+      "size": 123.45,
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "formats": null
+    },
+    "etape": "Suivi",
+    "annee_de_lancement": "2024",
+    "type": "Débat public",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 4,
+    "documentId": "fi0000000000000000000004",
+    "etape_1_lancement": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Lancement de « Consultation sur l'école numérique »."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Détails du lancement."
+          }
+        ]
+      }
+    ],
+    "etape_2_analyse": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Analyse de « Consultation sur l'école numérique »."
+          }
+        ]
+      }
+    ],
+    "etape_3_suivi": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Suivi : "
+          },
+          {
+            "type": "link",
+            "url": "https://suivi.parity.example/4",
+            "children": [
+              {
+                "type": "text",
+                "text": "tableau de bord"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "format": "ordered",
+        "children": [
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Action 1"
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Action 2"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "titre": "Consultation sur l'école numérique",
+    "debut": "2025-01-20",
+    "fin": "2025-04-20",
+    "porteur": "Ministère n°4",
+    "lien_site": "https://fiche.parity.example/4",
+    "condition_participation": "Tirage au sort",
+    "modalite_participation": "En ligne",
+    "thematique": {
+      "id": 3,
+      "documentId": "th0000000000000000000003",
+      "label": "Éducation",
+      "pictogramme": "📚",
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "locale": null
+    },
+    "illustration": {
+      "id": 704,
+      "documentId": "pc0000000000000000000704",
+      "name": "fiche-4.jpg",
+      "alternativeText": null,
+      "width": 1600,
+      "height": 900,
+      "url": "https://cdn.parity.example/uploads/fiche-4.jpg",
+      "mime": "image/jpeg",
+      "ext": ".jpg",
+      "size": 123.45,
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "formats": {
+        "thumbnail": {
+          "name": "thumbnail_fiche-4.jpg",
+          "url": "https://cdn.parity.example/uploads/thumbnail_fiche-4.jpg",
+          "width": 245,
+          "height": 138
+        },
+        "medium": {
+          "name": "medium_fiche-4.jpg",
+          "url": "https://cdn.parity.example/uploads/medium_fiche-4.jpg",
+          "width": 750,
+          "height": 422
+        }
+      }
+    },
+    "etape": "Lancement",
+    "annee_de_lancement": "2025",
+    "type": "Consultation",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 5,
+    "documentId": "fi0000000000000000000005",
+    "etape_1_lancement": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Lancement de « Débat national sur l'énergie »."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Détails du lancement."
+          }
+        ]
+      }
+    ],
+    "etape_2_analyse": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Analyse de « Débat national sur l'énergie »."
+          }
+        ]
+      }
+    ],
+    "etape_3_suivi": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Suivi : "
+          },
+          {
+            "type": "link",
+            "url": "https://suivi.parity.example/5",
+            "children": [
+              {
+                "type": "text",
+                "text": "tableau de bord"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "format": "ordered",
+        "children": [
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Action 1"
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Action 2"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "titre": "Débat national sur l'énergie",
+    "debut": "2022-02-01",
+    "fin": "2022-05-01",
+    "porteur": "Ministère n°5",
+    "lien_site": "https://fiche.parity.example/5",
+    "condition_participation": "Sur inscription",
+    "modalite_participation": "En ligne",
+    "thematique": {
+      "id": 1,
+      "documentId": "th0000000000000000000001",
+      "label": "Environnement",
+      "pictogramme": "🌳",
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "locale": null
+    },
+    "illustration": {
+      "id": 705,
+      "documentId": "pc0000000000000000000705",
+      "name": "fiche-5.jpg",
+      "alternativeText": null,
+      "width": 1600,
+      "height": 900,
+      "url": "https://cdn.parity.example/uploads/fiche-5.jpg",
+      "mime": "image/jpeg",
+      "ext": ".jpg",
+      "size": 123.45,
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "formats": {
+        "thumbnail": {
+          "name": "thumbnail_fiche-5.jpg",
+          "url": "https://cdn.parity.example/uploads/thumbnail_fiche-5.jpg",
+          "width": 245,
+          "height": 138
+        },
+        "medium": {
+          "name": "medium_fiche-5.jpg",
+          "url": "https://cdn.parity.example/uploads/medium_fiche-5.jpg",
+          "width": 750,
+          "height": 422
+        }
+      }
+    },
+    "etape": "Analyse",
+    "annee_de_lancement": "2022",
+    "type": "Débat public",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  }
+]

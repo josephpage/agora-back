@@ -1,0 +1,186 @@
+[
+  {
+    "id": 1,
+    "documentId": "ce0000000000000000000001",
+    "titre": "Concertation sur la rénovation énergétique",
+    "url": "https://concertation.parity.example/1",
+    "image_url": "https://cdn.parity.example/concertations/concertation-1.jpg",
+    "datetime_publication": "{{now-3d}}",
+    "flamme_label": "Nouveau",
+    "thematique": {
+      "id": 1,
+      "documentId": "th0000000000000000000001",
+      "label": "Environnement",
+      "pictogramme": "🌳",
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "locale": null
+    },
+    "image": {
+      "id": 801,
+      "documentId": "pc0000000000000000000801",
+      "name": "concertation-1.jpg",
+      "alternativeText": null,
+      "width": 1600,
+      "height": 900,
+      "url": "https://cdn.parity.example/uploads/concertation-1.jpg",
+      "mime": "image/jpeg",
+      "ext": ".jpg",
+      "size": 123.45,
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "formats": {
+        "thumbnail": {
+          "name": "thumbnail_concertation-1.jpg",
+          "url": "https://cdn.parity.example/uploads/thumbnail_concertation-1.jpg",
+          "width": 245,
+          "height": 138
+        },
+        "medium": {
+          "name": "medium_concertation-1.jpg",
+          "url": "https://cdn.parity.example/uploads/medium_concertation-1.jpg",
+          "width": 750,
+          "height": 422
+        }
+      }
+    },
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 2,
+    "documentId": "ce0000000000000000000002",
+    "titre": "Concertation sur l'hôpital public",
+    "url": "https://concertation.parity.example/2",
+    "image_url": "https://cdn.parity.example/concertations/concertation-2.jpg",
+    "datetime_publication": "{{now-10d}}",
+    "flamme_label": null,
+    "thematique": {
+      "id": 2,
+      "documentId": "th0000000000000000000002",
+      "label": "Santé",
+      "pictogramme": "🏥",
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "locale": null
+    },
+    "image": {
+      "id": 802,
+      "documentId": "pc0000000000000000000802",
+      "name": "concertation-2.jpg",
+      "alternativeText": null,
+      "width": 1600,
+      "height": 900,
+      "url": "https://cdn.parity.example/uploads/concertation-2.jpg",
+      "mime": "image/jpeg",
+      "ext": ".jpg",
+      "size": 123.45,
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "formats": {
+        "thumbnail": {
+          "name": "thumbnail_concertation-2.jpg",
+          "url": "https://cdn.parity.example/uploads/thumbnail_concertation-2.jpg",
+          "width": 245,
+          "height": 138
+        }
+      }
+    },
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 3,
+    "documentId": "ce0000000000000000000003",
+    "titre": "Concertation sur les rythmes scolaires",
+    "url": "https://concertation.parity.example/3",
+    "image_url": "https://cdn.parity.example/concertations/concertation-3.jpg",
+    "datetime_publication": "{{now-10d}}",
+    "flamme_label": "Dernière ligne droite",
+    "thematique": {
+      "id": 3,
+      "documentId": "th0000000000000000000003",
+      "label": "Éducation",
+      "pictogramme": "📚",
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "locale": null
+    },
+    "image": null,
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 4,
+    "documentId": "ce0000000000000000000004",
+    "titre": "Concertation sur les transports ruraux",
+    "url": "https://concertation.parity.example/4",
+    "image_url": "https://cdn.parity.example/concertations/concertation-4.jpg",
+    "datetime_publication": "{{now-30d}}",
+    "flamme_label": null,
+    "thematique": {
+      "id": 4,
+      "documentId": "th0000000000000000000004",
+      "label": "Transports",
+      "pictogramme": "🚆",
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "locale": null
+    },
+    "image": {
+      "id": 804,
+      "documentId": "pc0000000000000000000804",
+      "name": "concertation-4.jpg",
+      "alternativeText": null,
+      "width": 1600,
+      "height": 900,
+      "url": "https://cdn.parity.example/uploads/concertation-4.jpg",
+      "mime": "image/jpeg",
+      "ext": ".jpg",
+      "size": 123.45,
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z",
+      "formats": null
+    },
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 5,
+    "documentId": "ce0000000000000000000005",
+    "titre": "Concertation dont la thématique est inconnue",
+    "url": "https://concertation.parity.example/5",
+    "image_url": "https://cdn.parity.example/concertations/concertation-5.jpg",
+    "datetime_publication": "{{now-1d}}",
+    "flamme_label": null,
+    "thematique": {
+      "id": 99,
+      "documentId": "th0000000000000000009999",
+      "label": "Thématique inconnue",
+      "pictogramme": "❓",
+      "createdAt": "2024-05-29T09:37:12.407Z",
+      "updatedAt": "2024-08-23T13:04:14.174Z",
+      "publishedAt": "2024-05-29T10:19:13.352Z"
+    },
+    "image": null,
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "id": 3,
+  "documentId": "pg0000000000000000000003",
+  "information_bottomsheet": "Les questions au Gouvernement vous permettent d'interpeller les ministres.",
+  "nombre_de_questions": "{} questions posées par les citoyens",
+  "programme_du_mois": [
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "Programme du mois"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "type": "list",
+      "format": "unordered",
+      "children": [
+        {
+          "type": "list-item",
+          "children": [
+            {
+              "type": "text",
+              "text": "Semaine 1 : écologie"
+            }
+          ]
+        },
+        {
+          "type": "list-item",
+          "children": [
+            {
+              "type": "text",
+              "text": "Semaine 2 : santé"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "comment_ca_marche": "Posez votre question, soutenez celles des autres, le Gouvernement répond aux plus soutenues.",
+  "createdAt": "2024-05-29T09:37:12.407Z",
+  "updatedAt": "2024-08-23T13:04:14.174Z",
+  "publishedAt": "2024-05-29T10:19:13.352Z",
+  "locale": null
+}

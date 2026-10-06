@@ -1,0 +1,39 @@
+{
+  "id": 9,
+  "documentId": "pg0000000000000000000009",
+  "politique_de_confidentialite": [
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "Politique de confidentialité"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "Nous collectons le minimum de données. "
+        },
+        {
+          "type": "link",
+          "url": "https://www.cnil.fr",
+          "children": [
+            {
+              "type": "text",
+              "text": "CNIL"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "createdAt": "2024-05-29T09:37:12.407Z",
+  "updatedAt": "2024-08-23T13:04:14.174Z",
+  "publishedAt": "2024-05-29T10:19:13.352Z",
+  "locale": null
+}

@@ -1,0 +1,107 @@
+[
+  {
+    "id": 1,
+    "documentId": "ne0000000000000000000001",
+    "message": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Bienvenue sur Agora, première version."
+          }
+        ]
+      }
+    ],
+    "short_message": "Bienvenue",
+    "call_to_action": "Découvrir",
+    "date_de_debut": "{{now-60d}}",
+    "page_route_mobile_enum": "qag",
+    "page_route_argument_mobile": null,
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 2,
+    "documentId": "ne0000000000000000000002",
+    "message": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Participez à la consultation "
+          },
+          {
+            "type": "text",
+            "text": "n°1",
+            "bold": true
+          },
+          {
+            "type": "text",
+            "text": " dès maintenant !"
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "format": "unordered",
+        "children": [
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Donnez votre avis"
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Suivez les résultats"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "short_message": "Nouvelle consultation",
+    "call_to_action": "Participer",
+    "date_de_debut": "{{now-3d}}",
+    "page_route_mobile_enum": "consultation",
+    "page_route_argument_mobile": "co0000000000000000000001",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 3,
+    "documentId": "ne0000000000000000000003",
+    "message": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Annonce programmée dans le futur (ne doit pas être renvoyée)."
+          }
+        ]
+      }
+    ],
+    "short_message": "À venir",
+    "call_to_action": "Bientôt",
+    "date_de_debut": "{{now+5d}}",
+    "page_route_mobile_enum": "themeHebdo",
+    "page_route_argument_mobile": null,
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  }
+]

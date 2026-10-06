@@ -1,0 +1,5 @@
+/bin/
+/agora
+parity/oracle/.build/
+parity/reports/
+*.test
