@@ -54,3 +54,6 @@ dump.rdb
 /modele_questionnaire.md
 /Query Results.csv
 /data/query_select_consultation_anonyme.sql
+
+# Claude Code agent worktrees (temporary)
+.claude/
