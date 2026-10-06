@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -329,6 +330,9 @@ func (s *Server) finish(w http.ResponseWriter, r *http.Request, st *responseStat
 		}
 	}
 
+	if body != nil && resp.Kind != BodyBytes && !st.has("Content-Disposition") && rfdContentDisposition(rawPath, status) {
+		st.add("Content-Disposition", "inline;filename=f.txt")
+	}
 	if st.securityHeaders {
 		s.addSecurityHeaders(st, status)
 	}
@@ -461,4 +465,35 @@ func newSessionID() string {
 	var b [16]byte
 	_, _ = rand.Read(b[:])
 	return strings.ToUpper(hex.EncodeToString(b[:]))
+}
+
+// rfdContentDisposition reproduces AbstractMessageConverterMethodProcessor.
+// addContentDispositionHeader: when the last path segment of the raw request
+// URI has an extension that is not "safe", Spring adds
+// "Content-Disposition: inline;filename=f.txt" to bodies written by message
+// converters (statuses 2xx and >= 400).
+func rfdContentDisposition(rawPath string, status int) bool {
+	if status < 200 || (status > 299 && status < 400) {
+		return false
+	}
+	filename := rawPath[strings.LastIndexByte(rawPath, '/')+1:]
+	pathParams := ""
+	if i := strings.IndexByte(filename, ';'); i >= 0 {
+		filename, pathParams = filename[:i], filename[i:]
+	}
+	unsafe := func(name string) bool {
+		if dec, err := url.PathUnescape(name); err == nil {
+			name = dec
+		}
+		dot := strings.LastIndexByte(name, '.')
+		if dot < 0 || strings.LastIndexByte(name, '/') > dot {
+			return false
+		}
+		ext := strings.ToLower(name[dot+1:])
+		if strings.TrimSpace(ext) == "" {
+			return false
+		}
+		return !rfdSafeExtensions[ext]
+	}
+	return unsafe(filename) || unsafe(pathParams)
 }

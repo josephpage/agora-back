@@ -10,6 +10,7 @@ import (
 	"agora/internal/auth"
 	"agora/internal/cache"
 	"agora/internal/config"
+	"agora/internal/fcm"
 	"agora/internal/httpx"
 	"agora/internal/store"
 	"agora/internal/strapi"
@@ -24,6 +25,7 @@ type App struct {
 	JWT         *auth.JWT
 	LoginTokens *auth.LoginTokens
 	IPHasher    *auth.IPHasher
+	FCM         *fcm.Sender
 	Log         *slog.Logger
 	// Clock is Clock.systemDefaultZone(): always use it instead of time.Now so
 	// tests can freeze time.

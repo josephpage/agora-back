@@ -14,17 +14,19 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"runtime/debug"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/redis/go-redis/v9"
 
 	"agora/internal/app"
 	"agora/internal/auth"
 	"agora/internal/cache"
 	"agora/internal/config"
+	"agora/internal/fcm"
 	"agora/internal/httpx"
 	"agora/internal/modules/all"
 	"agora/internal/modules/users"
@@ -90,6 +92,8 @@ func main() {
 	}
 }
 
+// newLogger logs to stdout; WARN and above also go to Sentry when SENTRY_DSN
+// is set (logback SentryAppender: events >= WARN, breadcrumbs >= INFO).
 func newLogger() *slog.Logger {
 	level := slog.LevelInfo
 	switch strings.ToUpper(os.Getenv("LOG_LEVEL")) {
@@ -100,7 +104,93 @@ func newLogger() *slog.Logger {
 	case "ERROR":
 		level = slog.LevelError
 	}
-	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
+	text := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})
+	dsn := os.Getenv("SENTRY_DSN")
+	if dsn == "" {
+		return slog.New(text)
+	}
+	rate := 0.0
+	if v, err := strconv.ParseFloat(os.Getenv("SENTRY_TRACES_SAMPLE_RATE"), 64); err == nil {
+		rate = v
+	}
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:              dsn,
+		Environment:      os.Getenv("SENTRY_ENVIRONMENT"),
+		TracesSampleRate: rate,
+	}); err != nil {
+		slog.New(text).Warn("sentry init failed", "err", err)
+		return slog.New(text)
+	}
+	return slog.New(fanout{text, sentryHandler{}})
+}
+
+// sentryHandler mirrors logback's SentryAppender: WARN+ records become Sentry
+// events, INFO records become breadcrumbs.
+type sentryHandler struct{ attrs []slog.Attr }
+
+func (sentryHandler) Enabled(_ context.Context, l slog.Level) bool { return l >= slog.LevelInfo }
+
+func (h sentryHandler) Handle(_ context.Context, r slog.Record) error {
+	msg := r.Message
+	r.Attrs(func(a slog.Attr) bool {
+		msg += " " + a.Key + "=" + a.Value.String()
+		return true
+	})
+	if r.Level < slog.LevelWarn {
+		sentry.AddBreadcrumb(&sentry.Breadcrumb{Message: msg, Level: sentry.LevelInfo, Timestamp: r.Time})
+		return nil
+	}
+	level := sentry.LevelWarning
+	if r.Level >= slog.LevelError {
+		level = sentry.LevelError
+	}
+	sentry.WithScope(func(scope *sentry.Scope) {
+		scope.SetLevel(level)
+		sentry.CaptureMessage(msg)
+	})
+	return nil
+}
+
+func (h sentryHandler) WithAttrs(a []slog.Attr) slog.Handler {
+	return sentryHandler{attrs: append(h.attrs, a...)}
+}
+func (h sentryHandler) WithGroup(string) slog.Handler { return h }
+
+// fanout sends records to several handlers.
+type fanout []slog.Handler
+
+func (f fanout) Enabled(ctx context.Context, l slog.Level) bool {
+	for _, h := range f {
+		if h.Enabled(ctx, l) {
+			return true
+		}
+	}
+	return false
+}
+
+func (f fanout) Handle(ctx context.Context, r slog.Record) error {
+	for _, h := range f {
+		if h.Enabled(ctx, r.Level) {
+			_ = h.Handle(ctx, r.Clone())
+		}
+	}
+	return nil
+}
+
+func (f fanout) WithAttrs(a []slog.Attr) slog.Handler {
+	out := make(fanout, len(f))
+	for i, h := range f {
+		out[i] = h.WithAttrs(a)
+	}
+	return out
+}
+
+func (f fanout) WithGroup(n string) slog.Handler {
+	out := make(fanout, len(f))
+	for i, h := range f {
+		out[i] = h.WithGroup(n)
+	}
+	return out
 }
 
 func build(ctx context.Context, cfg *config.Config, logger *slog.Logger) (*app.App, func(), error) {
@@ -127,6 +217,10 @@ func build(ctx context.Context, cfg *config.Config, logger *slog.Logger) (*app.A
 		})
 	}
 	c := cache.New(rdb, logger, cfg.Coexistence)
+	fcmSender, err := fcm.New(ctx, cfg.FirebaseCredentialsJSON, logger)
+	if err != nil {
+		return nil, nil, err
+	}
 	a := &app.App{
 		Cfg:   cfg,
 		DB:    db,
@@ -139,9 +233,10 @@ func build(ctx context.Context, cfg *config.Config, logger *slog.Logger) (*app.A
 			EncodeSecret: cfg.LoginToken.EncodeSecret, EncodeTransformation: cfg.LoginToken.EncodeTransformation, EncodeAlgorithm: cfg.LoginToken.EncodeAlgorithm,
 			DecodeSecret: cfg.LoginToken.DecodeSecret, DecodeTransformation: cfg.LoginToken.DecodeTransformation, DecodeAlgorithm: cfg.LoginToken.DecodeAlgorithm,
 		}),
-		IPHasher: auth.NewIPHasher(cfg.RemoteAddressHash.Algorithm, cfg.RemoteAddressHash.Iterations, cfg.RemoteAddressHash.KeyLength, cfg.RemoteAddressHash.Salt),
-		Log:      logger,
-		Clock:    time.Now,
+		IPHasher:   auth.NewIPHasher(cfg.RemoteAddressHash.Algorithm, cfg.RemoteAddressHash.Iterations, cfg.RemoteAddressHash.KeyLength, cfg.RemoteAddressHash.Salt),
+		FCM:        fcmSender,
+		Log:        logger,
+		Clock:      time.Now,
 		Background: ctx,
 	}
 	cleanup := func() {
@@ -213,9 +308,15 @@ func serve(ctx context.Context, a *app.App) error {
 }
 
 func reportPanic(r *http.Request, v any, stack []byte) {
-	_ = r
-	_ = v
-	if len(stack) == 0 {
-		stack = debug.Stack()
+	if sentry.CurrentHub().Client() == nil {
+		return
 	}
+	hub := sentry.CurrentHub().Clone()
+	hub.Scope().SetRequest(r)
+	if err, ok := v.(error); ok {
+		hub.CaptureException(err)
+	} else {
+		hub.CaptureMessage(fmt.Sprint(v))
+	}
+	_ = stack
 }
