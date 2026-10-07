@@ -1,20 +1,3 @@
-name: S2-known-foundation-diffs-request-layer
-tags: [S2-known-foundation]
-skip: "differences caused by the foundations (httpx / jsonjava), not by S2: see 'Foundation findings' in parity/ledger/S2.md. Run with -tags S2-known-foundation to see them (the lead is rewriting the request layer); enable by moving the tag to S2 once fixed."
-dbdiff: step
-steps:
-  # F-S2-1: no Content-Type and no body: Spring answers 400 (Required request body is missing), httpx 415.
-  - {id: feedback-without-body-nor-content-type, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}"}
-  - {id: insert-without-body-nor-content-type, method: POST, path: /qags, as: "{{seed.UserIdle}}"}
-  # F-S2-2: the Accept header of a 415 lists the media types of Spring's converters in another order/format.
-  - {id: feedback-form-content-type, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserIdle}}", bodyRaw: "isHelpful=true", contentType: application/x-www-form-urlencoded}
-  - {id: insert-form-content-type, method: POST, path: /qags, as: "{{seed.UserIdle}}", bodyRaw: "title=a", contentType: application/x-www-form-urlencoded}
-  - {id: insert-text-plain, method: POST, path: /qags, as: "{{seed.UserIdle}}", bodyRaw: "{}", contentType: text/plain}
-  # F-S2-3: 405 Allow: Spring joins the methods with ", " (and their order is not stable on the Kotlin side).
-  - {id: put-on-support, method: PUT, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserRegular1}}"}
-  - {id: get-on-feedback, method: GET, path: "/qags/{{seed.QagAcceptedTransport}}/feedback", as: "{{seed.UserRegular1}}"}
-  - {id: put-on-details, method: PUT, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
----
 name: S2-known-foundation-diffs-jackson-number-coercion
 tags: [S2-known-foundation]
 skip: "jsonjava refuses an integer literal that does not fit an int64 where Jackson coerces a BigInteger to a Boolean (non zero = true): {\"isHelpful\": 12345678901234567890} is 200 for Kotlin, 400 for Go."
@@ -22,19 +5,9 @@ dbdiff: step
 steps:
   - {id: huge-integer-is-true, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":12345678901234567890}", contentType: application/json}
 ---
-name: S2-known-foundation-diffs-latin1-user-agent
+name: S2-known-foundation-diffs-lone-surrogate
 tags: [S2-known-foundation]
-skip: "Tomcat decodes header bytes as ISO-8859-1; httpx.Ctx.RequiredHeader returns them as sent (UTF-8): the signupCount key of the suspicious-user check differs. The login module (S1) works around it for /signup; the support route uses c.RequiredHeader like every other slice, to be fixed in httpx."
+skip: "jsonjava decodes a lone UTF-16 surrogate escape (\\ud800) as U+FFFD; Jackson keeps the lone surrogate, which the OWASP sanitizer drops: the stored title is 'ab' for Kotlin and 'a?b' ('a' + U+FFFD, written as '?' by the sanitizer wrapper) for Go. sanitize.SanitizeUTF16 is exact if the JSON layer ever provides UTF-16 units (see parity/divergences/F7-sanitize.md)."
 dbdiff: step
 steps:
-  - id: ten-signups-with-a-non-ascii-user-agent
-    method: POST
-    path: /signup
-    repeat: 10
-    headers: {User-Agent: "Mozilla/5.0 suspect é", versionCode: "20", platform: android, X-Forwarded-For: "203.0.113.77"}
-    compare: {body: status}
-  - id: support-from-the-same-origin-is-ignored
-    method: POST
-    path: "/qags/{{seed.QagOpenPlain}}/support"
-    as: "{{seed.UserRegular1}}"
-    headers: {User-Agent: "Mozilla/5.0 suspect é", X-Forwarded-For: "203.0.113.77"}
+  - {id: lone-surrogate-escape, method: POST, path: /qags, as: "{{seed.UserProfile10}}", bodyRaw: "{\"title\":\"a\\ud800b\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: application/json}
