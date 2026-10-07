@@ -1,0 +1,13 @@
+name: S1-known-foundation-diffs
+tags: [S1]
+skip: "foundation findings reported to the lead (not fixable in the S1 slice): (1) a validly signed JWT without a sub claim is a Kotlin NPE (500) but Go answers 401 (auth.JWT.Parse returns an empty subject); (2) every 415 (missing or unsupported Content-Type) carries the wrong Accept header (httpx.acceptForBodies; Spring sends application/xml;charset=UTF-8, text/xml;charset=UTF-8, application/json, application/*+xml;charset=UTF-8, application/*+json); (3) a 406 (unknown ?mediaType) must not carry the handler's Set-Cookie header (already fixed on the lead's branch); (4) the 405 Allow header is joined with ', ' by Spring and with ',' by httpx"
+dbdiff: step
+steps:
+  - {id: no-sub, path: /profile, bearer: "eyJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE1OTk5OTAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.8DDgS_eQhmdKspTRUBgeEKVeTS4clJ9TK_gCi-Du43kG3yZpEkHWuPTJBoIenQHpwb4YdBeGR-9azSdKkgoquA"}
+  - {id: put-profile, method: PUT, path: /profile, as: "{{seed.UserRegular1}}"}
+  - {id: delete-profile, method: DELETE, path: /profile, as: "{{seed.UserRegular1}}"}
+  - {id: profile-no-content-type, method: POST, path: /profile, as: "{{seed.UserIdle}}", bodyRaw: '{"gender":"M"}', contentType: none}
+  - {id: profile-text-plain, method: POST, path: /profile, as: "{{seed.UserIdle}}", bodyRaw: '{"gender":"M"}', contentType: text/plain}
+  - {id: login-406-keeps-set-cookie, method: POST, path: "/login?mediaType=foo", headers: {versionCode: "20", platform: android}, body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIK8UeYtso2EbJ3uG7Walwlucljy6EHMr/wCr2RPFF3uQ=="}}
+  - {id: login-no-content-type, method: POST, path: /login, bodyRaw: '{"loginToken":"x"}', contentType: none, headers: {versionCode: "20", platform: android}}
+  - {id: departments-text-plain, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", bodyRaw: '{"departments":[]}', contentType: text/plain}

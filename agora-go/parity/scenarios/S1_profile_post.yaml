@@ -1,0 +1,121 @@
+name: S1-profile-post-insert-then-update
+tags: [S1]
+dbdiff: step
+steps:
+  - {id: get-before, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: post-empty-object-insert, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {}}
+  - {id: get-after-empty, path: /profile, as: "{{seed.UserIdle}}"}
+  - id: post-full-numbers
+    method: POST
+    path: /profile
+    as: "{{seed.UserIdle}}"
+    body: {gender: "M", yearOfBirth: 1990, department: 75, cityType: "R", jobCategory: "AG", voteFrequency: "S", publicMeetingFrequency: "P", consultationFrequency: "J"}
+  - {id: get-after-full, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: get-after-full-xml, path: "/profile?mediaType=xml", as: "{{seed.UserIdle}}"}
+  - id: post-full-strings
+    method: POST
+    path: /profile
+    as: "{{seed.UserIdle}}"
+    body: {gender: "F", yearOfBirth: "1985", department: "2A", cityType: "U", jobCategory: "CA", voteFrequency: "P", publicMeetingFrequency: "J", consultationFrequency: "S"}
+  - {id: get-after-strings, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: year-invalid-string, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: "A", yearOfBirth: "abc"}}
+  - {id: get-year-invalid, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: year-float, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {yearOfBirth: 1990.5}}
+  - {id: get-year-float, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: year-plus, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {yearOfBirth: "+1990"}}
+  - {id: get-year-plus, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: year-overflow, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {yearOfBirth: "99999999999"}}
+  - {id: year-negative, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {yearOfBirth: -5}}
+  - {id: get-year-negative, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: year-zero-padded, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {yearOfBirth: "0001990"}}
+  - {id: get-year-padded, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: year-spaces, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {yearOfBirth: " 1990 "}}
+  - {id: get-year-spaces, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: year-bool, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {yearOfBirth: true}}
+  - {id: year-exp, method: POST, path: /profile, as: "{{seed.UserIdle}}", bodyRaw: '{"yearOfBirth": 1e3, "gender": "M"}', contentType: application/json}
+  - {id: get-year-exp, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: year-null, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {yearOfBirth: null, gender: "F"}}
+  - {id: get-year-null, path: /profile, as: "{{seed.UserIdle}}"}
+  - id: invalid-codes
+    method: POST
+    path: /profile
+    as: "{{seed.UserIdle}}"
+    body: {gender: "X", yearOfBirth: 2000, department: "XX", cityType: "Z", jobCategory: "ZZ", voteFrequency: "Q", publicMeetingFrequency: "q", consultationFrequency: "s"}
+  - {id: get-invalid-codes, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: lower-case-codes, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: "m", cityType: "r", jobCategory: "ag", voteFrequency: "s"}}
+  - {id: get-lower-case, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: dept-corse-2b, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {department: "2B"}}
+  - {id: get-dept-2b, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: dept-971, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {department: "971"}}
+  - {id: get-dept-971, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: dept-99, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {department: 99}}
+  - {id: get-dept-99, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: dept-01, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {department: "01"}}
+  - {id: get-dept-01, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: dept-1-unknown, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {department: "1"}}
+  - {id: get-dept-1, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: dept-empty, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {department: ""}}
+  - {id: dept-spaces, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {department: " 75"}}
+  - {id: get-dept-spaces, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: dept-name, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {department: "Paris"}}
+  - {id: all-null, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: null, yearOfBirth: null, department: null, cityType: null, jobCategory: null, voteFrequency: null, publicMeetingFrequency: null, consultationFrequency: null}}
+  - {id: get-all-null, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: unknown-fields, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: "M", primaryDepartment: "Paris", secondaryDepartment: "Nord", foo: [1, 2, {a: 1}], userId: "x"}}
+  - {id: get-unknown-fields, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: gender-number, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: 5}}
+  - {id: gender-bool, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: true}}
+  - {id: gender-array, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: ["M"]}}
+  - {id: gender-object, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: {a: 1}}}
+  - {id: body-array, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: []}
+  - {id: body-string, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: "M"}
+  - {id: body-number, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: 12}
+  - {id: body-null, method: POST, path: /profile, as: "{{seed.UserIdle}}", bodyRaw: "null", contentType: application/json}
+  - {id: body-empty, method: POST, path: /profile, as: "{{seed.UserIdle}}", bodyRaw: "", contentType: application/json}
+  - {id: body-invalid-json, method: POST, path: /profile, as: "{{seed.UserIdle}}", bodyRaw: "{gender:", contentType: application/json}
+  - {id: body-trailing-garbage, method: POST, path: /profile, as: "{{seed.UserIdle}}", bodyRaw: '{"gender":"A"} xyz', contentType: application/json}
+  - {id: get-trailing-garbage, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: duplicate-keys, method: POST, path: /profile, as: "{{seed.UserIdle}}", bodyRaw: '{"gender":"M","gender":"F"}', contentType: application/json}
+  - {id: get-duplicate-keys, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: json-charset, method: POST, path: /profile, as: "{{seed.UserIdle}}", bodyRaw: '{"gender":"M"}', contentType: "application/json;charset=UTF-8"}
+  - {id: vendor-json, method: POST, path: /profile, as: "{{seed.UserIdle}}", bodyRaw: '{"gender":"A"}', contentType: "application/vnd.api+json"}
+  - {id: get-vendor-json, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: post-xml-media-type, method: POST, path: "/profile?mediaType=xml", as: "{{seed.UserIdle}}", body: {gender: "F"}}
+  - {id: post-bad-media-type, method: POST, path: "/profile?mediaType=foo", as: "{{seed.UserIdle}}", body: {gender: "M"}}
+  - {id: get-after-bad-media, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: unicode, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: "é", cityType: "😀"}}
+---
+name: S1-profile-post-insert-deletes-ask-date
+tags: [S1]
+dbdiff: step
+setup:
+  sql:
+    - "DELETE FROM users_profile WHERE user_id = '00000000-0000-4000-9000-000000000001'"
+    - "INSERT INTO demographic_info_ask_date (id, ask_date, user_id) VALUES ('aaaaaaaa-0000-4000-a000-000000000001', '2026-01-01 10:00:00', '00000000-0000-4000-9000-00000000000f')"
+    - "INSERT INTO demographic_info_ask_date (id, ask_date, user_id) VALUES ('aaaaaaaa-0000-4000-a000-000000000002', '2026-02-01 10:00:00', '00000000-0000-4000-9000-00000000000f')"
+steps:
+  - {id: regular1-insert-removes-ask-date, method: POST, path: /profile, as: "{{seed.UserRegular1}}", body: {gender: "F", yearOfBirth: 1970}}
+  - {id: idle-insert-removes-both-rows, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {}}
+  - {id: regular2-update-keeps-ask-date, method: POST, path: /profile, as: "{{seed.UserRegular2}}", body: {gender: "A", yearOfBirth: 1999, department: "13"}}
+  - {id: get-regular2, path: /profile, as: "{{seed.UserRegular2}}"}
+  - {id: regular6-update-keeps-departments, method: POST, path: /profile, as: "{{seed.UserRegular6}}", body: {gender: "M"}}
+  - {id: get-regular6, path: /profile, as: "{{seed.UserRegular6}}"}
+  - {id: regular7-update-all-null-row, method: POST, path: /profile, as: "{{seed.UserRegular7}}", body: {cityType: "R"}}
+  - {id: get-regular7, path: /profile, as: "{{seed.UserRegular7}}"}
+  - {id: invalid-row-update, method: POST, path: /profile, as: "{{seed.UserProfileInvalid}}", body: {gender: "F"}}
+  - {id: get-invalid-row, path: /profile, as: "{{seed.UserProfileInvalid}}"}
+---
+# Kotlin quirk: POST /profile/departments writes with native SQL and leaves the
+# 1h "profileCache" entry written by the previous POST /profile; the next profile
+# update starts from that stale entry and erases the departments.
+name: S1-profile-stale-cache-quirk
+tags: [S1]
+dbdiff: step
+steps:
+  - {id: insert, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: "M", yearOfBirth: 1980}}
+  - {id: departments, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Paris", "Nord"]}}
+  - {id: get-with-departments, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: update-erases-departments, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: "F", yearOfBirth: 1981}}
+  - {id: get-departments-erased, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: departments-again, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Ain"]}}
+  - {id: update-again, method: POST, path: /profile, as: "{{seed.UserIdle}}", body: {gender: "A"}}
+  - {id: get-final, path: /profile, as: "{{seed.UserIdle}}"}
