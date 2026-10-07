@@ -27,7 +27,8 @@ export PARITY_REF_STRAPI=http://localhost:$REF_STRAPI PARITY_GO_STRAPI=http://lo
 export PARITY_REF_CMD="$RUN/start-ref.sh" PARITY_GO_CMD="$RUN/start-go.sh"
 REFJAR=${PARITY_REF_JAR:-/home/user/agora-ref/build/libs/agora-back-0.0.1.jar}
 JAVA17=${PARITY_JAVA:-/usr/lib/jvm/java-17-openjdk-amd64/bin/java}
-STRAPI_NOW_FILE="/home/user/run/strapi_now"
+# one Strapi clock for every slot of a machine (fixture dates are relative to it)
+STRAPI_NOW_FILE=${PARITY_STRAPI_NOW_FILE:-${PARITY_RUN_DIR:-/home/user/run}/strapi_now}
 
 load_env() { # file
   while IFS= read -r line; do
