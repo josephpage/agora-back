@@ -45,9 +45,14 @@ wait_http() { # url name
 }
 
 start_pg() {
-  pg_lsclusters 2>/dev/null | grep -q online || pg_ctlcluster 16 main start
+  # PARITY_PG_EXTERNAL=1: PostgreSQL is provided (CI service), user backend/agora_password
+  if [ "${PARITY_PG_EXTERNAL:-0}" != "1" ]; then
+    pg_lsclusters 2>/dev/null | grep -q online || pg_ctlcluster 16 main start
+  fi
   for db in $REF_DB $GO_DB; do
-    su postgres -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='$db'\"" | grep -q 1 || su postgres -c "psql -q -c 'CREATE DATABASE $db OWNER backend'"
+    if ! PGPASSWORD=agora_password psql -h localhost -U backend -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$db'" | grep -q 1; then
+      PGPASSWORD=agora_password psql -q -h localhost -U backend -d postgres -c "CREATE DATABASE $db OWNER backend"
+    fi
     PGPASSWORD=agora_password psql -q -h localhost -U backend -d $db -f internal/store/schema/baseline.sql >/dev/null 2>&1
   done
 }
