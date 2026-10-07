@@ -1,0 +1,179 @@
+name: s0-thematiques-basic
+tags: [S0]
+dbdiff: none
+steps:
+  - {id: anon, path: /thematiques}
+  - {id: anon-again, path: /thematiques, repeat: 3}
+  - {id: user, path: /thematiques, as: "{{seed.UserRegular1}}"}
+  - {id: banned, path: /thematiques, as: "{{seed.UserBanned}}"}
+  - {id: moderator, path: /thematiques, as: "{{seed.UserModerator}}"}
+  - {id: admin, path: /thematiques, as: "{{seed.UserAdmin}}"}
+  - {id: unknown-user-jwt, path: /thematiques, as: "00000000-0000-4000-9000-0000000000ff"}
+  - {id: bad-jwt, path: /thematiques, bearer: "abc.def.ghi"}
+  - {id: basic-auth, path: /thematiques, headers: {Authorization: "Basic abc"}}
+  - {id: xml, path: "/thematiques?mediaType=xml"}
+  - {id: xml-upper, path: "/thematiques?mediaType=XML"}
+  - {id: xml-user, path: "/thematiques?mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: json-explicit, path: "/thematiques?mediaType=json"}
+  - {id: foo, path: "/thematiques?mediaType=foo"}
+  - {id: foo-user, path: "/thematiques?mediaType=foo", as: "{{seed.UserRegular1}}"}
+  - {id: empty-media, path: "/thematiques?mediaType="}
+  - {id: other-params, path: "/thematiques?x=1&y=%C3%A9"}
+  - {id: accept-xml-header, path: /thematiques, headers: {Accept: application/xml}}
+  - {id: accept-text, path: /thematiques, headers: {Accept: text/plain}}
+  - {id: head, method: HEAD, path: /thematiques}
+  - {id: head-xml, method: HEAD, path: "/thematiques?mediaType=xml"}
+  - {id: head-foo, method: HEAD, path: "/thematiques?mediaType=foo"}
+  - {id: post, method: POST, path: /thematiques}
+  - {id: put, method: PUT, path: /thematiques}
+  - {id: delete, method: DELETE, path: /thematiques}
+  - {id: options, method: OPTIONS, path: /thematiques}
+  - {id: cors-get, path: /thematiques, headers: {Origin: "https://www.agora.gouv.fr"}}
+  - {id: cors-other-origin, path: /thematiques, headers: {Origin: "https://evil.example"}}
+  - {id: cors-preflight, method: OPTIONS, path: /thematiques, headers: {Origin: "https://www.agora.gouv.fr", Access-Control-Request-Method: GET}}
+  - {id: trailing-slash, path: /thematiques/}
+  - {id: upper-case-path, path: /Thematiques}
+  - {id: sub-path, path: /thematiques/th0000000000000000000001}
+  # ETag (ShallowEtagHeaderFilter on /thematiques): md5 of the JSON / XML body
+  - {id: etag-match, path: /thematiques, headers: {If-None-Match: '"0ad2a890924a661c9907ef1a7be61d0de"'}}
+  - {id: etag-match-user, path: /thematiques, as: "{{seed.UserRegular1}}", headers: {If-None-Match: '"0ad2a890924a661c9907ef1a7be61d0de"'}}
+  - {id: etag-match-weak, path: /thematiques, headers: {If-None-Match: 'W/"0ad2a890924a661c9907ef1a7be61d0de"'}}
+  - {id: etag-match-in-list, path: /thematiques, headers: {If-None-Match: '"nope", "0ad2a890924a661c9907ef1a7be61d0de"'}}
+  - {id: etag-wrong, path: /thematiques, headers: {If-None-Match: '"0000"'}}
+  - {id: etag-unquoted, path: /thematiques, headers: {If-None-Match: '0ad2a890924a661c9907ef1a7be61d0de'}}
+  - {id: etag-empty, path: /thematiques, headers: {If-None-Match: ''}}
+  - {id: etag-xml-json-etag, path: "/thematiques?mediaType=xml", headers: {If-None-Match: '"0ad2a890924a661c9907ef1a7be61d0de"'}}
+  - {id: etag-xml-match, path: "/thematiques?mediaType=xml", headers: {If-None-Match: '"063ca233854ebcb6da8962c780af0f78d"'}}
+  - {id: etag-foo, path: "/thematiques?mediaType=foo", headers: {If-None-Match: '"0ad2a890924a661c9907ef1a7be61d0de"'}}
+  - {id: etag-head-match, method: HEAD, path: /thematiques, headers: {If-None-Match: '"0ad2a890924a661c9907ef1a7be61d0de"'}}
+  - {id: etag-head-wrong, method: HEAD, path: /thematiques, headers: {If-None-Match: '"0000"'}}
+  - {id: if-modified-since, path: /thematiques, headers: {If-Modified-Since: "Wed, 21 Oct 2026 07:28:00 GMT"}}
+  - {id: cache-control-request, path: /thematiques, headers: {Cache-Control: no-cache}}
+---
+name: s0-thematiques-sort-and-duplicates
+tags: [S0]
+dbdiff: none
+# "Autre" thematique last, then by label with Java String.compareTo (UTF-16 code units: supplementary
+# characters sort before U+E000..U+FFFF, accents after ASCII, upper case before lower case), stable ties.
+setup:
+  strapiOverrides:
+    - model: thematiques
+      data:
+        - {documentId: "th-01", label: "Santé", pictogramme: "🏥"}
+        - {documentId: "47897e51-8e94-4920-a26a-1b1e5e232e82", label: "Autre", pictogramme: "❓"}
+        - {documentId: "th-03", label: "Zoologie", pictogramme: "🦓"}
+        - {documentId: "th-04", label: "Éducation", pictogramme: "📚"}
+        - {documentId: "th-05", label: "environnement", pictogramme: "🌳"}
+        - {documentId: "th-06", label: "Environnement", pictogramme: "🌍"}
+        - {documentId: "th-07", label: "Environnement", pictogramme: "second with same label"}
+        - {documentId: "th-08", label: "😀 emoji", pictogramme: "x"}
+        - {documentId: "th-09", label: "ＡＢ fullwidth", pictogramme: "x"}
+        - {documentId: "th-10", label: " private use", pictogramme: "x"}
+        - {documentId: "th-11", label: "", pictogramme: ""}
+        - {documentId: "th-12", label: "a b", pictogramme: "tab\there"}
+        - {documentId: "th-13", label: "a  b", pictogramme: "quote\" back\\ <&> é  "}
+        - {documentId: "th-01", label: "Santé (duplicate id)", pictogramme: "dup"}
+        - {documentId: "th-14", label: "Autre", pictogramme: "same label as the autre one"}
+steps:
+  - {id: json, path: /thematiques}
+  - {id: xml, path: "/thematiques?mediaType=xml"}
+  - {id: user-json, path: /thematiques, as: "{{seed.UserRegular1}}"}
+  - {id: etag, path: /thematiques, headers: {If-None-Match: '"x"'}}
+---
+name: s0-thematiques-empty-list
+tags: [S0]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: thematiques, data: []}
+steps:
+  - {id: json, path: /thematiques}
+  - {id: json-again, path: /thematiques}
+  - {id: xml, path: "/thematiques?mediaType=xml"}
+  - {id: head, method: HEAD, path: /thematiques}
+---
+name: s0-thematiques-fault-500
+tags: [S0]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: thematiques, mode: "500"}
+steps:
+  - {id: json, path: /thematiques}
+  - {id: json-again, path: /thematiques}
+  - {id: xml, path: "/thematiques?mediaType=xml"}
+  - {id: etag-of-empty-list, path: /thematiques, headers: {If-None-Match: '"x"'}}
+---
+name: s0-thematiques-fault-malformed
+tags: [S0]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: thematiques, mode: malformed}
+steps:
+  - {id: json, path: /thematiques}
+---
+name: s0-thematiques-fault-nulldata
+tags: [S0]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: thematiques, mode: nulldata}
+steps:
+  - {id: json, path: /thematiques}
+---
+name: s0-thematiques-fault-missingfield
+tags: [S0]
+dbdiff: none
+# the first string field of the first element is dropped: the whole list is undecodable, hence empty
+setup:
+  strapiFaults:
+    - {model: thematiques, mode: missingfield}
+steps:
+  - {id: json, path: /thematiques}
+---
+name: s0-thematiques-fault-slow
+tags: [S0]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: thematiques, mode: slow, delayMs: 800}
+steps:
+  - {id: json, path: /thematiques}
+  - {id: json-cached, path: /thematiques}
+---
+name: s0-thematiques-all-models-fault
+tags: [S0]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: "*", mode: "500"}
+steps:
+  - {id: thematiques, path: /thematiques}
+  - {id: theme-hebdo, path: /theme_hebdo}
+  - {id: referentiel, path: /referentiels/regions-et-departements}
+---
+name: s0-thematiques-unusual-values
+tags: [S0]
+dbdiff: none
+# numbers / booleans are coerced to strings by Jackson; extra properties are ignored
+setup:
+  strapiOverrides:
+    - model: thematiques
+      data:
+        - {id: 7, documentId: "th-x", label: 12, pictogramme: true, createdAt: "2024-01-01T00:00:00.000Z", extra: {a: [1, 2]}}
+        - {documentId: "th-y", label: 2.50, pictogramme: "p"}
+steps:
+  - {id: json, path: /thematiques}
+---
+name: s0-thematiques-unusual-values-null-label
+tags: [S0]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: thematiques
+      data:
+        - {documentId: "th-x", label: null, pictogramme: "p"}
+        - {documentId: "th-y", label: "ok", pictogramme: "p"}
+steps:
+  - {id: json, path: /thematiques}

@@ -1,0 +1,21 @@
+name: s0-known-foundation-diffs-etag
+tags: [S0-known]
+dbdiff: none
+# Differences caused by the httpx / xmljava foundations (not by slice S0), see "Foundation requests" in parity/ledger/S0.md.
+# Run with -tags S0-known; expected to show diffs until the foundations are fixed.
+steps:
+  # ShallowEtagHeaderFilter / Spring 6 validateIfNoneMatch: "*" is NOT a match (the regexp only extracts quoted ETags)
+  - {id: etag-star, path: /thematiques, headers: {If-None-Match: '*'}}
+---
+name: s0-known-foundation-diffs-xml-gt
+tags: [S0-known]
+dbdiff: none
+# Woodstox writes ">" unescaped in text content (except after "]" or as first character, with a rule that
+# also depends on the writer buffer); xmljava always writes "&gt;".
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Spécial", periode: "a <b> c", est_theme_libre: true, date_debut: "{{now-1d}}", date_fin: "{{now+1d}}", nom_ministre: "Zoé \"Quote\" <&>"}
+steps:
+  - {id: xml, path: "/theme_hebdo?mediaType=xml"}

@@ -3,5 +3,6 @@ package themehebdo
 import "agora/internal/app"
 
 // Routes registers this module's HTTP routes on a.Server.
-// TODO(slice): port the Kotlin controllers (see parity/LEDGER.md).
-func Routes(a *app.App) {}
+func Routes(a *app.App) {
+	a.Server.GET("/theme_hebdo", Get(a).handler)
+}
