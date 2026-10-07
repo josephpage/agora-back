@@ -47,7 +47,25 @@ type Cache struct {
 	group   singleflight.Group
 	epoch   string
 	now     func() time.Time
+
+	// Invalidation sequencing (guarded by mu). A load that overlapped an
+	// invalidation of its key is neither stored nor shared with the callers
+	// that arrive after the invalidation: a user always reads their own write.
+	seq       uint64               // incremented by every invalidation
+	keySeq    map[string]invalMark // L1 key → its last invalidation
+	nameSeq   map[string]uint64    // cache name → last name-wide invalidation
+	flushSeq  uint64               // last full flush
+	lastPrune time.Time
 }
+
+type invalMark struct {
+	seq uint64
+	at  time.Time
+}
+
+// invalHorizon bounds how long per-key invalidation marks are kept; a load
+// running longer than that is not stored.
+const invalHorizon = 2 * time.Minute
 
 type entry struct {
 	val     any
@@ -59,7 +77,8 @@ func New(rdb *redis.Client, log *slog.Logger, coexistence bool) *Cache {
 	if log == nil {
 		log = slog.Default()
 	}
-	return &Cache{rdb: rdb, log: log, coexistence: coexistence, entries: map[string]entry{}, now: time.Now}
+	return &Cache{rdb: rdb, log: log, coexistence: coexistence, entries: map[string]entry{}, now: time.Now,
+		keySeq: map[string]invalMark{}, nameSeq: map[string]uint64{}}
 }
 
 // Redis exposes the client for modules that need raw commands.
@@ -83,6 +102,10 @@ func (c *Cache) subscribe(ctx context.Context) {
 		ch := sub.Channel()
 		for msg := range ch {
 			c.applyInvalidation(msg.Payload)
+			if nonce, ok := strings.CutPrefix(msg.Payload, "*\x00ack:"); ok {
+				// flush acknowledgement awaited by the parity harness
+				_ = c.rdb.Set(ctx, invalidationChannel+":ack:"+nonce, "1", 30*time.Second).Err()
+			}
 		}
 		_ = sub.Close()
 		select {
@@ -121,7 +144,7 @@ func (c *Cache) checkEpoch(ctx context.Context) {
 	}
 	c.mu.Lock()
 	if c.epoch != "" && c.epoch != v {
-		c.entries = map[string]entry{}
+		c.flushLocked()
 		c.log.Info("cache epoch changed (FLUSHDB): L1 cleared")
 	}
 	c.epoch = v
@@ -135,6 +158,11 @@ func (c *Cache) applyInvalidation(payload string) {
 	name, key, _ := strings.Cut(payload, "\x00")
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if name == "*" {
+		c.flushLocked()
+		return
+	}
+	c.seq++
 	if key == "*" {
 		prefix := name + "\x00"
 		for k := range c.entries {
@@ -142,13 +170,42 @@ func (c *Cache) applyInvalidation(payload string) {
 				delete(c.entries, k)
 			}
 		}
+		c.nameSeq[name] = c.seq
 		return
 	}
-	if name == "*" {
-		c.entries = map[string]entry{}
-		return
+	k := l1Key(name, key)
+	delete(c.entries, k)
+	now := c.now()
+	c.keySeq[k] = invalMark{seq: c.seq, at: now}
+	if now.Sub(c.lastPrune) > invalHorizon/2 {
+		c.lastPrune = now
+		for mk, m := range c.keySeq {
+			if now.Sub(m.at) > invalHorizon {
+				delete(c.keySeq, mk)
+			}
+		}
 	}
-	delete(c.entries, l1Key(name, key))
+}
+
+func (c *Cache) flushLocked() {
+	c.seq++
+	c.flushSeq = c.seq
+	c.entries = map[string]entry{}
+	c.keySeq = map[string]invalMark{}
+	c.nameSeq = map[string]uint64{}
+}
+
+// lastInvalLocked is the sequence number of the latest invalidation that
+// covers the L1 key k of cache name.
+func (c *Cache) lastInvalLocked(name, k string) uint64 {
+	last := c.flushSeq
+	if s := c.nameSeq[name]; s > last {
+		last = s
+	}
+	if m, ok := c.keySeq[k]; ok && m.seq > last {
+		last = m.seq
+	}
+	return last
 }
 
 // Get returns a fresh L1 value.
@@ -188,20 +245,29 @@ func (c *Cache) evictExpiredLocked() {
 }
 
 // GetOrLoad returns the cached value or loads it once (singleflight).
-// Errors are not cached.
+// Errors are not cached. A load that overlapped an invalidation of its key is
+// returned to the callers that joined it before the invalidation, but it is
+// not stored, and callers arriving after the invalidation start a new load.
 func GetOrLoad[T any](c *Cache, name, key string, ttl time.Duration, load func() (T, error)) (T, error) {
 	if v, ok := c.Get(name, key); ok {
 		return v.(T), nil
 	}
-	v, err, _ := c.group.Do(l1Key(name, key), func() (any, error) {
+	k := l1Key(name, key)
+	c.mu.RLock()
+	gen := c.lastInvalLocked(name, k)
+	c.mu.RUnlock()
+	v, err, _ := c.group.Do(k+"\x00"+strconv.FormatUint(gen, 10), func() (any, error) {
 		if v, ok := c.Get(name, key); ok {
 			return v, nil
 		}
+		c.mu.RLock()
+		start, startAt := c.seq, c.now()
+		c.mu.RUnlock()
 		val, err := load()
 		if err != nil {
 			return nil, err
 		}
-		c.Put(name, key, val, ttl)
+		c.putIfNotInvalidated(name, k, val, ttl, start, startAt)
 		return val, nil
 	})
 	if err != nil {
@@ -209,6 +275,22 @@ func GetOrLoad[T any](c *Cache, name, key string, ttl time.Duration, load func()
 		return zero, err
 	}
 	return v.(T), nil
+}
+
+func (c *Cache) putIfNotInvalidated(name, k string, v any, ttl time.Duration, start uint64, startAt time.Time) {
+	if ttl <= 0 {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	now := c.now()
+	if c.lastInvalLocked(name, k) > start || now.Sub(startAt) > invalHorizon/2 {
+		return
+	}
+	c.entries[k] = entry{val: v, expires: now.Add(ttl)}
+	if len(c.entries) > 500_000 {
+		c.evictExpiredLocked()
+	}
 }
 
 // Invalidate drops a key locally and on every other instance.
@@ -227,7 +309,7 @@ func (c *Cache) InvalidateAll(ctx context.Context, name string) { c.Invalidate(c
 // FlushLocal clears this instance's L1 (used after FLUSHDB, before epoch poll).
 func (c *Cache) FlushLocal() {
 	c.mu.Lock()
-	c.entries = map[string]entry{}
+	c.flushLocked()
 	c.mu.Unlock()
 }
 

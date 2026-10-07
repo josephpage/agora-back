@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -33,15 +34,37 @@ func (s *Side) reset(ctx context.Context, setup Setup, now time.Time) error {
 	}
 	rdb := redis.NewClient(&redis.Options{Addr: s.RedisAddr, Password: s.RedisPassword})
 	defer rdb.Close()
+	// keep the Go epoch sentinel: otherwise the instance's epoch watcher would
+	// notice the FLUSHALL up to 2 s later and clear its L1 in the middle of the
+	// scenario (the explicit flush below already cleared it)
+	epoch, _ := rdb.Get(ctx, "agora:go:epoch").Result()
 	if err := rdb.FlushAll(ctx).Err(); err != nil {
 		return fmt.Errorf("%s redis: %w", s.Name, err)
 	}
+	if epoch != "" {
+		if err := rdb.Set(ctx, "agora:go:epoch", epoch, 0).Err(); err != nil {
+			return fmt.Errorf("%s redis: %w", s.Name, err)
+		}
+	}
 	if s.GoCache {
-		// immediate L1 flush on every Go instance
-		_ = rdb.Publish(ctx, "agora:go:inval", "*\x00").Err()
-		// the pub/sub delivery is asynchronous: without this pause the first request of the scenario could still
-		// be served from an L1 entry of the previous scenario (seen with a few ms of scheduling delay)
-		time.Sleep(50 * time.Millisecond)
+		// flush every Go L1 and wait for the instance's acknowledgement: the
+		// pub/sub delivery is asynchronous, and without it the first request of
+		// the scenario could still be served from the previous scenario's L1
+		nonce := strconv.FormatInt(time.Now().UnixNano(), 36)
+		if err := rdb.Publish(ctx, "agora:go:inval", "*\x00ack:"+nonce).Err(); err != nil {
+			return fmt.Errorf("%s L1 flush: %w", s.Name, err)
+		}
+		deadline := time.Now().Add(3 * time.Second)
+		for {
+			if n, _ := rdb.Exists(ctx, "agora:go:inval:ack:"+nonce).Result(); n == 1 {
+				break
+			}
+			if time.Now().After(deadline) {
+				return fmt.Errorf("%s: no L1 flush acknowledgement from the Go instance", s.Name)
+			}
+			time.Sleep(2 * time.Millisecond)
+		}
+		_ = rdb.Del(ctx, "agora:go:inval:ack:"+nonce).Err()
 	}
 	for k, v := range setup.Redis {
 		if err := rdb.Set(ctx, k, v, 0).Err(); err != nil {
