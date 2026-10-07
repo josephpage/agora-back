@@ -265,42 +265,13 @@ func getFiche(ctx context.Context, a *app.App, id string) (*ficheInventaire, err
 	return &f, nil
 }
 
-// replaceInvalidUTF8 turns every invalid UTF-8 byte of s into U+FFFD, like the
-// decoder Tomcat uses on the query string (foundation finding: httpx keeps the
-// raw bytes). Truncated multi-byte sequences give one U+FFFD per byte instead of
-// one per malformed sequence.
-func replaceInvalidUTF8(s string) string {
-	if utf8.ValidString(s) {
-		return s
-	}
-	var b strings.Builder
-	for i := 0; i < len(s); {
-		r, n := utf8.DecodeRuneInString(s[i:])
-		if r == utf8.RuneError && n == 1 {
-			b.WriteRune(utf8.RuneError)
-		} else {
-			b.WriteString(s[i : i+n])
-		}
-		i += n
-	}
-	return b.String()
-}
-
 // queryValues parses the query string like Tomcat's getParameterValues sees it
-// (every value of every parameter; malformed pairs are skipped, the same
-// fallback as httpx.Ctx).
+// (the same decoding as httpx.Ctx - split on '&' then on the first '=', percent
+// decoding, a malformed pair or an empty name skipped, UTF-8 decoded with Java's
+// replacement rules - but keeping every value of a repeated parameter:
+// httpx.Ctx.Param only exposes the first one, see "Foundation findings" 6).
 func queryValues(c *httpx.Ctx) url.Values {
-	q, err := url.ParseQuery(c.R.URL.RawQuery)
-	if err == nil {
-		for k, vals := range q {
-			for i, v := range vals {
-				vals[i] = replaceInvalidUTF8(v)
-			}
-			q[k] = vals
-		}
-		return q
-	}
-	q = url.Values{}
+	out := url.Values{}
 	for _, pair := range strings.Split(c.R.URL.RawQuery, "&") {
 		if pair == "" {
 			continue
@@ -308,12 +279,13 @@ func queryValues(c *httpx.Ctx) url.Values {
 		k, v, _ := strings.Cut(pair, "=")
 		kk, err1 := url.QueryUnescape(k)
 		vv, err2 := url.QueryUnescape(v)
-		if err1 != nil || err2 != nil {
+		if err1 != nil || err2 != nil || kk == "" {
 			continue
 		}
-		q[kk] = append(q[kk], replaceInvalidUTF8(vv))
+		kk = javacompat.DecodeUTF8Java([]byte(kk))
+		out[kk] = append(out[kk], javacompat.DecodeUTF8Java([]byte(vv)))
 	}
-	return q
+	return out
 }
 
 // stringParam is `@RequestParam(name) p: String?`: several values are joined with

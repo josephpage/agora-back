@@ -304,14 +304,6 @@ func TestParamBinding(t *testing.T) {
 	}
 }
 
-func TestReplaceInvalidUTF8(t *testing.T) {
-	for in, want := range map[string]string{"abc": "abc", "caf\xe9": "caf�", "\xff\xfe": "��", "é": "é"} {
-		if got := replaceInvalidUTF8(in); got != want {
-			t.Errorf("%q: %q, want %q", in, got, want)
-		}
-	}
-}
-
 func TestCompareUTF16(t *testing.T) {
 	for _, tc := range []struct {
 		a, b string

@@ -141,14 +141,13 @@ def run():
     jsonish = {"json", "json-charset-utf8", "json-charset-utf8-space", "json-upper", "json-vnd", "json-problem", "json-q",
                "json-garbage-param", "json-charset-latin1", "json-charset-utf16"}
     sc("content-types", [post("ct-" + n, raw=ok, ct=c) for n, c in cts if n in jsonish])
-    # 415 answers: the Accept header Spring adds lists the converters in another order and with charsets (httpx.acceptForBodies)
-    # and a wildcard Content-Type is a 500 (IllegalArgumentException), not a 415
-    sc("content-types-unsupported", [post("ct-" + n, raw=ok, ct=c) for n, c in cts if n not in jsonish] + [
+    # 415 answers (Accept header of the converters), a wildcard Content-Type is a 500 (IllegalArgumentException)
+    sc("content-types-unsupported", [post("ct-" + n, raw=ok, ct=c) for n, c in cts if n not in jsonish and n != "json-charset-bad"] + [
         post("form", raw="type=bug&description=d", ct="application/x-www-form-urlencoded"),
         post("form-query", raw="", ct="application/x-www-form-urlencoded", path=P + "?type=bug&description=d"),
-    ], tags=("S9-known",))
+    ])
     sc("content-types-charset", [post("ct-" + n, raw=ok, ct=c) for n, c in cts if n == "json-charset-bad"],
-       tags=("S9-known",))
+       )
     sc("content-types-query", [post("query-params", raw=ok, ct="application/json", path=P + "?type=feature&description=x")])
     # --- methods, routes, auth
     sc("methods", [
@@ -212,18 +211,18 @@ def run():
         post("xml", raw=xml, ct="application/xml"), post("xml-text", raw=xml, ct="text/xml"), post("xml-vnd", raw=xml, ct="application/vnd.x+xml"),
         post("xml-bad", raw="<a>", ct="application/xml"), post("xml-unknown-type", raw=xml.replace("bug", "zzz"), ct="application/xml"),
     ], tags=("S9-known",), dbdiff="step"))
-    # --- body encoding (jsonjava request decoder: being rewritten by the lead; expected to pass afterwards)
+    # --- body encoding (BOM, charset parameter, lone surrogates)
     sc("encoding-bom", [
         post("bom", raw="﻿" + ok, ct="application/json"),
         post("bom-charset", raw="﻿" + ok, ct="application/json;charset=UTF-8"),
         post("latin1-in-utf8", raw='{"type":"bug","description":"é"}', ct="application/json;charset=ISO-8859-1"),
-    ], tags=("S9-known",))
+    ])
     sc("lone-surrogate", [
         post("high", raw='{"type":"bug","description":"a\\ud800b"}', ct="application/json"),
         post("low", raw='{"type":"bug","description":"a\\udc00b"}', ct="application/json"),
         post("pair", raw='{"type":"bug","description":"a\\ud83d\\ude00b"}', ct="application/json"),
         post("type-lone", raw='{"type":"bu\\ud800g","description":"d"}', ct="application/json"),
-    ], tags=("S9-known",))
+    ])
     return out
 
 

@@ -129,7 +129,7 @@ def run():
     # --- detail ids
     ids = [FI(1), FI(2), FI(3), FI(4), FI(5), "fi0000000000000000000006", "unknown", "FI0000000000000000000001", FI(1) + "%20", "%20" + FI(1),
            "a%20b", "%C3%A9", "%C3%89", "a,b", FI(1) + "," + FI(2), "a+b", "a%2Bb", "a%3Fb", "a%23b", "a%26b", "a%3Db", "a%5B1%5D", "a%25",
-           "x" * 300, "%F0%9F%98%80", FI(1) + ".json", FI(1) + ".xml", FI(1) + ".html", FI(1) + ";x=1", FI(1) + "/", FI(1) + "/x",
+           "%FF", "%ED%A0%80", "x" * 300, "%F0%9F%98%80", FI(1) + ".json", FI(1) + ".xml", FI(1) + ".html", FI(1) + ";x=1", FI(1) + "/", FI(1) + "/x",
            "null", "undefined", "0", "-1", "true", "%00", "..%2F", "*", "'", "%22", "%27%20OR%201=1", "%24in", "%5B%24in%5D"]
     for i in range(0, len(ids), 8):
         out.append(scenario("s9-fiches-detail-ids-%02d" % (i // 8),
@@ -230,9 +230,9 @@ def run():
 
 
 def run_known():
-    """Known foundation diffs (tag S9-known): invalid UTF-8 / control characters in the path."""
+    """Known foundation diffs (tag S9-known): control character in the path, U+FFFD in URL encoding."""
     out = []
-    for name, v in [("invalid-utf8", "%FF"), ("surrogate", "%ED%A0%80"), ("control-char", "a%0Ab")]:
+    for name, v in [("control-char", "a%0Ab")]:
         out.append(scenario("s9-known-fiches-detail-" + name, [step("id", L + "/" + v)], tags=("S9-known",)))
     # U+FFFD (genuine or decoded from invalid bytes) is written "?" by javacompat.URLEncode
     for name, q in [("invalid-byte", "?titre=%E9"), ("invalid-bytes", "?titre=a%FFb%FE"), ("surrogate", "?titre=%ED%A0%80"),

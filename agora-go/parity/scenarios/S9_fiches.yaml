@@ -614,42 +614,44 @@ steps:
   - {"id": "id-20", "path": "/fiches_inventaire/a%3Db"}
   - {"id": "id-21", "path": "/fiches_inventaire/a%5B1%5D"}
   - {"id": "id-22", "path": "/fiches_inventaire/a%25"}
-  - {"id": "id-23", "path": "/fiches_inventaire/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
+  - {"id": "id-23", "path": "/fiches_inventaire/%FF"}
 ---
 name: "s9-fiches-detail-ids-03"
 tags: ["S9"]
 dbdiff: "none"
 steps:
-  - {"id": "id-24", "path": "/fiches_inventaire/%F0%9F%98%80"}
-  - {"id": "id-25", "path": "/fiches_inventaire/fi0000000000000000000001.json"}
-  - {"id": "id-26", "path": "/fiches_inventaire/fi0000000000000000000001.xml"}
-  - {"id": "id-27", "path": "/fiches_inventaire/fi0000000000000000000001.html"}
-  - {"id": "id-28", "path": "/fiches_inventaire/fi0000000000000000000001;x=1"}
-  - {"id": "id-29", "path": "/fiches_inventaire/fi0000000000000000000001/"}
-  - {"id": "id-30", "path": "/fiches_inventaire/fi0000000000000000000001/x"}
-  - {"id": "id-31", "path": "/fiches_inventaire/null"}
+  - {"id": "id-24", "path": "/fiches_inventaire/%ED%A0%80"}
+  - {"id": "id-25", "path": "/fiches_inventaire/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
+  - {"id": "id-26", "path": "/fiches_inventaire/%F0%9F%98%80"}
+  - {"id": "id-27", "path": "/fiches_inventaire/fi0000000000000000000001.json"}
+  - {"id": "id-28", "path": "/fiches_inventaire/fi0000000000000000000001.xml"}
+  - {"id": "id-29", "path": "/fiches_inventaire/fi0000000000000000000001.html"}
+  - {"id": "id-30", "path": "/fiches_inventaire/fi0000000000000000000001;x=1"}
+  - {"id": "id-31", "path": "/fiches_inventaire/fi0000000000000000000001/"}
 ---
 name: "s9-fiches-detail-ids-04"
 tags: ["S9"]
 dbdiff: "none"
 steps:
-  - {"id": "id-32", "path": "/fiches_inventaire/undefined"}
-  - {"id": "id-33", "path": "/fiches_inventaire/0"}
-  - {"id": "id-34", "path": "/fiches_inventaire/-1"}
-  - {"id": "id-35", "path": "/fiches_inventaire/true"}
-  - {"id": "id-36", "path": "/fiches_inventaire/%00"}
-  - {"id": "id-37", "path": "/fiches_inventaire/..%2F"}
-  - {"id": "id-38", "path": "/fiches_inventaire/*"}
-  - {"id": "id-39", "path": "/fiches_inventaire/'"}
+  - {"id": "id-32", "path": "/fiches_inventaire/fi0000000000000000000001/x"}
+  - {"id": "id-33", "path": "/fiches_inventaire/null"}
+  - {"id": "id-34", "path": "/fiches_inventaire/undefined"}
+  - {"id": "id-35", "path": "/fiches_inventaire/0"}
+  - {"id": "id-36", "path": "/fiches_inventaire/-1"}
+  - {"id": "id-37", "path": "/fiches_inventaire/true"}
+  - {"id": "id-38", "path": "/fiches_inventaire/%00"}
+  - {"id": "id-39", "path": "/fiches_inventaire/..%2F"}
 ---
 name: "s9-fiches-detail-ids-05"
 tags: ["S9"]
 dbdiff: "none"
 steps:
-  - {"id": "id-40", "path": "/fiches_inventaire/%22"}
-  - {"id": "id-41", "path": "/fiches_inventaire/%27%20OR%201=1"}
-  - {"id": "id-42", "path": "/fiches_inventaire/%24in"}
-  - {"id": "id-43", "path": "/fiches_inventaire/%5B%24in%5D"}
+  - {"id": "id-40", "path": "/fiches_inventaire/*"}
+  - {"id": "id-41", "path": "/fiches_inventaire/'"}
+  - {"id": "id-42", "path": "/fiches_inventaire/%22"}
+  - {"id": "id-43", "path": "/fiches_inventaire/%27%20OR%201=1"}
+  - {"id": "id-44", "path": "/fiches_inventaire/%24in"}
+  - {"id": "id-45", "path": "/fiches_inventaire/%5B%24in%5D"}
 ---
 name: "s9-fiches-detail-variants"
 tags: ["S9"]
