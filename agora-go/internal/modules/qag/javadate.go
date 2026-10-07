@@ -1,6 +1,7 @@
 package qag
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 	"strings"
@@ -179,6 +180,15 @@ func (d *localDate) UnmarshalJavaTree(tree any) error {
 			return errBadDate
 		}
 		*d = v
+		return nil
+	case json.Number:
+		// an integer is a number of days since 1970-01-01 (LocalDate.ofEpochDay); decimals are rejected
+		days, err := t.Int64()
+		if err != nil || days < -365243219162 || days > 365243219162 {
+			return errBadDate
+		}
+		u := time.Unix(days*86400, 0).UTC()
+		*d = localDate{u.Year(), int(u.Month()), u.Day()}
 		return nil
 	case []any:
 		if len(t) != 3 {

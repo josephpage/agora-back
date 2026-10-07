@@ -15,6 +15,13 @@ steps:
   - {id: get-on-feedback, method: GET, path: "/qags/{{seed.QagAcceptedTransport}}/feedback", as: "{{seed.UserRegular1}}"}
   - {id: put-on-details, method: PUT, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
 ---
+name: S2-known-foundation-diffs-jackson-number-coercion
+tags: [S2-known-foundation]
+skip: "jsonjava refuses an integer literal that does not fit an int64 where Jackson coerces a BigInteger to a Boolean (non zero = true): {\"isHelpful\": 12345678901234567890} is 200 for Kotlin, 400 for Go."
+dbdiff: step
+steps:
+  - {id: huge-integer-is-true, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":12345678901234567890}", contentType: application/json}
+---
 name: S2-known-foundation-diffs-latin1-user-agent
 tags: [S2-known-foundation]
 skip: "Tomcat decodes header bytes as ISO-8859-1; httpx.Ctx.RequiredHeader returns them as sent (UTF-8): the signupCount key of the suspicious-user check differs. The login module (S1) works around it for /signup; the support route uses c.RequiredHeader like every other slice, to be fixed in httpx."

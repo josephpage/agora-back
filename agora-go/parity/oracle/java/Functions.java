@@ -446,6 +446,7 @@ final class Functions {
 
         // ---- slice S0 (thematiques, theme hebdo, referentiels) ---------------------------------------
         S0Functions.register(F);
+        S2Functions.register(F);
     }
 
     static Object jsonRoundTrip(JsonNode a) throws Exception {
