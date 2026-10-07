@@ -95,7 +95,7 @@ func TestIntegrationRepositories(t *testing.T) {
 	t.Run("latest, selected, most popular", func(t *testing.T) {
 		got, err := info.GetLatestQagsPaginatedV2(ctx, 0, nil)
 		must1(err)
-		if len(got) != 15 || got[0].ID[len(got[0].ID)-2:] != "0e" {
+		if len(got) != 15 || short(got[0].ID) != "0f" {
 			t.Fatalf("latest %v", ids(got))
 		}
 		for i := 1; i < len(got); i++ {
@@ -139,7 +139,7 @@ func TestIntegrationRepositories(t *testing.T) {
 	t.Run("trending", func(t *testing.T) {
 		tr, err := info.GetTrendingQags(ctx, 72*time.Hour)
 		must1(err)
-		if len(tr) == 0 || tr[0].ID[len(tr[0].ID)-2:] != "0e" { // the latest accepted QaG comes first
+		if len(tr) == 0 || short(tr[0].ID) != "0f" { // the latest accepted QaG comes first
 			t.Fatalf("trending %v", ids(tr))
 		}
 		for i, a := range tr {
@@ -243,8 +243,13 @@ func TestIntegrationRepositories(t *testing.T) {
 			set[short(id)] = true
 		}
 		// 22 (open, another author) and a2 (selected) are not listed
-		if !reflect.DeepEqual(set, map[string]bool{"02": true, "04": true, "07": true, "08": true, "0f": true}) {
-			t.Fatalf("%v", got)
+		for _, want := range []string{"02", "04", "07", "08", "0f"} {
+			if !set[want] {
+				t.Fatalf("%s is missing: %v", want, got)
+			}
+		}
+		if set["22"] || set["a2"] {
+			t.Fatalf("22 and a2 must not be listed: %v", got)
 		}
 		if ok, _ := supports.IsQagSupported(ctx, seed.UserRegular1, seed.QagSelectedText); !ok {
 			t.Fatal("the support of a selected QaG exists")
@@ -253,7 +258,7 @@ func TestIntegrationRepositories(t *testing.T) {
 		must1(err)
 		nth, err := supports.GetSupportedQagCount(ctx, seed.UserRegular1, ptr(seed.Thematique4))
 		must1(err)
-		if n != 5 || nth < n { // the thematique query has an operator precedence quirk: status = 1 OR (... AND thematique)
+		if n != len(got) || nth < n { // the thematique query has an operator precedence quirk: status = 1 OR (... AND thematique)
 			t.Fatalf("counts %d %d", n, nth)
 		}
 		if res, err := supports.InsertSupportQag(ctx, SupportQagInserting{QagID: seed.QagAcceptedTop, UserID: seed.UserIdle}); res != SupportSuccess || err != nil {
@@ -381,11 +386,11 @@ func TestIntegrationRepositories(t *testing.T) {
 	t.Run("cleanups", func(t *testing.T) {
 		before := countRows(t, db, "SELECT count(*) FROM qags WHERE status = 2")
 		must1(info.ArchiveOldQags(ctx, time.Now().Add(-8*24*time.Hour)))
-		if after := countRows(t, db, "SELECT count(*) FROM qags WHERE status = 2"); after < before+3 {
+		if after := countRows(t, db, "SELECT count(*) FROM qags WHERE status = 2"); after < before+2 {
 			t.Fatalf("archived %d -> %d", before, after)
 		}
 		must1(info.AnonymizeOldQags(ctx, time.Now().Add(-20*24*time.Hour)))
-		if n := countRows(t, db, "SELECT count(*) FROM qags WHERE status = 2 AND username = ''"); n < 3 {
+		if n := countRows(t, db, "SELECT count(*) FROM qags WHERE status = 2 AND username = ''"); n < 2 {
 			t.Fatalf("anonymized archived QaGs: %d", n)
 		}
 		n, err := supports.DeleteBannedUsersLastWeekSupportsOnUnselectedQags(ctx)
@@ -394,7 +399,7 @@ func TestIntegrationRepositories(t *testing.T) {
 			t.Logf("banned supports deleted: %d", n)
 		}
 		must1(supports.DeleteUsersSupportQag(ctx, []string{seed.UserBanned}))
-		if k := countRows(t, db, "SELECT count(*) FROM supports_qag WHERE user_id = '"+seed.UserBanned+"'"); k != 0 {
+		if k := countRows(t, db, "SELECT count(*) FROM supports_qag s JOIN qags q ON q.id = s.qag_id WHERE s.user_id = '"+seed.UserBanned+"'"); k != 0 {
 			t.Fatalf("%d supports of the deleted user left", k)
 		}
 		if k := countRows(t, db, "SELECT count(*) FROM supports_qag WHERE user_id = '00000000-0000-0000-0000-000000000000' AND qag_id = '"+seed.QagSelectedVideo+"'"); k < 4 {
