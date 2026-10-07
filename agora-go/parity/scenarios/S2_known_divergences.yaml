@@ -1,0 +1,28 @@
+name: S2-known-B-user-feedback-cache-keeps-the-previous-answer
+tags: [S2-known-B]
+skip: "class B divergence B-USERFEEDBACK (parity/divergences/S2.md): Kotlin stores the PREVIOUS answer of the user in the 'userFeedbackQags' cache after a feedback, for one hour; Go stores the new one. Run with -tags S2-known-B: the diffs listed in the comments are the expected ones."
+dbdiff: step
+steps:
+  # first feedback of the user: Kotlin caches 'not answered' → the details still hide the user answer and the results
+  - {id: first-feedback, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular2}}", body: {isHelpful: true}}
+  # EXPECTED DIFF: Go shows feedbackUserResponse=true and feedbackResults; Kotlin shows neither
+  - {id: details-after-first-feedback, path: "/qags/{{seed.QagSelectedDocument}}", as: "{{seed.UserRegular2}}", compare: {ignore: ["$.response.responseDate"]}}
+  # the answered user changes its mind: Kotlin keeps the cached previous answer
+  - {id: details-before-change, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: change-answer, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular1}}", body: {isHelpful: false}}
+  # EXPECTED DIFF: Go feedbackUserResponse=false, Kotlin still true
+  - {id: details-after-change, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+---
+name: S2-known-B-agora-queue-lock-after-an-exception
+tags: [S2-known-B]
+skip: "class B divergence B-AGORAQUEUE (DIVERGENCES.md): an exception inside a queued action leaves the user locked on the Kotlin side until it restarts; Go releases the lock with defer. Run with -tags S2-known-B after restarting the reference: the second step differs (Kotlin 400, Go 200)."
+dbdiff: step
+setup:
+  sql:
+    - "UPDATE qags SET status = 5 WHERE id = '00000000-0000-4000-8000-000000000002'"
+steps:
+  - {id: support-makes-kotlin-throw, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserProfile9}}"}
+  # EXPECTED DIFF: Kotlin 400 (locked), Go 200
+  - {id: support-another-qag, method: POST, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserProfile9}}"}
+  # consequence of the previous diff (the support does not exist on the Kotlin side); the lock is per task type
+  - {id: other-task-type-is-not-locked, method: DELETE, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserProfile9}}"}
