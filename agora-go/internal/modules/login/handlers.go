@@ -1,8 +1,6 @@
 package login
 
 import (
-	"strings"
-
 	"agora/internal/app"
 	"agora/internal/auth"
 	"agora/internal/httpx"
@@ -19,55 +17,6 @@ func Routes(a *app.App) {
 type handlers struct {
 	a   *app.App
 	svc *Service
-}
-
-// latin1 converts the bytes of a header value like Tomcat: each byte is one
-// ISO-8859-1 character.
-func latin1(s string) string {
-	ascii := true
-	for i := 0; i < len(s); i++ {
-		if s[i] >= 0x80 {
-			ascii = false
-			break
-		}
-	}
-	if ascii {
-		return s
-	}
-	var b strings.Builder
-	for i := 0; i < len(s); i++ {
-		b.WriteRune(rune(s[i]))
-	}
-	return b.String()
-}
-
-// headerValue is Spring's @RequestHeader String resolution: every value of the
-// header (Tomcat getHeaderValues) joined with ",", bytes read as ISO-8859-1.
-func headerValue(c *httpx.Ctx, name string) (string, bool) {
-	vals := c.R.Header.Values(name)
-	if len(vals) == 0 {
-		return "", false
-	}
-	if len(vals) == 1 {
-		return latin1(vals[0]), true
-	}
-	return latin1(strings.Join(vals, ",")), true
-}
-
-func requiredHeader(c *httpx.Ctx, name string) string {
-	v, ok := headerValue(c, name)
-	if !ok {
-		panic(&httpx.SpringError{Status: 400, Cause: "MissingRequestHeaderException: " + name})
-	}
-	return v
-}
-
-func optionalHeader(c *httpx.Ctx, name string) *string {
-	v, ok := headerValue(c, name)
-	if !ok {
-		return nil
-	}
-	return &v
 }
 
 func orDefault(v *string, def string) string {
@@ -88,11 +37,11 @@ func mustBool(v bool, err error) bool {
 
 // signup is SignupController.signup.
 func (h *handlers) signup(c *httpx.Ctx) *httpx.Response {
-	userAgent := requiredHeader(c, "User-Agent")
-	fcmToken := optionalHeader(c, "fcmToken")
-	versionName := optionalHeader(c, "versionName")
-	versionCode := requiredHeader(c, "versionCode")
-	platform := requiredHeader(c, "platform")
+	userAgent := c.RequiredHeader("User-Agent")
+	fcmToken := c.OptionalHeader("fcmToken")
+	versionName := c.OptionalHeader("versionName")
+	versionCode := c.RequiredHeader("versionCode")
+	platform := c.RequiredHeader("platform")
 	ctx := c.Context()
 
 	if !mustBool(h.svc.Flags.IsFeatureEnabled(ctx, FeatureSignUp)) {
@@ -137,11 +86,11 @@ func (h *handlers) signup(c *httpx.Ctx) *httpx.Response {
 
 // login is LoginController.login.
 func (h *handlers) login(c *httpx.Ctx) *httpx.Response {
-	userAgent := requiredHeader(c, "User-Agent")
-	fcmToken := optionalHeader(c, "fcmToken")
-	versionName := optionalHeader(c, "versionName")
-	versionCode := requiredHeader(c, "versionCode")
-	platform := requiredHeader(c, "platform")
+	userAgent := c.RequiredHeader("User-Agent")
+	fcmToken := c.OptionalHeader("fcmToken")
+	versionName := c.OptionalHeader("versionName")
+	versionCode := c.RequiredHeader("versionCode")
+	platform := c.RequiredHeader("platform")
 	var body LoginRequestJSON
 	c.BindBody(&body)
 	ctx := c.Context()

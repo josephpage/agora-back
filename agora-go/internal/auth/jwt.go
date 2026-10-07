@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"hash"
 	"strconv"
 	"strings"
@@ -196,8 +197,23 @@ func (j *JWT) Parse(token string) (string, error) {
 	if !exp.After(now) {
 		return "", ErrInvalidJWT
 	}
-	sub, _ := claims["sub"].(string)
-	return sub, nil
+	// Claims.getSubject(): String.valueOf(value); a missing or null subject
+	// reaches loginWithUserId(userId: String) → NullPointerException → 500.
+	switch v := claims["sub"].(type) {
+	case string:
+		return v, nil
+	case json.Number:
+		return v.String(), nil
+	case bool:
+		if v {
+			return "true", nil
+		}
+		return "false", nil
+	case nil:
+		return "", errors.New("NullPointerException: missing sub")
+	default:
+		return "", fmt.Errorf("unsupported sub claim %T", v)
+	}
 }
 
 func numericDateClaim(c map[string]any, name string) (time.Time, bool, bool) {
