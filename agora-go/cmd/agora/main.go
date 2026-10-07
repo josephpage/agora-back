@@ -68,6 +68,13 @@ func main() {
 	logger := newLogger()
 	slog.SetDefault(logger)
 
+	// Go-only performance migrations (indexes): needs DATABASE_URL only.
+	for _, arg := range os.Args[1:] {
+		if dir, ok := strings.CutPrefix(arg, "--migrate="); ok {
+			os.Exit(runMigrate(dir, logger))
+		}
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		logger.Error("configuration error", "err", err)
@@ -90,6 +97,36 @@ func main() {
 		logger.Error("server error", "err", err)
 		os.Exit(1)
 	}
+}
+
+// runMigrate applies (up), reverts (down) or lists (status) the index
+// migrations of internal/store/migrations.
+func runMigrate(direction string, logger *slog.Logger) int {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	db, err := store.Open(ctx, os.Getenv("DATABASE_URL"), 1, 30*time.Second)
+	if err != nil {
+		logger.Error("migration: database", "err", err)
+		return 1
+	}
+	defer db.Pool.Close()
+	if direction == "status" {
+		lines, err := store.MigrationStatus(ctx, db.Pool)
+		if err != nil {
+			logger.Error("migration status", "err", err)
+			return 1
+		}
+		for _, l := range lines {
+			fmt.Println(l)
+		}
+		return 0
+	}
+	if err := store.Migrate(ctx, db.Pool, direction, logger); err != nil {
+		logger.Error("migration failed", "direction", direction, "err", err)
+		return 1
+	}
+	logger.Info("migration done", "direction", direction)
+	return 0
 }
 
 // newLogger logs to stdout; WARN and above also go to Sentry when SENTRY_DSN
