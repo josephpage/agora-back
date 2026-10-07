@@ -74,6 +74,13 @@ var profiles = map[string][]request{
 		{name: "unsupport", weight: 30, method: "DELETE", path: static("/qags/00000000-0000-4000-8000-000000000001/support"), auth: true},
 		{name: "details", weight: 30, method: "GET", path: static("/qags/00000000-0000-4000-8000-000000000001"), auth: true},
 	},
+	// Routes of the slices already ported (S0, S1): early Kotlin/Go comparison.
+	"ported": {
+		{name: "thematiques", weight: 30, method: "GET", path: static("/thematiques")},
+		{name: "theme-hebdo", weight: 20, method: "GET", path: static("/theme_hebdo")},
+		{name: "referentiels", weight: 10, method: "GET", path: static("/referentiels/regions-et-departements")},
+		{name: "profile", weight: 40, method: "GET", path: static("/profile"), auth: true},
+	},
 	// Public web pages (SSR).
 	"web": {
 		{name: "home", weight: 25, method: "GET", path: static("/content/page-site-vitrine-accueil")},

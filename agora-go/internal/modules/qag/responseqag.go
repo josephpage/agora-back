@@ -119,7 +119,7 @@ func responseQagMapper(list []*strapiResponseQag, now time.Time) []ResponseQag {
 			out = append(out, ResponseQag{Text: &ResponseQagText{
 				Author:            r.Auteur,
 				AuthorPortraitURL: r.getAuthorPortraitURL(),
-				ResponseDate:      r.ReponseDate.toDate(now),
+				ResponseDate:      r.ReponseDate.ToDate(now),
 				FeedbackQuestion:  r.FeedbackQuestion,
 				QagID:             r.QuestionID,
 				AuthorFunction:    r.AuteurFonction,
@@ -135,7 +135,7 @@ func responseQagMapper(list []*strapiResponseQag, now time.Time) []ResponseQag {
 			video := &ResponseQagVideo{
 				Author:            r.Auteur,
 				AuthorPortraitURL: r.getAuthorPortraitURL(),
-				ResponseDate:      r.ReponseDate.toDate(now),
+				ResponseDate:      r.ReponseDate.ToDate(now),
 				FeedbackQuestion:  r.FeedbackQuestion,
 				QagID:             r.QuestionID,
 				AuthorFunction:    &fn,

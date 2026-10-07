@@ -2,12 +2,34 @@
 package common
 
 import (
+	"strconv"
 	"time"
 )
 
 // FormatDate is DateMapper.toFormattedDate(Date|LocalDateTime):
 // "yyyy-MM-dd HH:mm:ss" in the process (JVM default) zone.
-func FormatDate(t time.Time) string { return t.In(time.Local).Format("2006-01-02 15:04:05") }
+//
+// For years outside 1..9999 the pattern letters `yyyy` (year of era,
+// SignStyle.EXCEEDS_PAD) print the era year with a '+' beyond four digits.
+func FormatDate(t time.Time) string {
+	l := t.In(time.Local)
+	y := l.Year()
+	if y >= 1 && y <= 9999 {
+		return l.Format("2006-01-02 15:04:05")
+	}
+	yoe := y
+	if y <= 0 {
+		yoe = 1 - y
+	}
+	s := strconv.Itoa(yoe)
+	for len(s) < 4 {
+		s = "0" + s
+	}
+	if yoe > 9999 {
+		s = "+" + s
+	}
+	return s + l.Format("-01-02 15:04:05")
+}
 
 // FormatLocalDate is DateMapper.toFormattedDate(LocalDate) (atStartOfDay).
 func FormatLocalDate(t time.Time) string {
