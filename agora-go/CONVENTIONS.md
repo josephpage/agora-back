@@ -63,9 +63,17 @@ bodies). Your handler only reproduces the controller method:
   - `List<String>?` params → `c.ParamList("p")` (comma splitting like Spring)
   - `@PathVariable` → `c.PathVar("name")`; Int conversions → `httpx.SpringIntPathVar(v)`,
     Boolean → `httpx.SpringBoolParam(v)`; enums: exact `valueOf` after trim, else 400.
-  - `@RequestBody dto` → `c.BindBody(&dto)` (415/400 handled).
+  - `@RequestBody dto` → `c.BindBody(&dto)`. It reproduces the whole Spring/Jackson chain (captured on the
+    reference, see `parity/scenarios/F5_request_layer.yaml`): firewall check of every header, Content-Type
+    parsing (415 + `Accept`), charset, BOM/UTF-16/32 detection, Jackson's UTF-8 rules, first value only,
+    duplicate properties, null/missing checks at the end of the object.
+  - `request.getHeader("X")` (servlet API) → `c.Header("X")`.
   - `authentificationHelper.getUserId()!!` → `c.UserID()`; nullable → `c.OptionalUserID()`.
   - `IpAddressUtils.retrieveIpAddressHash(request)` → `c.IPHash()`.
+- **Never read `c.R.Header` or `c.R.URL.Query()` directly**: the helpers decode header values as ISO-8859-1
+  (Tomcat), join repeated `@RequestHeader` values with `,`, apply the lazy Spring Security firewall (a tab or a
+  C1 control character in a header the application reads → 400) and decode query parameters like Tomcat
+  (invalid UTF-8 → U+FFFD, malformed escape → parameter skipped).
 - Return values:
   - `ResponseEntity.ok().body(x)` → `httpx.OK(x)`; other status → `httpx.JSON(status, x)`
   - `.body(Unit)` → `httpx.Unit(status)` (writes `{}`)

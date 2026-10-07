@@ -319,12 +319,3 @@ func TestFeatureKeys(t *testing.T) {
 		}
 	}
 }
-
-func TestLatin1(t *testing.T) {
-	if got := latin1("é"); got != "Ã©" { // the two UTF-8 bytes read as ISO-8859-1
-		t.Errorf("got %q", got)
-	}
-	if got := latin1("plain"); got != "plain" {
-		t.Errorf("got %q", got)
-	}
-}

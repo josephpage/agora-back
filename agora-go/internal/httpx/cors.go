@@ -87,22 +87,74 @@ func splitHostPortDefault(hp, scheme string) (string, string) {
 	return host, port
 }
 
-// handleCORS implements Spring Security's CorsFilter + DefaultCorsProcessor.
-// Captured behaviour: the global "/**" configuration applies to every actual
-// cross-origin request (even unknown paths); a preflight is only accepted
-// when some handler matches the path, otherwise it is rejected (403).
-// It returns true when the response has been fully written.
-func (s *Server) handleCORS(w http.ResponseWriter, r *http.Request, st *responseState) bool {
-	origin, hasOrigin := r.Header["Origin"]
-	if !hasOrigin || isSameOrigin(r, origin[0]) {
-		return false
+// corsRequest reproduces CorsUtils.isCorsRequest. An Origin value the
+// firewall rejects counts as cross-origin (reading it is what fails).
+func corsRequest(r *http.Request) (string, bool) {
+	vals, ok := r.Header["Origin"]
+	if !ok || len(vals) == 0 {
+		return "", false
 	}
-	preflight := r.Method == "OPTIONS" && r.Header.Get("Access-Control-Request-Method") != ""
-	if preflight && !s.router.match("OPTIONS", r.URL.Path).pathMatched && !s.isResourcePath(r.URL.Path) {
-		s.rejectCORS(w, r, st)
+	if !headerValueOK(vals[0]) {
+		return vals[0], true
+	}
+	return vals[0], !isSameOrigin(r, vals[0])
+}
+
+// isPreflight reproduces CorsUtils.isPreFlightRequest (header presence only:
+// an empty Access-Control-Request-Method still makes a preflight).
+func isPreflight(r *http.Request) bool {
+	_, has := r.Header["Access-Control-Request-Method"]
+	return r.Method == "OPTIONS" && has
+}
+
+// corsHandlerFound reports whether HandlerMappingIntrospector finds a CORS
+// configuration for the request at the Spring Security CorsFilter: a mapped
+// handler for (path, method) — any method for a preflight — or the springdoc
+// resource handler.
+func (s *Server) corsHandlerFound(r *http.Request, m matchResult, preflight bool) bool {
+	if s.isResourcePath(r.URL.Path) {
 		return true
 	}
-	allowOrigin, ok := s.cors.checkOrigin(origin[0])
+	if preflight {
+		return m.pathMatched
+	}
+	return m.route != nil || r.Method == "OPTIONS" && m.pathMatched
+}
+
+// handleCORS implements Spring Security's CorsFilter + DefaultCorsProcessor.
+// When no handler is found, the request goes on without CORS processing and
+// the MVC CorsInterceptor of the /error handler processes it while the error
+// is rendered (deferred, see writeSpringError). It returns true when the
+// response has been fully written.
+func (s *Server) handleCORS(w http.ResponseWriter, r *http.Request, st *responseState, m matchResult) bool {
+	origin, cors := corsRequest(r)
+	if !cors {
+		return false
+	}
+	// isCorsRequest / isPreFlightRequest read Origin and Access-Control-Request-Method
+	if !headerValueOK(origin) || r.Method == "OPTIONS" && !firstHeaderOK(r, "Access-Control-Request-Method") {
+		s.writeRejectedEmpty(w, r, st)
+		return true
+	}
+	preflight := isPreflight(r)
+	if !s.corsHandlerFound(r, m, preflight) {
+		if preflight {
+			s.rejectCORS(w, r, st)
+			return true
+		}
+		st.corsDeferred, st.corsOrigin = true, origin
+		return false
+	}
+	// handleInternal starts with ServletServerHttpRequest.getHeaders()
+	switch springHeadersStatus(r) {
+	case 400:
+		s.writeRejectedEmpty(w, r, st)
+		return true
+	case 500:
+		s.writeTomcatPage(w, r, st, 500)
+		return true
+	}
+	allowOrigin, ok := s.cors.checkOrigin(origin)
 	if !ok {
 		s.rejectCORS(w, r, st)
 		return true
@@ -138,6 +190,12 @@ func (s *Server) handleCORS(w http.ResponseWriter, r *http.Request, st *response
 	return false
 }
 
+// firstHeaderOK checks the first value of a header (getHeader).
+func firstHeaderOK(r *http.Request, name string) bool {
+	vs := r.Header[http.CanonicalHeaderKey(name)]
+	return len(vs) == 0 || headerValueOK(vs[0])
+}
+
 // isResourcePath matches springdoc's resource handler mapping (/swagger-ui*/**).
 func (s *Server) isResourcePath(p string) bool {
 	return strings.HasPrefix(p, "/swagger-ui")
@@ -145,4 +203,18 @@ func (s *Server) isResourcePath(p string) bool {
 
 func (s *Server) rejectCORS(w http.ResponseWriter, r *http.Request, st *responseState) {
 	s.finish(w, r, st, Bytes(403, "", []byte("Invalid CORS request")), s.opts.Now(), "")
+}
+
+// writeRejectedEmpty writes the answer to a firewall rejection raised while a
+// cross-origin request is processed: the error dispatch is rejected again, so
+// the 400 has no body.
+func (s *Server) writeRejectedEmpty(w http.ResponseWriter, r *http.Request, st *responseState) {
+	s.finish(w, r, st, Empty(400), s.opts.Now(), "")
+}
+
+// writeTomcatPage writes Tomcat's own error page: the exception was raised
+// again while the error page was rendered.
+func (s *Server) writeTomcatPage(w http.ResponseWriter, r *http.Request, st *responseState, status int) {
+	page := tomcatErrorPage(status, ReasonPhrase(status))
+	s.finish(w, r, st, Bytes(status, "text/html;charset=utf-8", []byte(page)).With("Content-Language", "en"), s.opts.Now(), "")
 }

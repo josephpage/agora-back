@@ -47,11 +47,12 @@ type Step struct {
 	Method      string            `yaml:"method"`
 	Path        string            `yaml:"path"` // may contain a raw query string
 	Query       map[string]string `yaml:"query"`
-	Headers     map[string]string `yaml:"headers"`
-	As          string            `yaml:"as"`     // seeded user id (or {{var}}) to authenticate with a minted JWT
-	Bearer      string            `yaml:"bearer"` // explicit token (template)
-	Body        any               `yaml:"body"`   // JSON body (object/array/scalar)
+	Headers     map[string]string `yaml:"headers"` // a "b64:" value is sent as raw bytes
+	As          string            `yaml:"as"`      // seeded user id (or {{var}}) to authenticate with a minted JWT
+	Bearer      string            `yaml:"bearer"`  // explicit token (template)
+	Body        any               `yaml:"body"`    // JSON body (object/array/scalar)
 	BodyRaw     *string           `yaml:"bodyRaw"`
+	BodyB64     *string           `yaml:"bodyB64"` // raw body bytes (invalid UTF-8, UTF-16...), base64
 	ContentType string            `yaml:"contentType"`
 	Capture     map[string]string `yaml:"capture"` // var → JSON path ($.a.b[0])
 	Compare     Compare           `yaml:"compare"`

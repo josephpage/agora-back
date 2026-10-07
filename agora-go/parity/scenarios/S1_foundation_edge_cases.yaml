@@ -1,6 +1,6 @@
-name: S1-known-foundation-diffs
+# Edge cases found by the S1 slice in the foundations (JWT without sub, 415 Accept, 405 Allow, 406 headers); fixed by the lead.
+name: S1-foundation-edge-cases
 tags: [S1]
-skip: "foundation findings reported to the lead (not fixable in the S1 slice): (1) a validly signed JWT without a sub claim is a Kotlin NPE (500) but Go answers 401 (auth.JWT.Parse returns an empty subject); (2) every 415 (missing or unsupported Content-Type) carries the wrong Accept header (httpx.acceptForBodies; Spring sends application/xml;charset=UTF-8, text/xml;charset=UTF-8, application/json, application/*+xml;charset=UTF-8, application/*+json); (3) a 406 (unknown ?mediaType) must not carry the handler's Set-Cookie header (already fixed on the lead's branch); (4) the 405 Allow header is joined with ', ' by Spring and with ',' by httpx; (5) the order of the methods in Allow for a path with several methods (GET+POST on /profile) is not stable on the Kotlin side (seen as POST,GET,HEAD,OPTIONS and as GET,HEAD,POST,OPTIONS on two JVM runs, Spring's HttpOptionsHandler puts GET,HEAD first) while httpx.optionsAllow follows the registration order"
 dbdiff: step
 steps:
   - {id: no-sub, path: /profile, bearer: "eyJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE1OTk5OTAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.8DDgS_eQhmdKspTRUBgeEKVeTS4clJ9TK_gCi-Du43kG3yZpEkHWuPTJBoIenQHpwb4YdBeGR-9azSdKkgoquA"}

@@ -446,6 +446,11 @@ final class Functions {
 
         // ---- slice S0 (thematiques, theme hebdo, referentiels) ---------------------------------------
         S0Functions.register(F);
+
+        // ---- request layer (F5): byte decoding, Jackson tokens, media types -------------------------
+        F5Functions.register(F);
+
+        // ---- slice S9 (CMS content pages, news, charter, fiches inventaire, app feedback) -----------
         S9Functions.register(F);
     }
 

@@ -2,8 +2,8 @@ package httpx
 
 import (
 	"context"
+	"errors"
 	"io"
-	"mime"
 	"net"
 	"net/http"
 	"net/url"
@@ -66,18 +66,40 @@ func (c *Ctx) Context() context.Context { return c.R.Context() }
 // PathVar returns a path variable (always present when the route matched).
 func (c *Ctx) PathVar(name string) string { return c.Vars[name] }
 
-// Header returns the first value of a request header (Tomcat getHeader).
+// Header returns the first value of a request header as the application sees
+// it (Tomcat getHeader: ISO-8859-1 decoded, checked by the firewall).
 func (c *Ctx) Header(name string) (string, bool) {
 	v, ok := c.R.Header[http.CanonicalHeaderKey(name)]
 	if !ok || len(v) == 0 {
 		return "", false
 	}
-	return v[0], true
+	if !headerValueOK(v[0]) {
+		panic(&headerRejected{name: name})
+	}
+	return javacompat.Latin1(v[0]), true
+}
+
+// requestHeader is @RequestHeader's value: every value of the header (checked
+// by the firewall), several values joined with "," (String[] → String).
+func (c *Ctx) requestHeader(name string) (string, bool) {
+	vs, ok := c.R.Header[http.CanonicalHeaderKey(name)]
+	if !ok || len(vs) == 0 {
+		return "", false
+	}
+	for _, v := range vs {
+		if !headerValueOK(v) {
+			panic(&headerRejected{name: name})
+		}
+	}
+	if len(vs) == 1 {
+		return javacompat.Latin1(vs[0]), true
+	}
+	return javacompat.Latin1(strings.Join(vs, ",")), true
 }
 
 // RequiredHeader is @RequestHeader("name") on a non-null String: absent → 400.
 func (c *Ctx) RequiredHeader(name string) string {
-	v, ok := c.Header(name)
+	v, ok := c.requestHeader(name)
 	if !ok {
 		panic(&SpringError{Status: 400, Cause: "MissingRequestHeaderException: " + name})
 	}
@@ -86,7 +108,7 @@ func (c *Ctx) RequiredHeader(name string) string {
 
 // OptionalHeader is @RequestHeader(name, required=false) String?.
 func (c *Ctx) OptionalHeader(name string) *string {
-	v, ok := c.Header(name)
+	v, ok := c.requestHeader(name)
 	if !ok {
 		return nil
 	}
@@ -95,17 +117,16 @@ func (c *Ctx) OptionalHeader(name string) *string {
 
 func (c *Ctx) params() url.Values {
 	if c.query == nil {
-		q, err := url.ParseQuery(c.R.URL.RawQuery)
-		if err != nil {
-			// Tomcat ignores malformed pairs; keep what parsed.
-			q = lenientParseQuery(c.R.URL.RawQuery)
-		}
-		c.query = q
+		c.query = tomcatParseQuery(c.R.URL.RawQuery)
 	}
 	return c.query
 }
 
-func lenientParseQuery(raw string) url.Values {
+// tomcatParseQuery reproduces Tomcat's Parameters.processParameters: pairs
+// split on '&' then on the first '=', percent-decoded ('+' is a space), a pair
+// with a malformed escape or an empty name is skipped, and the bytes are
+// decoded as UTF-8 with Java's replacement rules.
+func tomcatParseQuery(raw string) url.Values {
 	out := url.Values{}
 	for _, pair := range strings.Split(raw, "&") {
 		if pair == "" {
@@ -114,10 +135,11 @@ func lenientParseQuery(raw string) url.Values {
 		k, v, _ := strings.Cut(pair, "=")
 		kk, err1 := url.QueryUnescape(k)
 		vv, err2 := url.QueryUnescape(v)
-		if err1 != nil || err2 != nil {
+		if err1 != nil || err2 != nil || kk == "" {
 			continue
 		}
-		out[kk] = append(out[kk], vv)
+		kk = javacompat.DecodeUTF8Java([]byte(kk))
+		out[kk] = append(out[kk], javacompat.DecodeUTF8Java([]byte(vv)))
 	}
 	return out
 }
@@ -275,49 +297,60 @@ func (c *Ctx) IPHash() string {
 }
 
 // ClientIP is IpAddressUtils.retrieveIpAddress(request).
+// X-Remote-Address is only read (and checked by the firewall) when
+// X-Forwarded-For yields no address, like the Kotlin elvis chain.
 func (c *Ctx) ClientIP() string {
-	xff, _ := c.Header("X-Forwarded-For")
-	xra, _ := c.Header("X-Remote-Address")
 	host, _, err := net.SplitHostPort(c.R.RemoteAddr)
 	if err != nil {
 		host = c.R.RemoteAddr
 	}
-	return auth.ClientIP(xff, xra, host)
+	xff, _ := c.Header("X-Forwarded-For")
+	if ip := auth.ClientIP(xff, "", ""); ip != "" {
+		return ip
+	}
+	xra, _ := c.Header("X-Remote-Address")
+	return auth.ClientIP("", xra, host)
 }
 
-// isJSONOrXMLContentType tells whether a request body can be read by the
-// Jackson JSON or XML converters (application/json, application/*+json,
-// application/xml, text/xml, application/*+xml).
-func isReadableContentType(ct string) (json bool, xml bool) {
-	mt, _, err := mime.ParseMediaType(ct)
-	if err != nil {
-		return false, false
-	}
-	mt = strings.ToLower(mt)
-	switch {
-	case mt == "application/json" || strings.HasPrefix(mt, "application/") && strings.HasSuffix(mt, "+json"):
-		return true, false
-	case mt == "application/xml" || mt == "text/xml" || strings.HasPrefix(mt, "application/") && strings.HasSuffix(mt, "+xml"):
-		return false, true
-	}
-	return false, false
-}
-
-// BindBody is @RequestBody: decodes the request body into v with Jackson
-// semantics. Unsupported content type → 415, missing/unreadable body → 400.
+// BindBody is @RequestBody: decodes the request body into v like
+// RequestResponseBodyMethodProcessor + MappingJackson2HttpMessageConverter.
+//
+//   - the request headers are built (ServletServerHttpRequest.getHeaders()):
+//     firewall check of every header (400) and Content-Type enrichment (500
+//     for a wildcard type without charset);
+//   - an invalid Content-Type is a 415 (InvalidMediaTypeException);
+//   - no Content-Type means application/octet-stream: 415, or 400 "Required
+//     request body is missing" when there is no body either (and for methods
+//     other than POST/PUT/PATCH, whatever the content type);
+//   - an empty body is a 400; an XML body is refused (400, class C);
+//   - the JSON is decoded with the Content-Type charset (UTF-8 by default),
+//     Jackson's encoding detection and parsing rules (jsonjava.UnmarshalRequest).
 func (c *Ctx) BindBody(v any) {
-	ct := c.R.Header.Get("Content-Type")
-	if ct == "" {
-		// Spring assumes application/octet-stream → no converter → 415
-		panic(&SpringError{Status: 415, Cause: "no content type", Headers: []Header{{"Accept", acceptForBodies}}})
+	r := c.R
+	switch springHeadersStatus(r) {
+	case 400:
+		panic(&headerRejected{name: "(all)"})
+	case 500:
+		panic(&SpringError{Status: 500, Cause: "IllegalArgumentException: Content-Type cannot contain wildcard type"})
 	}
-	isJSON, isXML := isReadableContentType(ct)
-	if !isJSON && !isXML {
-		panic(&SpringError{Status: 415, Cause: "unsupported content type " + ct, Headers: []Header{{"Accept", acceptForBodies}}})
+	ct := requestContentType(r)
+	var mt mediaType
+	if ct != "" {
+		var ok bool
+		if mt, ok = parseSpringMediaType(ct); !ok {
+			panic(&SpringError{Status: 415, Cause: "InvalidMediaTypeException: " + ct, Headers: []Header{{"Accept", acceptForBodies}}})
+		}
 	}
-	body, err := io.ReadAll(io.LimitReader(c.R.Body, 16<<20))
+	body, err := io.ReadAll(io.LimitReader(r.Body, 16<<20))
 	if err != nil {
 		panic(&SpringError{Status: 400, Cause: "body read: " + err.Error()})
+	}
+	isJSON, isXML := ct != "" && mt.readableJSON(), ct != "" && mt.readableXML()
+	if !isJSON && !isXML {
+		if !(r.Method == "POST" || r.Method == "PUT" || r.Method == "PATCH") || ct == "" && len(body) == 0 {
+			panic(&SpringError{Status: 400, Cause: "Required request body is missing"})
+		}
+		panic(&SpringError{Status: 415, Cause: "unsupported content type " + ct, Headers: []Header{{"Accept", acceptForBodies}}})
 	}
 	if len(body) == 0 {
 		panic(&SpringError{Status: 400, Cause: "Required request body is missing"})
@@ -328,11 +361,19 @@ func (c *Ctx) BindBody(v any) {
 		}
 		return
 	}
-	if err := jsonjava.Unmarshal(body, v); err != nil {
+	charset := mt.charset
+	if charset == "" {
+		charset = "UTF-8"
+	}
+	if err := jsonjava.UnmarshalRequest(body, charset, v); err != nil {
+		if errors.Is(err, jsonjava.ErrUnsupportedCharset) {
+			// a JVM charset Go does not decode (class C: C-CHARSET-EXOTIC)
+			panic(&SpringError{Status: 415, Cause: "unsupported charset " + charset, Headers: []Header{{"Accept", acceptForBodies}}})
+		}
 		panic(&SpringError{Status: 400, Cause: "HttpMessageNotReadableException: " + err.Error()})
 	}
 }
 
-// acceptForBodies is the Accept header Spring adds to 415 responses
-// (supported media types of the registered converters). Verified by capture.
-const acceptForBodies = "application/json, application/*+json, application/xml, text/xml, application/*+xml"
+// acceptForBodies is the Accept header of a 415 for a DTO body: the media
+// types of the JSON and XML converters, sorted by specificity (captured).
+const acceptForBodies = "application/xml;charset=UTF-8, text/xml;charset=UTF-8, application/json, application/*+xml;charset=UTF-8, application/*+json"

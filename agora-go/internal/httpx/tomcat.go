@@ -2,7 +2,9 @@ package httpx
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
+	"unicode/utf8"
 )
 
 // Tomcat 10.1 rejects some requests before any Spring code runs. These rules
@@ -105,6 +107,14 @@ func (s *Server) tomcatReject(w http.ResponseWriter, r *http.Request) bool {
 	if strings.Contains(lp, "%2f") || strings.Contains(lp, "%5c") || strings.Contains(lp, "%00") || !validPercentEncoding(rawPath) {
 		writePage(400, "Bad Request")
 		return true
+	}
+	// CoyoteAdapter decodes the URI as UTF-8 and refuses malformed input
+	// (the JDK decoder is as strict as Go's: no overlong forms, no surrogates).
+	if strings.IndexByte(rawPath, '%') >= 0 {
+		if dec, err := url.PathUnescape(rawPath); err == nil && !utf8.ValidString(dec) {
+			writePage(400, "Bad Request")
+			return true
+		}
 	}
 	if !knownMethods[r.Method] {
 		if r.Method == "TRACE" {
