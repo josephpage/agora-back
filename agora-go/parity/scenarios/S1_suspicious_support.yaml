@@ -1,0 +1,26 @@
+name: S1-suspicious-signups-then-support
+tags: [S1]
+skip: "needs POST /qags/{id}/support (QaG slice): the soft-ban counter is only read there. The login module logic (IsSuspiciousActivity, signupCount::<ipHash>/<userAgent>, nightly flagging) is covered by login/integration_test.go against the same sequence observed on the Kotlin reference; enable this scenario once the QaG support route is ported."
+dbdiff: step
+steps:
+  - id: ten-signups-same-origin
+    method: POST
+    path: /signup
+    repeat: 10
+    headers: {User-Agent: "Mozilla/5.0 suspicious", versionCode: "20", platform: android, X-Forwarded-For: "203.0.113.99"}
+    compare: {body: status}
+  - id: support-from-suspicious-origin-is-silently-ignored
+    method: POST
+    path: "/qags/{{seed.QagOpenPlain}}/support"
+    as: "{{seed.UserRegular1}}"
+    headers: {User-Agent: "Mozilla/5.0 suspicious", X-Forwarded-For: "203.0.113.99"}
+  - id: eleventh-signup-increments-the-counter
+    method: POST
+    path: /signup
+    headers: {User-Agent: "Mozilla/5.0 suspicious", versionCode: "20", platform: android, X-Forwarded-For: "203.0.113.99"}
+    compare: {body: status}
+  - id: support-from-another-origin-is-recorded
+    method: POST
+    path: "/qags/{{seed.QagOpenPlain}}/support"
+    as: "{{seed.UserRegular1}}"
+    headers: {User-Agent: "Mozilla/5.0 other", X-Forwarded-For: "203.0.113.99"}

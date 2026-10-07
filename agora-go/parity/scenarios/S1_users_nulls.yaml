@@ -1,0 +1,48 @@
+name: S1-users-null-columns
+tags: [S1]
+dbdiff: step
+setup:
+  sql:
+    - "UPDATE agora_users SET fcm_token = NULL WHERE id = '00000000-0000-4000-9000-00000000000f'"
+    - "UPDATE agora_users SET is_banned = NULL WHERE id = '00000000-0000-4000-9000-00000000000a'"
+    - "UPDATE agora_users SET password = NULL WHERE id = '00000000-0000-4000-9000-00000000000b'"
+    - "UPDATE agora_users SET created_date = NULL WHERE id = '00000000-0000-4000-9000-00000000000c'"
+steps:
+  - {id: null-fcm-1, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: null-fcm-2, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: null-banned-1, path: /profile, as: "{{seed.UserPublisher}}"}
+  - {id: null-banned-2, path: /profile, as: "{{seed.UserPublisher}}"}
+  - {id: null-password-1, path: /profile, as: "{{seed.UserModerator}}"}
+  - {id: null-password-2, path: /profile, as: "{{seed.UserModerator}}"}
+  - {id: null-created-1, path: /profile, as: "{{seed.UserAdmin}}"}
+  - {id: null-created-2, path: /profile, as: "{{seed.UserAdmin}}"}
+  - id: login-null-password
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhLr5pRp2XnoAbQxpE0urhVPucljy6EHMr/wCr2RPFF3uQ=="}
+  - {id: regular-still-fine, path: /profile, as: "{{seed.UserRegular1}}"}
+---
+name: S1-signup-repeated-same-origin
+tags: [S1]
+dbdiff: step
+steps:
+  - id: eleven-signups
+    method: POST
+    path: /signup
+    repeat: 11
+    headers: {User-Agent: "Mozilla/5.0 repeated", versionCode: "20", platform: android, X-Forwarded-For: "203.0.113.77"}
+    compare: {body: status}
+  - id: signup-after-threshold
+    method: POST
+    path: /signup
+    headers: {User-Agent: "Mozilla/5.0 repeated", versionCode: "20", platform: android, X-Forwarded-For: "203.0.113.77"}
+    compare: {body: status}
+---
+name: S1-signup-detection-flag-off
+tags: [S1]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_SUSPICIOUS_USER_DETECTION_ENABLED": "false"}
+steps:
+  - {id: signup, method: POST, path: /signup, headers: {versionCode: "20", platform: android}, compare: {body: status}}
