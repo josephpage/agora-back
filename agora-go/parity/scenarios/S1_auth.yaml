@@ -1,0 +1,35 @@
+name: S1-auth-jwt-variants
+tags: [S1]
+dbdiff: step
+steps:
+  - {id: anon, path: /profile}
+  - {id: regular, path: /profile, as: "{{seed.UserProfile1}}"}
+  - {id: regular-xml, path: "/profile?mediaType=xml", as: "{{seed.UserProfile1}}"}
+  - {id: regular-bad-mediatype, path: "/profile?mediaType=foo", as: "{{seed.UserProfile1}}"}
+  - {id: regular1-no-profile, path: /profile, as: "{{seed.UserRegular2}}"}
+  # static tokens signed with the shared secret (exp in 2100 unless stated)
+  - {id: static-hs512, path: /profile, bearer: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtOTAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE1OTk5OTAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.7dhCyhpy5SYqgvKWiDns9PnzRYEzP7fjWJsOZCKwivtGjXkHJNTQyJASnQAFKqffl5fszXbWPUssx7__UBRaZQ"}
+  - {id: static-hs256, path: /profile, bearer: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtOTAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE1OTk5OTAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.mPKc1HANjAjPsImoeFh0b8z5-DG04TN5DJ71EPTyWtw"}
+  - {id: static-hs384, path: /profile, bearer: "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtOTAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE1OTk5OTAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.QmCJMWVjJZq1EqGBQUHVS8M1MmPLIID9IG5MyKb8Ug_JzWawvSEWqL28RBRCiYK6"}
+  - {id: expired, path: /profile, bearer: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtOTAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE1OTk5OTAwMDAsImV4cCI6MTYwMDAwMDAwMH0.HZQojFnYl_yWa5NIlX8kxVsd2LOZb3YGk29yIAXkq4vfRaVOsUIx33ifqXChgdewtRfX39PFBSr-LjJswU0trA"}
+  - {id: no-exp, path: /profile, bearer: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtOTAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE1OTk5OTAwMDB9.oPsBvVQxIflTx76aPn5rWKHmzT6BQXqCxCw0DTiHIXEHy_FPzW6YqcTLJX4E5eXM4pbWBuJTTzot5ubV1e6gHQ"}
+  - {id: bad-key, path: /profile, bearer: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtOTAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE1OTk5OTAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.wMgO9-YmQ3yu4krNAgHFjoXZb_ehsTcdYmS0S1-Hs6c-KJ4TZI-j_GRIvFW5JSaG0fZXGbOIpMMaETWXBOFa_Q"}
+  - {id: nbf-future, path: /profile, bearer: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtOTAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE1OTk5OTAwMDAsImV4cCI6NDEwMjQ0NDgwMCwibmJmIjo0MTAyNDQ0NzAwfQ.Ozu-f1p6qFRTEtbcJc5CgIih2VC_JYWaJv0otpVTZsOre_Z96Pgv8zfdPmT3cf4AyUpPhYrvAPbcgDyQJJ9Wjw"}
+  - {id: banned-user, path: /profile, bearer: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtOTAwMC0wMDAwMDAwMDAwMGQiLCJpYXQiOjE1OTk5OTAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.2YcTwD5tggLWdAB3RZn36QnHfsynKdT4cNC_XEnytjQraD7Ds2yFV1pz9kt-BZ3lEMFxcCP1-vOGJHH_QAR9Nw"}
+  - {id: header-lowercase-bearer, path: /profile, headers: {Authorization: "bearer {{seed.UserRegular1}}"}}
+  - {id: header-double-space, path: /profile, headers: {Authorization: "Bearer   eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtOTAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE1OTk5OTAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.7dhCyhpy5SYqgvKWiDns9PnzRYEzP7fjWJsOZCKwivtGjXkHJNTQyJASnQAFKqffl5fszXbWPUssx7__UBRaZQ  "}}
+  - {id: header-no-bearer-prefix-then-cookie, path: /profile, headers: {Authorization: "Token abc", Cookie: "auth-jwt=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtOTAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE1OTk5OTAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.7dhCyhpy5SYqgvKWiDns9PnzRYEzP7fjWJsOZCKwivtGjXkHJNTQyJASnQAFKqffl5fszXbWPUssx7__UBRaZQ"}}
+  - {id: cookie-static, path: /profile, headers: {Cookie: "other=1; auth-jwt=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtOTAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE1OTk5OTAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.7dhCyhpy5SYqgvKWiDns9PnzRYEzP7fjWJsOZCKwivtGjXkHJNTQyJASnQAFKqffl5fszXbWPUssx7__UBRaZQ"}}
+  - {id: cookie-empty, path: /profile, headers: {Cookie: "auth-jwt="}}
+  - {id: bearer-empty-token, path: /profile, headers: {Authorization: "Bearer"}}
+  - {id: unknown-user, path: /profile, as: "00000000-0000-4000-9000-0000000000ee"}
+  - {id: not-a-uuid-sub, path: /profile, as: "zzz"}
+  - {id: lenient-uuid-sub, path: /profile, as: "0-0-0-0-1"}
+  - {id: uppercase-uuid-sub, path: /profile, as: "00000000-0000-4000-9000-00000000000A"}
+  - {id: publisher, path: /profile, as: "{{seed.UserPublisher}}"}
+  - {id: admin-post-mediatype, path: "/profile?mediaType=xml", as: "{{seed.UserAdmin}}"}
+  - {id: head-profile, method: HEAD, path: /profile, as: "{{seed.UserRegular1}}"}
+  - {id: get-signup, method: GET, path: /signup}
+  - {id: get-login, method: GET, path: /login}
+  - {id: anon-post-profile, method: POST, path: /profile, body: {gender: "M"}}
+  - {id: anon-post-departments, method: POST, path: /profile/departments, body: {departments: []}}

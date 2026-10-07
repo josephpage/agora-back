@@ -1,0 +1,158 @@
+name: S1-signup-success-and-reuse
+tags: [S1]
+dbdiff: step
+steps:
+  - id: signup-full
+    method: POST
+    path: /signup
+    headers: {User-Agent: "Chrome/126.0.0.0", fcmToken: "fcm-new-user", versionName: "1.2.3", versionCode: "20", platform: android, X-Forwarded-For: "203.0.113.7"}
+    capture: {jwt: "$.jwtToken", loginToken: "$.loginToken", uid: "$.userId"}
+  - {id: profile-with-jwt, path: /profile, bearer: "{{jwt}}"}
+  - {id: profile-with-jwt-xml, path: "/profile?mediaType=xml", bearer: "{{jwt}}"}
+  - id: signup-minimal
+    method: POST
+    path: /signup
+    headers: {versionCode: "1", platform: web}
+  - id: signup-xml
+    method: POST
+    path: "/signup?mediaType=xml"
+    headers: {versionCode: "12", platform: ios, fcmToken: "tok-ios"}
+    compare: {body: status} # random ids and tokens inside an XML text cannot be bound by the harness
+  - id: signup-bad-mediatype
+    method: POST
+    path: "/signup?mediaType=foo"
+    headers: {versionCode: "12", platform: ios}
+  - id: signup-empty-optional-headers
+    method: POST
+    path: /signup
+    headers: {versionCode: "20", platform: android, fcmToken: "", versionName: ""}
+  - id: signup-xff-list
+    method: POST
+    path: /signup
+    headers: {versionCode: "20", platform: android, X-Forwarded-For: " , 198.51.100.4 , 10.0.0.1", User-Agent: "ua with spaces"}
+  - id: signup-remote-address
+    method: POST
+    path: /signup
+    headers: {versionCode: "20", platform: android, X-Remote-Address: "192.0.2.55"}
+  - id: signup-xml-body-ignored
+    method: POST
+    path: /signup
+    bodyRaw: "garbage that is never read"
+    contentType: text/plain
+    headers: {versionCode: "20", platform: android}
+  - id: signup-latin1-user-agent
+    method: POST
+    path: /signup
+    headers: {versionCode: "20", platform: android, User-Agent: "Agora é ü ñ 中", fcmToken: "tok é", versionName: "v é"}
+  - id: signup-duplicate-header-case-variants
+    method: POST
+    path: /signup
+    headers: {versionCode: "20", platform: android, fcmToken: "first", fcmtoken: "second", FCMTOKEN: "third"}
+  - id: signup-version-name-default-uses-code
+    method: POST
+    path: /signup
+    headers: {versionCode: "00020", platform: android}
+  - id: signup-version-plus
+    method: POST
+    path: /signup
+    headers: {versionCode: "+20", platform: android}
+  - id: signup-version-negative-web
+    method: POST
+    path: /signup
+    headers: {versionCode: "-1", platform: web}
+  - id: signup-max-int
+    method: POST
+    path: /signup
+    headers: {versionCode: "2147483647", platform: android}
+  - id: signup-empty-user-agent
+    method: POST
+    path: /signup
+    headers: {versionCode: "20", platform: android, User-Agent: ""}
+---
+name: S1-signup-rejections
+tags: [S1]
+dbdiff: step
+steps:
+  - {id: missing-version, method: POST, path: /signup, headers: {platform: android}}
+  - {id: missing-platform, method: POST, path: /signup, headers: {versionCode: "20"}}
+  - {id: missing-both, method: POST, path: /signup}
+  - {id: missing-version-xml, method: POST, path: "/signup?mediaType=xml", headers: {platform: android}}
+  - {id: unknown-platform, method: POST, path: /signup, headers: {versionCode: "20", platform: "quantum-computer"}}
+  - {id: platform-case, method: POST, path: /signup, headers: {versionCode: "20", platform: "Android"}}
+  - {id: platform-empty, method: POST, path: /signup, headers: {versionCode: "20", platform: ""}}
+  - {id: platform-spaces, method: POST, path: /signup, headers: {versionCode: "20", platform: " android"}}
+  - {id: unknown-platform-xml, method: POST, path: "/signup?mediaType=xml", headers: {versionCode: "20", platform: "pc"}}
+  - {id: code-not-int, method: POST, path: /signup, headers: {versionCode: "abc", platform: android}}
+  - {id: code-float, method: POST, path: /signup, headers: {versionCode: "20.5", platform: android}}
+  - {id: code-empty, method: POST, path: /signup, headers: {versionCode: "", platform: android}}
+  - {id: code-overflow, method: POST, path: /signup, headers: {versionCode: "2147483648", platform: android}}
+  - {id: code-spaces, method: POST, path: /signup, headers: {versionCode: " 20", platform: android}}
+  - {id: code-hex, method: POST, path: /signup, headers: {versionCode: "0x20", platform: android}}
+  - {id: android-too-low, method: POST, path: /signup, headers: {versionCode: "17", platform: android}}
+  - {id: android-boundary, method: POST, path: /signup, headers: {versionCode: "18", platform: android}}
+  - {id: ios-too-low, method: POST, path: /signup, headers: {versionCode: "11", platform: ios}}
+  - {id: ios-boundary, method: POST, path: /signup, headers: {versionCode: "12", platform: ios}}
+  - {id: web-too-low, method: POST, path: /signup, headers: {versionCode: "0", platform: web}}
+  - {id: web-negative, method: POST, path: /signup, headers: {versionCode: "-3", platform: web}}
+  - {id: too-low-xml, method: POST, path: "/signup?mediaType=xml", headers: {versionCode: "1", platform: android}}
+  - {id: trailing-slash, method: POST, path: /signup/, headers: {versionCode: "20", platform: android}}
+  - {id: long-user-agent-fails-users-data, method: POST, path: /signup, headers: {versionCode: "20", platform: android, User-Agent: "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU"}}
+---
+name: S1-signup-flag-disabled
+tags: [S1]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_SIGNUP_ENABLED": "false"}
+steps:
+  - {id: disabled, method: POST, path: /signup, headers: {versionCode: "20", platform: android}}
+  - {id: disabled-before-version-check, method: POST, path: /signup, headers: {versionCode: "abc", platform: nope}}
+  - {id: disabled-xml, method: POST, path: "/signup?mediaType=xml", headers: {versionCode: "20", platform: android}}
+  - {id: missing-header-wins-over-flag, method: POST, path: /signup, headers: {platform: android}}
+---
+name: S1-signup-flag-env-initialized
+tags: [S1]
+dbdiff: step
+steps:
+  - {id: enabled-by-env, method: POST, path: /signup, headers: {versionCode: "20", platform: android}}
+  - {id: again-reads-redis, method: POST, path: /signup, headers: {versionCode: "20", platform: android}}
+---
+name: S1-signup-flag-odd-values
+tags: [S1]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_SIGNUP_ENABLED": "[\"java.lang.Boolean\", true]"}
+steps:
+  - {id: typed-true, method: POST, path: /signup, headers: {versionCode: "20", platform: android}}
+---
+name: S1-signup-flag-string-value
+tags: [S1]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_SIGNUP_ENABLED": "\"true\""}
+steps:
+  - {id: json-string-is-not-true, method: POST, path: /signup, headers: {versionCode: "20", platform: android}}
+---
+name: S1-signup-flag-null-value
+tags: [S1]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_SIGNUP_ENABLED": "null"}
+steps:
+  - {id: null-falls-back-to-env, method: POST, path: /signup, headers: {versionCode: "20", platform: android}}
+---
+name: S1-signup-flag-garbage-value
+tags: [S1]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_SIGNUP_ENABLED": "garbage"}
+steps:
+  - {id: undecodable-is-a-500, method: POST, path: /signup, headers: {versionCode: "20", platform: android}}
+  - {id: login-flag-unaffected, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: "x"}}
+---
+name: S1-signup-flag-array-value
+tags: [S1]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_SIGNUP_ENABLED": "[true]"}
+steps:
+  - {id: untyped-array-is-a-500, method: POST, path: /signup, headers: {versionCode: "20", platform: android}}

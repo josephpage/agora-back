@@ -1,0 +1,64 @@
+name: S1-departments-new-user
+tags: [S1]
+dbdiff: step
+steps:
+  - {id: zero-creates-row, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: []}}
+  - {id: get-zero, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: one, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Paris"]}}
+  - {id: get-one, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: get-one-xml, path: "/profile?mediaType=xml", as: "{{seed.UserIdle}}"}
+  - {id: two, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Bouches-du-Rhône", "Corse-du-Sud"]}}
+  - {id: get-two, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: three-too-many, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Paris", "Nord", "Ain"]}}
+  - {id: three-invalid-names-count-first, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["x", "y", "z"]}}
+  - {id: unknown-territory, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Atlantis"]}}
+  - {id: unknown-second, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Paris", "Mordor"]}}
+  - {id: get-after-failed, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: unknown-territory-xml, method: POST, path: "/profile/departments?mediaType=xml", as: "{{seed.UserIdle}}", body: {departments: ["Atlantis"]}}
+  - {id: too-many-xml, method: POST, path: "/profile/departments?mediaType=xml", as: "{{seed.UserIdle}}", body: {departments: ["a", "b", "c"]}}
+  - {id: ok-xml, method: POST, path: "/profile/departments?mediaType=xml", as: "{{seed.UserIdle}}", body: {departments: ["Nord"]}}
+  - {id: lower-case, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["paris", "NORD"]}}
+  - {id: get-lower-case, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: accent-insensitive-no, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["ardeche"]}}
+  - {id: accent-ok, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["ARDÈCHE"]}}
+  - {id: get-accent, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: region-is-not-a-department, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Île-de-France"]}}
+  - {id: country-is-not-a-department, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["France"]}}
+  - {id: code-instead-of-name, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: [75]}}
+  - {id: empty-string, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: [""]}}
+  - {id: spaces-around, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: [" Paris "]}}
+  - {id: duplicates, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Paris", "Paris"]}}
+  - {id: get-duplicates, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: null-first, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: [null]}}
+  - {id: null-second-after-valid, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Paris", null]}}
+  - {id: invalid-before-null, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Atlantis", null]}}
+  - {id: two-nulls, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: [null, null]}}
+  - {id: three-with-null, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: [null, null, null]}}
+  - {id: missing-departments, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {}}
+  - {id: null-departments, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: null}}
+  - {id: departments-string, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: "Paris"}}
+  - {id: departments-object, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: {a: 1}}}
+  - {id: bool-element, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: [true]}}
+  - {id: nested-array-element, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: [["Paris"]]}}
+  - {id: object-element, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: [{a: 1}]}}
+  - {id: body-array, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: ["Paris"]}
+  - {id: body-empty, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", bodyRaw: "", contentType: application/json}
+  - {id: extra-fields, method: POST, path: /profile/departments, as: "{{seed.UserIdle}}", body: {departments: ["Gard"], gender: "M"}}
+  - {id: get-final, path: /profile, as: "{{seed.UserIdle}}"}
+---
+name: S1-departments-existing-profiles
+tags: [S1]
+dbdiff: step
+steps:
+  - {id: regular1-replaces-departments, method: POST, path: /profile/departments, as: "{{seed.UserRegular1}}", body: {departments: ["Rhône"]}}
+  - {id: get-regular1, path: /profile, as: "{{seed.UserRegular1}}"}
+  - {id: regular1-clears, method: POST, path: /profile/departments, as: "{{seed.UserRegular1}}", body: {departments: []}}
+  - {id: get-regular1-cleared, path: /profile, as: "{{seed.UserRegular1}}"}
+  - {id: regular6-two, method: POST, path: /profile/departments, as: "{{seed.UserRegular6}}", body: {departments: ["Nord", "Paris"]}}
+  - {id: get-regular6, path: /profile, as: "{{seed.UserRegular6}}"}
+  - {id: regular7-all-null-row, method: POST, path: /profile/departments, as: "{{seed.UserRegular7}}", body: {departments: ["Var"]}}
+  - {id: get-regular7, path: /profile, as: "{{seed.UserRegular7}}"}
+  - {id: profile-update-after-departments-db-read, method: POST, path: /profile, as: "{{seed.UserRegular7}}", body: {gender: "M"}}
+  - {id: get-regular7-after-update, path: /profile, as: "{{seed.UserRegular7}}"}
+  - {id: banned-user, method: POST, path: /profile/departments, as: "{{seed.UserBanned}}", body: {departments: ["Var"]}}
+  - {id: anon, method: POST, path: /profile/departments, body: {departments: ["Var"]}}
