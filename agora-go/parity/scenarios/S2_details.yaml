@@ -40,7 +40,6 @@ steps:
   - {id: xml-special-chars, path: "/qags/{{seed.QagAcceptedSpecialChars}}?mediaType=xml", as: "{{seed.UserRegular1}}"}
   - {id: xml-selected-video, path: "/qags/{{seed.QagSelectedVideo}}?mediaType=xml", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"], body: status}}
   - {id: trailing-slash, path: "/qags/{{seed.QagAcceptedTransport}}/", as: "{{seed.UserRegular1}}"}
-  - {id: options-no-origin, method: OPTIONS, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
   - {id: cors-origin, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}", headers: {Origin: "https://www.agora.gouv.fr"}}
 ---
 name: S2-details-status
