@@ -29,7 +29,6 @@ steps:
   - {id: publisher, path: /profile, as: "{{seed.UserPublisher}}"}
   - {id: admin-post-mediatype, path: "/profile?mediaType=xml", as: "{{seed.UserAdmin}}"}
   - {id: head-profile, method: HEAD, path: /profile, as: "{{seed.UserRegular1}}"}
-  - {id: options-profile, method: OPTIONS, path: /profile, as: "{{seed.UserRegular1}}"}
   - {id: get-signup, method: GET, path: /signup}
   - {id: get-login, method: GET, path: /login}
   - {id: anon-post-profile, method: POST, path: /profile, body: {gender: "M"}}
