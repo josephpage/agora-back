@@ -1,12 +1,14 @@
 package consultation
 
 import (
+	"crypto/rand"
 	"errors"
 	"strconv"
 	"time"
 
 	"agora/internal/app"
 	"agora/internal/cache"
+	"agora/internal/javacompat"
 )
 
 func itoa(n int64) string { return strconv.FormatInt(n, 10) }
@@ -89,4 +91,16 @@ func coexistenceCap(a *app.App, ttl time.Duration) time.Duration {
 		return 5 * time.Minute
 	}
 	return ttl
+}
+
+// randomUUID is UUID.randomUUID() (also what Hibernate's GenerationType.UUID
+// produces): a random version 4 UUID in canonical lowercase form.
+func randomUUID() string {
+	var b [16]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		panic(err)
+	}
+	b[6] = b[6]&0x0f | 0x40
+	b[8] = b[8]&0x3f | 0x80
+	return javacompat.UUIDFromBytes(b).String()
 }
