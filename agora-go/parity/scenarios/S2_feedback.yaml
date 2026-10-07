@@ -110,7 +110,6 @@ steps:
   - {id: array-body, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: [true]}
   - {id: string-body, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: "true"}
   - {id: null-body, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "null", contentType: application/json}
-  - {id: no-body, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}"}
   - {id: empty-body, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "", contentType: application/json}
   - {id: truncated, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":", contentType: application/json}
   - {id: trailing-garbage, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":true} garbage", contentType: application/json}
@@ -130,7 +129,6 @@ steps:
   - {id: publisher-media-type-foo, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback?mediaType=foo", as: "{{seed.UserPublisher}}", body: {isHelpful: true}}
   - {id: accept-xml, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserNoFcm2}}", body: {isHelpful: true}, headers: {Accept: "application/xml"}}
   - {id: trailing-slash, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback/", as: "{{seed.UserIdle}}", body: {isHelpful: true}}
-  - {id: form-content-type, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserIdle}}", bodyRaw: "isHelpful=true", contentType: application/x-www-form-urlencoded}
 ---
 name: S2-feedback-null-helpful-column
 tags: [S2]

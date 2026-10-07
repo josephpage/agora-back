@@ -1,0 +1,111 @@
+name: S2-ask-status-users
+tags: [S2]
+dbdiff: none
+steps:
+  - {id: enabled, path: /qags/ask_status, as: "{{seed.UserRegular1}}"}
+  - {id: weekly-limit, path: /qags/ask_status, as: "{{seed.UserRegular2}}"}
+  - {id: idle-user, path: /qags/ask_status, as: "{{seed.UserIdle}}"}
+  - {id: moderator, path: /qags/ask_status, as: "{{seed.UserModerator}}"}
+  - {id: admin, path: /qags/ask_status, as: "{{seed.UserAdmin}}"}
+  - {id: publisher, path: /qags/ask_status, as: "{{seed.UserPublisher}}"}
+  - {id: banned-author-of-open-qag, path: /qags/ask_status, as: "{{seed.UserBanned}}"}
+  - {id: only-archived-qag, path: /qags/ask_status, as: "{{seed.UserProfile12}}"}
+  - {id: regular3-depends-on-the-week, path: /qags/ask_status, as: "{{seed.UserRegular3}}"}
+  - {id: regular4-depends-on-the-week, path: /qags/ask_status, as: "{{seed.UserRegular4}}"}
+  - {id: regular5-depends-on-the-week, path: /qags/ask_status, as: "{{seed.UserRegular5}}"}
+  - {id: anonymous, path: /qags/ask_status}
+  - {id: bad-jwt, path: /qags/ask_status, bearer: "abc.def.ghi"}
+  - {id: unknown-user, path: /qags/ask_status, as: "00000000-0000-4000-9000-0000000000ff"}
+---
+name: S2-ask-status-formats
+tags: [S2]
+dbdiff: none
+steps:
+  - {id: xml-enabled, path: "/qags/ask_status?mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: xml-limit, path: "/qags/ask_status?mediaType=xml", as: "{{seed.UserRegular2}}"}
+  - {id: json-param, path: "/qags/ask_status?mediaType=json", as: "{{seed.UserRegular2}}"}
+  - {id: unknown-media-type, path: "/qags/ask_status?mediaType=foo", as: "{{seed.UserRegular2}}"}
+  - {id: accept-xml, path: /qags/ask_status, as: "{{seed.UserRegular2}}", headers: {Accept: "application/xml"}}
+  - {id: accept-text, path: /qags/ask_status, as: "{{seed.UserRegular2}}", headers: {Accept: "text/plain"}}
+  - {id: head, method: HEAD, path: /qags/ask_status, as: "{{seed.UserRegular2}}"}
+  - {id: head-anonymous, method: HEAD, path: /qags/ask_status}
+  - {id: trailing-slash, path: /qags/ask_status/, as: "{{seed.UserRegular1}}"}
+  - {id: query-ignored, path: "/qags/ask_status?userId=x", as: "{{seed.UserRegular1}}"}
+  - {id: if-none-match, path: /qags/ask_status, as: "{{seed.UserRegular2}}", headers: {If-None-Match: "\"abc\""}}
+  - {id: cors, path: /qags/ask_status, as: "{{seed.UserRegular2}}", headers: {Origin: "https://www.agora.gouv.fr"}}
+---
+name: S2-ask-status-just-before-monday-10h
+tags: [S2]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET post_date = date_trunc('week', LOCALTIMESTAMP) + interval '10 hours' - interval '1 second' WHERE user_id = '00000000-0000-4000-9000-000000000003' AND status IN (0, 1)"
+steps:
+  - {id: ask-status, path: /qags/ask_status, as: "{{seed.UserRegular3}}"}
+---
+name: S2-ask-status-just-after-monday-10h
+tags: [S2]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET post_date = date_trunc('week', LOCALTIMESTAMP) + interval '10 hours' + interval '1 second' WHERE user_id = '00000000-0000-4000-9000-000000000003' AND status IN (0, 1)"
+steps:
+  - {id: ask-status, path: /qags/ask_status, as: "{{seed.UserRegular3}}"}
+---
+name: S2-ask-status-monday-10h-exactly
+tags: [S2]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET post_date = date_trunc('week', LOCALTIMESTAMP) + interval '10 hours' WHERE user_id = '00000000-0000-4000-9000-000000000003' AND status IN (0, 1)"
+steps:
+  - {id: ask-status, path: /qags/ask_status, as: "{{seed.UserRegular3}}"}
+---
+name: S2-ask-status-previous-week-bounds
+tags: [S2]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET post_date = date_trunc('week', LOCALTIMESTAMP) + interval '10 hours' - interval '7 days' + interval '1 second' WHERE user_id = '00000000-0000-4000-9000-000000000003' AND status IN (0, 1)"
+    - "UPDATE qags SET post_date = date_trunc('week', LOCALTIMESTAMP) + interval '10 hours' - interval '7 days' - interval '1 second' WHERE user_id = '00000000-0000-4000-9000-000000000004' AND status IN (0, 1)"
+    - "UPDATE qags SET post_date = date_trunc('week', LOCALTIMESTAMP) + interval '10 hours' + interval '7 days' - interval '1 second' WHERE user_id = '00000000-0000-4000-9000-000000000005' AND status IN (0, 1)"
+steps:
+  - {id: just-inside-previous-window, path: /qags/ask_status, as: "{{seed.UserRegular3}}"}
+  - {id: just-outside-previous-window, path: /qags/ask_status, as: "{{seed.UserRegular4}}"}
+  - {id: one-second-before-next-monday, path: /qags/ask_status, as: "{{seed.UserRegular5}}"}
+---
+name: S2-ask-status-future-and-multiple-qags
+tags: [S2]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET post_date = LOCALTIMESTAMP + interval '30 days' WHERE id = '00000000-0000-4000-8000-000000000022'"
+    - "UPDATE qags SET post_date = LOCALTIMESTAMP - interval '400 days' WHERE id = '00000000-0000-4000-8000-000000000003'"
+    - "UPDATE qags SET status = 5 WHERE id = '00000000-0000-4000-8000-000000000023'"
+steps:
+  - {id: future-post-date, path: /qags/ask_status, as: "{{seed.UserRegular3}}"}
+  - {id: invalid-status-is-not-selected-by-the-query, path: /qags/ask_status, as: "{{seed.UserRegular4}}"}
+---
+name: S2-ask-status-null-columns
+tags: [S2]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET title = NULL WHERE id = '00000000-0000-4000-8000-000000000021'"
+    - "UPDATE qags SET post_date = NULL WHERE id = '00000000-0000-4000-8000-000000000027'"
+steps:
+  - {id: null-title-of-last-qag, path: /qags/ask_status, as: "{{seed.UserRegular2}}"}
+  - {id: null-post-date-of-last-qag, path: /qags/ask_status, as: "{{seed.UserRegular1}}"}
+---
+name: S2-ask-status-after-insert-by-another-route
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: before, path: /qags/ask_status, as: "{{seed.UserIdle}}"}
+  - id: insert
+    method: POST
+    path: /qags
+    as: "{{seed.UserIdle}}"
+    body: {title: "t", thematiqueId: "{{seed.Thematique1}}", description: "d", author: "a"}
+  - {id: after, path: /qags/ask_status, as: "{{seed.UserIdle}}"}
+  - {id: other-user-unchanged, path: /qags/ask_status, as: "{{seed.UserRegular1}}"}
