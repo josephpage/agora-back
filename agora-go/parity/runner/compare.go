@@ -394,6 +394,12 @@ func (b *Binder) compareHeaders(rh, gh http.Header, extra []string) []Diff {
 				continue
 			}
 		}
+		if strings.EqualFold(name, "Allow") && sameMethodSet(rv, gv) {
+			// the order of the methods follows the JVM's reflection order of
+			// the controller methods, which changes between reference runs
+			// (class N): same methods and same separator are equivalent
+			continue
+		}
 		diffs = append(diffs, Diff{Where: "header:" + name, Ref: rv, Go: gv})
 	}
 	return diffs
@@ -421,4 +427,20 @@ func (b *Binder) equivalentCookies(r, g []string) bool {
 		}
 	}
 	return true
+}
+
+// sameMethodSet compares two Allow values as sets, with the same separator.
+func sameMethodSet(a, b string) bool {
+	if strings.Contains(a, ", ") != strings.Contains(b, ", ") {
+		return false
+	}
+	split := func(s string) []string {
+		var out []string
+		for _, p := range strings.Split(s, ",") {
+			out = append(out, strings.TrimSpace(p))
+		}
+		sort.Strings(out)
+		return out
+	}
+	return strings.Join(split(a), ",") == strings.Join(split(b), ",")
 }

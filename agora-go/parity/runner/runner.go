@@ -25,6 +25,11 @@ type Runner struct {
 	Verbose  bool
 	// StrapiCheck compares the URIs sent to the fake Strapi (go ⊆ ref).
 	StrapiCheck bool
+	// KotlinLocksFile records the AgoraQueue slots the reference probably
+	// left locked (see kotlinlocks.go); "" keeps them in memory only.
+	KotlinLocksFile string
+	locks           *kotlinLocks
+	scenario        string
 }
 
 // StepResult is the outcome of one step.
@@ -97,6 +102,10 @@ func (r *Runner) mint(userID string) string {
 
 // Run executes one scenario.
 func (r *Runner) Run(ctx context.Context, sc *Scenario) *ScenarioResult {
+	if r.locks == nil {
+		r.locks = loadKotlinLocks(r.KotlinLocksFile)
+	}
+	r.scenario = sc.Name
 	res := &ScenarioResult{Name: sc.Name, File: sc.file}
 	if sc.Skip != "" {
 		res.Skipped = sc.Skip
@@ -250,8 +259,16 @@ func (r *Runner) runStep(ctx context.Context, b *Binder, st Step) StepResult {
 			sr.Diffs = append(sr.Diffs, Diff{Where: "transport", Ref: fmt.Sprint(rr.Err), Go: fmt.Sprint(gr.Err)})
 			return sr
 		}
+		qkey := queueKey(rreq.Method, rreq.URL.Path, expand(st.As, rv))
 		if rr.Status != gr.Status {
-			sr.Diffs = append(sr.Diffs, Diff{Where: "status", Ref: fmt.Sprint(rr.Status), Go: fmt.Sprint(gr.Status), Note: short(rr.Body) + " ||| " + short(gr.Body)})
+			note := short(rr.Body) + " ||| " + short(gr.Body)
+			if origin, locked := r.locks.origin(qkey); locked && rr.Status == 400 {
+				note = "HARNESS: the reference probably still holds the AgoraQueue slot " + qkey + " left by the exception of " + origin + " (B-AGORAQUEUE): use a dedicated user, or run restart-ref. " + note
+			}
+			sr.Diffs = append(sr.Diffs, Diff{Where: "status", Ref: fmt.Sprint(rr.Status), Go: fmt.Sprint(gr.Status), Note: note})
+		}
+		if rr.Status == 500 && qkey != "" {
+			r.locks.add(qkey, r.scenario+"/"+st.ID)
 		}
 		mode := st.Compare.Body
 		if mode != "none" && mode != "status" {

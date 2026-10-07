@@ -60,6 +60,7 @@ func main() {
 		os.Exit(2)
 	}
 	r := &runner.Runner{
+		KotlinLocksFile: os.Getenv("PARITY_KOTLIN_LOCKS"),
 		Ref: &runner.Side{
 			Name: "ref", BaseURL: env("PARITY_REF_URL", "http://localhost:8081"),
 			DBURL:     env("PARITY_REF_DB", "postgres://backend:agora_password@localhost:5432/agora_ref"),

@@ -1,20 +1,25 @@
 name: S2-known-foundation-diffs-jackson-number-coercion
 tags: [S2-known-foundation]
-skip: "jsonjava refuses an integer literal that does not fit an int64 where Jackson coerces a BigInteger to a Boolean (non zero = true): {\"isHelpful\": 12345678901234567890} is 200 for Kotlin, 400 for Go."
 dbdiff: step
 steps:
   - {id: huge-integer-is-true, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":12345678901234567890}", contentType: application/json}
+  - {id: zero-is-false, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":0}", contentType: application/json}
+  - {id: minus-zero-is-true, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":-0}", contentType: application/json}
+  - {id: two-is-true, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":2}", contentType: application/json}
+  - {id: float-refused, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":1.0}", contentType: application/json}
+  - {id: exponent-refused, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":1e2}", contentType: application/json}
+  - {id: string-true, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":\"true\"}", contentType: application/json}
+  - {id: string-one, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":\"1\"}", contentType: application/json}
 ---
 name: S2-known-foundation-diffs-lone-surrogate
 tags: [S2-known-foundation]
-skip: "jsonjava decodes a lone UTF-16 surrogate escape (\\ud800) as U+FFFD; Jackson keeps the lone surrogate, which the OWASP sanitizer drops: the stored title is 'ab' for Kotlin and 'a?b' ('a' + U+FFFD, written as '?' by the sanitizer wrapper) for Go. sanitize.SanitizeUTF16 is exact if the JSON layer ever provides UTF-16 units (see parity/divergences/F7-sanitize.md)."
+skip: "class C divergence C-LONE-SURROGATE (DIVERGENCES.md): jsonjava decodes a lone UTF-16 surrogate escape (\\ud800) as U+FFFD; Jackson keeps the lone surrogate, which the OWASP sanitizer drops: the stored title is 'ab' for Kotlin and 'a?b' ('a' + U+FFFD, written as '?' by the sanitizer wrapper) for Go. sanitize.SanitizeUTF16 is exact if the JSON layer ever provides UTF-16 units (see parity/divergences/F7-sanitize.md)."
 dbdiff: step
 steps:
   - {id: lone-surrogate-escape, method: POST, path: /qags, as: "{{seed.UserProfile10}}", bodyRaw: "{\"title\":\"a\\ud800b\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: application/json}
 ---
 name: S2-known-foundation-diffs-uppercase-media-type
 tags: [S2-known-foundation]
-skip: "Content-Type: APPLICATION/JSON: the reference answers 400 for POST /qags, Go reads the body (200). To be explained by the request layer owner."
 dbdiff: step
 steps:
-  - {id: uppercase-media-type, method: POST, path: /qags, as: "{{seed.UserProfile5}}", bodyRaw: "{\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "APPLICATION/JSON"}
+  - {id: uppercase-media-type, method: POST, path: /qags, as: "{{seed.UserProfile12}}", bodyRaw: "{\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "APPLICATION/JSON"}
