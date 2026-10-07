@@ -113,10 +113,18 @@ func (r *SupportRepository) GetSupportedQagCount(ctx context.Context, userID str
 // insertSQL inserts the support when the QaG exists and is open or accepted and
 // the user does not support it yet: the whole InsertSupportQagUseCase
 // (isQagSupported, getQagInfo + status check, insert) in one round trip.
-const insertSupportSQL = `INSERT INTO supports_qag (id, qag_id, support_date, user_id)
+var insertSupportSQL = `INSERT INTO supports_qag (id, qag_id, support_date, user_id)
         SELECT $1, qags.id, $3, $4 FROM qags
-        WHERE qags.id = $2 AND qags.status IN (0, 1)
+        WHERE qags.id = $2 AND qags.status IN (0, 1) AND ` + qagMappable("qags") + `
         AND NOT EXISTS (SELECT 1 FROM supports_qag WHERE user_id = $4 AND qag_id = $2)`
+
+// qagMappable is true for a row QagInfoMapper can map: Kotlin throws on a NULL in
+// one of the non-null properties, so the one-statement paths below must not act
+// on such a row (the replay then raises the same exception).
+func qagMappable(t string) string {
+	return t + ".title IS NOT NULL AND " + t + ".description IS NOT NULL AND " + t + ".post_date IS NOT NULL AND " +
+		t + ".username IS NOT NULL AND " + t + ".thematique_id IS NOT NULL AND " + t + ".user_id IS NOT NULL"
+}
 
 // InsertSupportQag is InsertSupportQagUseCase.insertSupportQag followed by
 // SupportQagRepositoryImpl.insertSupportQag, in a single INSERT ... SELECT.
@@ -164,7 +172,7 @@ func (r *SupportRepository) DeleteSupportQag(ctx context.Context, s SupportQagDe
 		return SupportFailure, nil
 	}
 	tag, err := r.a.DB.Pool.Exec(ctx, `DELETE FROM supports_qag WHERE user_id = $1 AND qag_id = $2
-        AND EXISTS (SELECT 1 FROM qags WHERE id = $2 AND status IN (0, 1))`, uid, qid)
+        AND EXISTS (SELECT 1 FROM qags WHERE id = $2 AND status IN (0, 1) AND `+qagMappable("qags")+`)`, uid, qid)
 	if err != nil {
 		return SupportFailure, err
 	}
