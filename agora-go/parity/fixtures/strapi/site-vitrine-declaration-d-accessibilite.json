@@ -1,0 +1,53 @@
+{
+  "id": 7,
+  "documentId": "pg0000000000000000000007",
+  "declaration": [
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "Déclaration d'accessibilité"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "Ce site est partiellement conforme au RGAA."
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "format": "ordered",
+      "children": [
+        {
+          "type": "list-item",
+          "children": [
+            {
+              "type": "text",
+              "text": "Contenus non accessibles"
+            }
+          ]
+        },
+        {
+          "type": "list-item",
+          "children": [
+            {
+              "type": "text",
+              "text": "Voies de recours"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "createdAt": "2024-05-29T09:37:12.407Z",
+  "updatedAt": "2024-08-23T13:04:14.174Z",
+  "publishedAt": "2024-05-29T10:19:13.352Z",
+  "locale": null
+}

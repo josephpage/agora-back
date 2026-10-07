@@ -1,0 +1,47 @@
+name: s0-referentiel-basic
+tags: [S0]
+dbdiff: none
+steps:
+  - {id: anon, path: /referentiels/regions-et-departements}
+  - {id: anon-again, path: /referentiels/regions-et-departements, repeat: 3}
+  - {id: user, path: /referentiels/regions-et-departements, as: "{{seed.UserRegular1}}"}
+  - {id: banned, path: /referentiels/regions-et-departements, as: "{{seed.UserBanned}}"}
+  - {id: publisher, path: /referentiels/regions-et-departements, as: "{{seed.UserPublisher}}"}
+  - {id: admin, path: /referentiels/regions-et-departements, as: "{{seed.UserAdmin}}"}
+  - {id: unknown-user-jwt, path: /referentiels/regions-et-departements, as: "00000000-0000-4000-9000-0000000000ff"}
+  - {id: bad-jwt, path: /referentiels/regions-et-departements, bearer: "abc.def.ghi"}
+  - {id: xml, path: "/referentiels/regions-et-departements?mediaType=xml"}
+  - {id: xml-user, path: "/referentiels/regions-et-departements?mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: xml-upper, path: "/referentiels/regions-et-departements?mediaType=XML"}
+  - {id: json-explicit, path: "/referentiels/regions-et-departements?mediaType=json"}
+  - {id: foo, path: "/referentiels/regions-et-departements?mediaType=foo"}
+  - {id: foo-user, path: "/referentiels/regions-et-departements?mediaType=foo", as: "{{seed.UserRegular1}}"}
+  - {id: empty-media, path: "/referentiels/regions-et-departements?mediaType="}
+  - {id: other-params, path: "/referentiels/regions-et-departements?x=1"}
+  - {id: accept-xml-header, path: /referentiels/regions-et-departements, headers: {Accept: application/xml}}
+  - {id: head, method: HEAD, path: /referentiels/regions-et-departements}
+  - {id: head-xml, method: HEAD, path: "/referentiels/regions-et-departements?mediaType=xml"}
+  - {id: head-foo, method: HEAD, path: "/referentiels/regions-et-departements?mediaType=foo"}
+  - {id: post, method: POST, path: /referentiels/regions-et-departements}
+  - {id: put, method: PUT, path: /referentiels/regions-et-departements}
+  - {id: delete, method: DELETE, path: /referentiels/regions-et-departements}
+  - {id: options, method: OPTIONS, path: /referentiels/regions-et-departements}
+  - {id: cors-get, path: /referentiels/regions-et-departements, headers: {Origin: "https://www.agora.gouv.fr"}}
+  - {id: cors-preflight, method: OPTIONS, path: /referentiels/regions-et-departements, headers: {Origin: "https://www.agora.gouv.fr", Access-Control-Request-Method: GET}}
+  - {id: no-etag-filter-on-this-path, path: /referentiels/regions-et-departements, headers: {If-None-Match: '"0000"'}}
+  - {id: trailing-slash, path: /referentiels/regions-et-departements/}
+  - {id: parent-path, path: /referentiels}
+  - {id: parent-path-slash, path: /referentiels/}
+  - {id: unknown-sub-path, path: /referentiels/regions}
+  - {id: sub-path, path: /referentiels/regions-et-departements/75}
+  - {id: upper-case-path, path: /Referentiels/regions-et-departements}
+  - {id: semicolon, path: "/referentiels;x=1/regions-et-departements"}
+---
+name: s0-referentiel-ignores-strapi
+tags: [S0]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: "*", mode: "500"}
+steps:
+  - {id: json, path: /referentiels/regions-et-departements}

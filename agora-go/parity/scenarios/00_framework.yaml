@@ -1,0 +1,33 @@
+name: framework-anonymous-and-errors
+tags: [framework]
+dbdiff: none
+steps:
+  - {id: anon-protected, path: /qags/ask_status}
+  - {id: anon-unknown, path: /unknown/path}
+  - {id: anon-unknown-xml, path: "/unknown/path?mediaType=xml"}
+  - {id: anon-unknown-foo, path: "/unknown/path?mediaType=foo"}
+  - {id: error-endpoint, path: /error}
+  - {id: error-endpoint-post, method: POST, path: /error}
+  - {id: authed-unknown, path: /unknown/path, as: "{{seed.UserRegular1}}"}
+  - {id: authed-unknown-xml, path: "/unknown/path?mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: admin-anon, path: /admin/cache/clear, method: POST}
+  - {id: admin-user, path: /admin/cache/clear, method: POST, as: "{{seed.UserRegular1}}"}
+  - {id: moderate-user, path: /moderate/qags, as: "{{seed.UserRegular1}}"}
+  - {id: moderate-moderator, path: /moderate/qags, as: "{{seed.UserModerator}}"}
+  - {id: fw-semicolon, path: "/qags;x/ask_status"}
+  - {id: fw-encoded-slash, path: "/qags%2Fask_status"}
+  - {id: fw-double-slash, path: "//qags/ask_status"}
+  - {id: fw-dot, path: "/qags/./ask_status"}
+  - {id: fw-encoded-percent, path: "/qags/%25"}
+  - {id: fw-backslash-encoded, path: "/qags/%5Cx"}
+  - {id: fw-trace, method: TRACE, path: /qags/ask_status}
+  - {id: bad-jwt, path: /qags/ask_status, bearer: "abc.def.ghi"}
+  - {id: bearer-null, path: /qags/ask_status, bearer: "null"}
+  - {id: bearer-empty, path: /qags/ask_status, headers: {Authorization: "Bearer "}}
+  - {id: basic-auth, path: /qags/ask_status, headers: {Authorization: "Basic abc"}}
+  - {id: cookie-auth-unknown, path: /unknown, headers: {Cookie: "auth-jwt=garbage"}}
+  - {id: unknown-user-jwt, path: /unknown, as: "00000000-0000-4000-9000-0000000000ff"}
+  - {id: non-uuid-sub-jwt, path: /unknown, as: "not-a-uuid"}
+  - {id: v2-consultations-head-anon, method: HEAD, path: /v2/consultations/x}
+  - {id: options-anon-public-unknown, method: OPTIONS, path: /content/unknown}
+  - {id: preflight-unknown-path, method: OPTIONS, path: /nothing/here, headers: {Origin: "https://www.agora.gouv.fr", Access-Control-Request-Method: GET}}

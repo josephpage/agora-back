@@ -1,0 +1,54 @@
+{
+  "id": 4,
+  "documentId": "pg0000000000000000000004",
+  "titre_header": "Agora, la plateforme de participation citoyenne",
+  "sous_titre_header": "Donnez votre avis, posez vos questions",
+  "titre_body": "Comment ça marche ?",
+  "description_body": "Participez aux consultations et interpellez le Gouvernement.",
+  "texte_image_1": [
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "Répondez aux consultations."
+        }
+      ]
+    }
+  ],
+  "texte_image_2": [
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "Posez vos "
+        },
+        {
+          "type": "text",
+          "text": "questions",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "text": " au Gouvernement."
+        }
+      ]
+    }
+  ],
+  "texte_image_3": [
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "Suivez les réponses des ministres."
+        }
+      ]
+    }
+  ],
+  "createdAt": "2024-05-29T09:37:12.407Z",
+  "updatedAt": "2024-08-23T13:04:14.174Z",
+  "publishedAt": "2024-05-29T10:19:13.352Z",
+  "locale": null
+}

@@ -1,0 +1,34 @@
+name: S1-profile-get-seeded
+tags: [S1]
+dbdiff: step
+steps:
+  - {id: regular1, path: /profile, as: "{{seed.UserRegular1}}"}
+  - {id: regular1-xml, path: "/profile?mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: regular1-json-param, path: "/profile?mediaType=json", as: "{{seed.UserRegular1}}"}
+  - {id: regular2, path: /profile, as: "{{seed.UserRegular2}}"}
+  - {id: regular3, path: /profile, as: "{{seed.UserRegular3}}"}
+  - {id: regular6-departments-only, path: /profile, as: "{{seed.UserRegular6}}"}
+  - {id: regular6-xml, path: "/profile?mediaType=xml", as: "{{seed.UserRegular6}}"}
+  - {id: regular7-all-null-row, path: /profile, as: "{{seed.UserRegular7}}"}
+  - {id: regular7-xml, path: "/profile?mediaType=xml", as: "{{seed.UserRegular7}}"}
+  - {id: idle-no-profile, path: /profile, as: "{{seed.UserIdle}}"}
+  - {id: idle-no-profile-xml, path: "/profile?mediaType=xml", as: "{{seed.UserIdle}}"}
+  - {id: profile1, path: /profile, as: "{{seed.UserProfile1}}"}
+  - {id: profile2, path: /profile, as: "{{seed.UserProfile2}}"}
+  - {id: profile3, path: /profile, as: "{{seed.UserProfile3}}"}
+  - {id: profile4, path: /profile, as: "{{seed.UserProfile4}}"}
+  - {id: profile5, path: /profile, as: "{{seed.UserProfile5}}"}
+  - {id: profile6, path: /profile, as: "{{seed.UserProfile6}}"}
+  - {id: profile7, path: /profile, as: "{{seed.UserProfile7}}"}
+  - {id: profile8, path: /profile, as: "{{seed.UserProfile8}}"}
+  - {id: profile9, path: /profile, as: "{{seed.UserProfile9}}"}
+  - {id: profile10, path: /profile, as: "{{seed.UserProfile10}}"}
+  - {id: profile11, path: /profile, as: "{{seed.UserProfile11}}"}
+  - {id: profile12-null-year, path: /profile, as: "{{seed.UserProfile12}}"}
+  - {id: invalid-codes, path: /profile, as: "{{seed.UserProfileInvalid}}"}
+  - {id: invalid-codes-xml, path: "/profile?mediaType=xml", as: "{{seed.UserProfileInvalid}}"}
+  - {id: banned, path: /profile, as: "{{seed.UserBanned}}"}
+  - {id: moderator, path: /profile, as: "{{seed.UserModerator}}"}
+  - {id: bad-uuid-casing, path: /profile, as: "00000000-0000-4000-9000-000000000020"}
+  - {id: profile-with-trailing-slash, path: /profile/, as: "{{seed.UserProfile1}}"}
+  - {id: profile-etag-style, path: /profile, as: "{{seed.UserProfile1}}", headers: {If-None-Match: '"abc"'}}

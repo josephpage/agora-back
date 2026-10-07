@@ -1,0 +1,9 @@
+{
+    "name": "agora-back-go",
+    "env": {
+        "GO_INSTALL_PACKAGE_SPEC": { "value": "./cmd/agora" }
+    },
+    "scripts": {
+      "first-deploy": "bash bin/init_review_database.sh"
+    }
+}

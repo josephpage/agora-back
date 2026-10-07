@@ -1,0 +1,258 @@
+name: S1-login-after-signup
+tags: [S1]
+dbdiff: step
+steps:
+  - id: signup
+    method: POST
+    path: /signup
+    headers: {User-Agent: "Agora/2.0 (Android 14)", fcmToken: "fcm-first", versionName: "2.0.1", versionCode: "20", platform: android, X-Forwarded-For: "203.0.113.9"}
+    capture: {jwt: "$.jwtToken", loginToken: "$.loginToken", uid: "$.userId"}
+  - id: login
+    method: POST
+    path: /login
+    headers: {User-Agent: "Agora/2.0 (Android 14)", fcmToken: "fcm-second", versionName: "2.0.2", versionCode: "21", platform: android, X-Forwarded-For: "203.0.113.10"}
+    body: {loginToken: "{{loginToken}}"}
+    capture: {jwt2: "$.jwtToken"}
+  - {id: profile-with-login-jwt, path: /profile, bearer: "{{jwt2}}"}
+  - {id: profile-with-signup-jwt, path: /profile, bearer: "{{jwt}}"}
+  - id: login-minimal-headers
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "{{loginToken}}"}
+  - id: login-removes-fcm-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android, fcmToken: ""}
+    body: {loginToken: "{{loginToken}}"}
+  - id: login-xml
+    method: POST
+    path: "/login?mediaType=xml"
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "{{loginToken}}"}
+    compare: {body: status}
+  - id: login-extra-body-fields
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "{{loginToken}}", extra: [1, 2], other: {a: 1}}
+  - id: login-latin1-headers
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android, User-Agent: "Agora é ü", fcmToken: "tok é"}
+    body: {loginToken: "{{loginToken}}"}
+  - id: login-long-user-agent
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android, User-Agent: "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU"}
+    body: {loginToken: "{{loginToken}}"}
+  - id: login-after-long-ua-still-ok
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "{{loginToken}}"}
+  - id: login-long-fcm
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android, fcmToken: "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"}
+    body: {loginToken: "{{loginToken}}"}
+---
+name: S1-login-seeded-users
+tags: [S1]
+dbdiff: step
+steps:
+  - id: regular1
+    method: POST
+    path: /login
+    headers: {User-Agent: "Agora/1 (iOS)", fcmToken: "fcm-r1-new", versionCode: "12", platform: ios, X-Forwarded-For: "198.51.100.1"}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIK8UeYtso2EbJ3uG7Walwlucljy6EHMr/wCr2RPFF3uQ=="}
+  - id: regular1-profile-after-login
+    path: /profile
+    as: "{{seed.UserRegular1}}"
+  - id: regular2
+    method: POST
+    path: /login
+    headers: {versionCode: "12", platform: ios}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhJDy+wS1LLKACEX3tQ344+Bucljy6EHMr/wCr2RPFF3uQ=="}
+  - id: banned-user-can-login
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIOOWOsvG/ph8qe4dc3jvsHucljy6EHMr/wCr2RPFF3uQ=="}
+  - id: unknown-user
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhLKmcWV6SMNpvKuOxjlOheCucljy6EHMr/wCr2RPFF3uQ=="}
+  - id: unknown-user-xml
+    method: POST
+    path: "/login?mediaType=xml"
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhLKmcWV6SMNpvKuOxjlOheCucljy6EHMr/wCr2RPFF3uQ=="}
+  - id: uppercase-uuid-in-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhLr5pRp2XnoAbQxpE0urhVPucljy6EHMr/wCr2RPFF3uQ=="}
+  - id: extra-fields-in-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIK8UeYtso2EbJ3uG7WalwlHXfABL0SuhfqLgUuSygkCZPzOuvWB+BykmgP1pCwcKA="}
+  - id: numeric-user-id-in-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "XzIZ9glV8fa0peDecGwW7A=="}
+  - id: bool-user-id-in-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "Bob2A7F2QcuZ6yg5B+T59w=="}
+  - id: null-user-id-in-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "zy7j2PaTGeHkxEeTpMv3ZA=="}
+  - id: missing-user-id-in-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "lCdzfF9oT6y45b2xPpLywQ=="}
+  - id: array-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "6BXq0JSdlSowGWfxnbG/fQ=="}
+  - id: string-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "tkrdh4exFO4DkT3H4X6ytg=="}
+  - id: not-a-uuid-in-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "tpyZKIf8gcVd8f37PNZXTQ+90M+hNN7mWA8QnlMnTew="}
+  - id: lenient-uuid-in-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "/SUplPi6dwdCf7dQyKVsaiAbozvCihYzS6FfyPw4Xn0="}
+  - id: trailing-garbage-in-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIK8UeYtso2EbJ3uG7WalwlLjC0WmppUmSDsZ96jmoXTA=="}
+  - id: array-user-id-in-token
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "7sK2TLWz9fMtUPlzJDmxj0ixBuSYVC37R5SUJmVs2wNXqPeFjUXXQpeJsM0jRQ05uVGCurpC09PDvYI6MJbFXw=="}
+---
+# a NULL last_connection_date makes the cached UserDTO unreadable in Kotlin
+name: S1-login-null-last-connection
+tags: [S1]
+dbdiff: step
+steps:
+  - id: never-connected-first-login
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIVixVtrEY4V9zjrPDAPBFxucljy6EHMr/wCr2RPFF3uQ=="}
+  - id: never-connected-second-login
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIVixVtrEY4V9zjrPDAPBFxucljy6EHMr/wCr2RPFF3uQ=="}
+  - {id: never-connected-profile, path: /profile, as: "{{seed.UserNeverConnected}}"}
+  - {id: never-connected-profile-again, path: /profile, as: "{{seed.UserNeverConnected}}"}
+  - id: nofcm1-first-login
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhJsFtD/82F+S+l5Mt+UA016ucljy6EHMr/wCr2RPFF3uQ=="}
+  - {id: nofcm1-profile, path: /profile, as: "{{seed.UserNoFcm1}}"}
+---
+name: S1-login-null-last-connection-profile-first
+tags: [S1]
+dbdiff: step
+steps:
+  - {id: first-authenticated-call-works, path: /profile, as: "{{seed.UserNeverConnected}}"}
+  - {id: second-authenticated-call-fails, path: /profile, as: "{{seed.UserNeverConnected}}"}
+  - {id: other-user-unaffected, path: /profile, as: "{{seed.UserRegular1}}"}
+  - {id: third-authenticated-call-fails, method: POST, path: /profile, as: "{{seed.UserNeverConnected}}", body: {gender: "M"}}
+---
+name: S1-login-rejections
+tags: [S1]
+dbdiff: step
+steps:
+  - {id: garbage-token, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: "garbage"}}
+  - {id: empty-token, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: ""}}
+  - {id: token-bad-padding, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIK8UeYtso2EbJ3uG7Walwlucljy6EHMr/wCr2RPFF3uQ==="}}
+  - {id: token-url-safe-base64, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: "euxogrrEhl4PRVh40bRahniogi_YOWRgTDtjYUFhOhIK8UeYtso2EbJ3uG7Walwlucljy6EHMr_wCr2RPFF3uQ=="}}
+  - {id: token-no-padding, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIK8UeYtso2EbJ3uG7Walwlucljy6EHMr/wCr2RPFF3uQ"}}
+  - {id: token-truncated, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhO"}}
+  - {id: token-with-whitespace, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIK8UeYtso2EbJ3uG7Walwlu cljy6EHMr/wCr2RPFF3uQ=="}}
+  - {id: token-number, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: 12345}}
+  - {id: token-null, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: null}}
+  - {id: token-missing, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {}}
+  - {id: token-array, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: ["x"]}}
+  - {id: token-object, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: {a: 1}}}
+  - {id: body-array, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: ["x"]}
+  - {id: body-string, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: "x"}
+  - {id: body-null, method: POST, path: /login, headers: {versionCode: "20", platform: android}, bodyRaw: "null", contentType: application/json}
+  - {id: body-empty, method: POST, path: /login, headers: {versionCode: "20", platform: android}, bodyRaw: "", contentType: application/json}
+  - {id: body-invalid-json, method: POST, path: /login, headers: {versionCode: "20", platform: android}, bodyRaw: "{loginToken", contentType: application/json}
+  - {id: missing-version-header, method: POST, path: /login, headers: {platform: android}, body: {loginToken: "x"}}
+  - {id: missing-platform-header, method: POST, path: /login, headers: {versionCode: "20"}, body: {loginToken: "x"}}
+  - {id: missing-header-wins-over-bad-body, method: POST, path: /login, headers: {platform: android}, bodyRaw: "{", contentType: application/json}
+  - {id: bad-body-before-flag-and-version, method: POST, path: /login, headers: {versionCode: "abc", platform: "nope"}, bodyRaw: "{", contentType: application/json}
+  - {id: unknown-platform, method: POST, path: /login, headers: {versionCode: "20", platform: "ps5"}, body: {loginToken: "x"}}
+  - {id: unknown-platform-xml, method: POST, path: "/login?mediaType=xml", headers: {versionCode: "20", platform: "ps5"}, body: {loginToken: "x"}}
+  - {id: version-not-int, method: POST, path: /login, headers: {versionCode: "1.0", platform: web}, body: {loginToken: "x"}}
+  - {id: version-too-low, method: POST, path: /login, headers: {versionCode: "17", platform: android}, body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIK8UeYtso2EbJ3uG7Walwlucljy6EHMr/wCr2RPFF3uQ=="}}
+  - {id: version-too-low-before-token-check, method: POST, path: /login, headers: {versionCode: "11", platform: ios}, body: {loginToken: "garbage"}}
+  - {id: version-too-low-xml, method: POST, path: "/login?mediaType=xml", headers: {versionCode: "11", platform: ios}, body: {loginToken: "garbage"}}
+  - {id: json-charset, method: POST, path: /login, headers: {versionCode: "20", platform: android}, contentType: "application/json;charset=UTF-8", bodyRaw: '{"loginToken":"garbage"}'}
+  - {id: trailing-slash, method: POST, path: /login/, headers: {versionCode: "20", platform: android}, body: {loginToken: "x"}}
+---
+name: S1-login-flag-disabled
+tags: [S1]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_LOGIN_ENABLED": "false"}
+steps:
+  - {id: disabled, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhIK8UeYtso2EbJ3uG7Walwlucljy6EHMr/wCr2RPFF3uQ=="}}
+  - {id: disabled-xml, method: POST, path: "/login?mediaType=xml", headers: {versionCode: "20", platform: android}, body: {loginToken: "x"}}
+  - {id: disabled-still-validates-body, method: POST, path: /login, headers: {versionCode: "20", platform: android}, bodyRaw: "{", contentType: application/json}
+  - {id: signup-unaffected, method: POST, path: /signup, headers: {versionCode: "20", platform: android}}
+---
+name: S1-login-flag-both-disabled-env-default
+tags: [S1]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_LOGIN_ENABLED": "false", "featureFlags::IS_SIGNUP_ENABLED": "false"}
+steps:
+  - {id: signup-disabled, method: POST, path: /signup, headers: {versionCode: "20", platform: android}}
+  - {id: login-disabled, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: "x"}}
+---
+name: S1-login-flag-garbage
+tags: [S1]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_LOGIN_ENABLED": "yes please"}
+steps:
+  - {id: undecodable, method: POST, path: /login, headers: {versionCode: "20", platform: android}, body: {loginToken: "x"}}
+---
+name: S1-login-banned-and-roles
+tags: [S1]
+dbdiff: step
+steps:
+  - {id: banned-profile, path: /profile, as: "{{seed.UserBanned}}"}
+  - id: publisher-login
+    method: POST
+    path: /login
+    headers: {versionCode: "20", platform: android, fcmToken: "pub-new"}
+    body: {loginToken: "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhLr5pRp2XnoAbQxpE0urhVPucljy6EHMr/wCr2RPFF3uQ=="}
+  - {id: publisher-profile, path: /profile, as: "{{seed.UserPublisher}}"}

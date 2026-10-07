@@ -1,0 +1,368 @@
+{
+  "id": 5,
+  "documentId": "pg0000000000000000000005",
+  "conditions_generales_d_utilisation": [
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "Conditions générales d'utilisation"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "Titre niveau 2"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "Titre niveau 3 avec "
+        },
+        {
+          "type": "link",
+          "url": "https://www.agora.gouv.fr/titre",
+          "children": [
+            {
+              "type": "text",
+              "text": "un lien"
+            }
+          ]
+        }
+      ],
+      "level": 3
+    },
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "Titre niveau 4"
+        }
+      ],
+      "level": 4
+    },
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "Titre niveau 5"
+        }
+      ],
+      "level": 5
+    },
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "Titre niveau 6"
+        }
+      ],
+      "level": 6
+    },
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "Titre de niveau invalide (7)"
+        }
+      ],
+      "level": 7
+    },
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "Titre sans niveau"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "Texte simple, "
+        },
+        {
+          "type": "text",
+          "text": "gras",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "text",
+          "text": "italique",
+          "italic": true
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "text",
+          "text": "souligné",
+          "underline": true
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "text",
+          "text": "barré",
+          "strikethrough": true
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "text",
+          "text": "code",
+          "code": true
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "text",
+          "text": "tout à la fois",
+          "bold": true,
+          "italic": true,
+          "underline": true,
+          "strikethrough": true,
+          "code": true
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "text",
+          "text": "marques à false",
+          "bold": false,
+          "italic": false,
+          "underline": false,
+          "strikethrough": false,
+          "code": false
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "Un paragraphe avec "
+        },
+        {
+          "type": "link",
+          "url": "https://www.agora.gouv.fr/page?a=1&b=2",
+          "children": [
+            {
+              "type": "text",
+              "text": "un lien "
+            },
+            {
+              "type": "text",
+              "text": "en gras",
+              "bold": true
+            },
+            {
+              "type": "text",
+              "text": " et italique",
+              "italic": true
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " puis du texte accentué : éàüçœ — « guillemets » … 🙂 & Tom <3 \"quoted\" \\ backslash."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "format": "unordered",
+      "children": [
+        {
+          "type": "list-item",
+          "children": [
+            {
+              "type": "text",
+              "text": "Premier point"
+            }
+          ]
+        },
+        {
+          "type": "list-item",
+          "children": [
+            {
+              "type": "text",
+              "text": "Deuxième point avec "
+            },
+            {
+              "type": "link",
+              "url": "https://example.org",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "lien"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list-item",
+          "children": [
+            {
+              "type": "text",
+              "text": "Troisième point en gras",
+              "bold": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "format": "ordered",
+      "children": [
+        {
+          "type": "list-item",
+          "children": [
+            {
+              "type": "text",
+              "text": "Étape un"
+            }
+          ]
+        },
+        {
+          "type": "list-item",
+          "children": [
+            {
+              "type": "text",
+              "text": "Étape deux"
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "format": "unordered",
+          "children": [
+            {
+              "type": "list-item",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Sous-point A"
+                }
+              ]
+            },
+            {
+              "type": "list-item",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Sous-point B"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "quote",
+      "children": [
+        {
+          "type": "text",
+          "text": "« La participation citoyenne est un droit. »"
+        }
+      ]
+    },
+    {
+      "type": "quote",
+      "children": [
+        {
+          "type": "text",
+          "text": "Citation en italique",
+          "italic": true
+        },
+        {
+          "type": "text",
+          "text": " avec "
+        },
+        {
+          "type": "link",
+          "url": "https://example.org/q",
+          "children": [
+            {
+              "type": "text",
+              "text": "lien"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "code",
+      "children": [
+        {
+          "type": "text",
+          "text": "fmt.Println(\"bloc inconnu\")"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "image": {
+        "url": "https://cdn.parity.example/uploads/inline.png",
+        "alternativeText": "image inline"
+      },
+      "children": [
+        {
+          "type": "text",
+          "text": ""
+        }
+      ]
+    }
+  ],
+  "createdAt": "2024-05-29T09:37:12.407Z",
+  "updatedAt": "2024-08-23T13:04:14.174Z",
+  "publishedAt": "2024-05-29T10:19:13.352Z",
+  "locale": null
+}

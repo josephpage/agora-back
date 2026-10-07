@@ -1,0 +1,26 @@
+{
+  "id": 10,
+  "documentId": "pg0000000000000000000010",
+  "titre": "Questions au Gouvernement",
+  "sous_titre": "Posez votre question au Gouvernement",
+  "texte_soutien": [
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "Soutenez les questions qui comptent pour vous. "
+        },
+        {
+          "type": "text",
+          "text": "Chaque soutien compte.",
+          "bold": true
+        }
+      ]
+    }
+  ],
+  "createdAt": "2024-05-29T09:37:12.407Z",
+  "updatedAt": "2024-08-23T13:04:14.174Z",
+  "publishedAt": "2024-05-29T10:19:13.352Z",
+  "locale": null
+}

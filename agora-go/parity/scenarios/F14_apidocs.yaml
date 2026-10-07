@@ -1,0 +1,12 @@
+name: apidocs-swagger
+tags: [F14]
+dbdiff: none
+steps:
+  - {id: api-docs, path: /v3/api-docs}
+  - {id: swagger-config, path: /v3/api-docs/swagger-config, compare: {body: none}}
+  - {id: swagger-html, path: /swagger-ui.html}
+  - {id: index, path: /swagger-ui/index.html, compare: {headers: []}}
+  - {id: initializer, path: /swagger-ui/swagger-initializer.js}
+  - {id: css, path: /swagger-ui/swagger-ui.css}
+  - {id: missing-asset, path: /swagger-ui/nope.js}
+  - {id: yaml-anon, path: /v3/api-docs.yaml}

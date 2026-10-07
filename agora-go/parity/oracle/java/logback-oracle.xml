@@ -1,0 +1,8 @@
+<configuration debug="false">
+    <!-- The oracle must never write anything but protocol lines on stdout.
+         All logging is dropped here; Oracle.java re-attaches an in-memory
+         ERROR-level capture appender so that swallowed exceptions (e.g.
+         LoginTokenGenerator) can be reported in the error message. -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+    <root level="OFF"/>
+</configuration>

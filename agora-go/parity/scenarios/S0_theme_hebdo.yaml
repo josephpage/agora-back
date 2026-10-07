@@ -1,0 +1,322 @@
+name: s0-theme-hebdo-basic
+tags: [S0]
+dbdiff: none
+steps:
+  - {id: anon, path: /theme_hebdo}
+  - {id: anon-again, path: /theme_hebdo, repeat: 3}
+  - {id: user, path: /theme_hebdo, as: "{{seed.UserRegular1}}"}
+  - {id: banned, path: /theme_hebdo, as: "{{seed.UserBanned}}"}
+  - {id: admin, path: /theme_hebdo, as: "{{seed.UserAdmin}}"}
+  - {id: unknown-user-jwt, path: /theme_hebdo, as: "00000000-0000-4000-9000-0000000000ff"}
+  - {id: bad-jwt, path: /theme_hebdo, bearer: "abc.def.ghi"}
+  - {id: xml, path: "/theme_hebdo?mediaType=xml"}
+  - {id: xml-user, path: "/theme_hebdo?mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: xml-upper, path: "/theme_hebdo?mediaType=XML"}
+  - {id: json-explicit, path: "/theme_hebdo?mediaType=json"}
+  - {id: foo, path: "/theme_hebdo?mediaType=foo"}
+  - {id: foo-user, path: "/theme_hebdo?mediaType=foo", as: "{{seed.UserRegular1}}"}
+  - {id: empty-media, path: "/theme_hebdo?mediaType="}
+  - {id: other-params, path: "/theme_hebdo?x=1"}
+  - {id: accept-xml-header, path: /theme_hebdo, headers: {Accept: application/xml}}
+  - {id: head, method: HEAD, path: /theme_hebdo}
+  - {id: head-xml, method: HEAD, path: "/theme_hebdo?mediaType=xml"}
+  - {id: head-foo, method: HEAD, path: "/theme_hebdo?mediaType=foo"}
+  - {id: post, method: POST, path: /theme_hebdo}
+  - {id: put, method: PUT, path: /theme_hebdo}
+  - {id: delete, method: DELETE, path: /theme_hebdo}
+  - {id: options, method: OPTIONS, path: /theme_hebdo}
+  - {id: cors-get, path: /theme_hebdo, headers: {Origin: "https://www.agora.gouv.fr"}}
+  - {id: cors-preflight, method: OPTIONS, path: /theme_hebdo, headers: {Origin: "https://www.agora.gouv.fr", Access-Control-Request-Method: GET}}
+  - {id: no-etag-filter-on-this-path, path: /theme_hebdo, headers: {If-None-Match: '"0000"'}}
+  - {id: trailing-slash, path: /theme_hebdo/}
+  - {id: dash-instead-of-underscore, path: /theme-hebdo}
+  - {id: camel-case, path: /themeHebdo}
+  - {id: sub-path, path: /theme_hebdo/current}
+---
+name: s0-theme-hebdo-libre-current
+tags: [S0]
+dbdiff: none
+# the current week is a "theme libre": sousTitre is replaced
+setup:
+  strapiOverrides:
+    - {model: theme-hebdos, fixture: variants/theme-hebdos.libre-current.json}
+steps:
+  - {id: json, path: /theme_hebdo}
+  - {id: json-user, path: /theme_hebdo, as: "{{seed.UserRegular1}}"}
+  - {id: xml, path: "/theme_hebdo?mediaType=xml"}
+  - {id: head, method: HEAD, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-no-themes
+tags: [S0]
+dbdiff: none
+# no theme at all: the default "semaine libre" theme with this week's default dates (Monday 00:05 / Sunday 23:55 UTC)
+setup:
+  strapiOverrides:
+    - {model: theme-hebdos, data: []}
+steps:
+  - {id: json, path: /theme_hebdo}
+  - {id: xml, path: "/theme_hebdo?mediaType=xml"}
+  - {id: user, path: /theme_hebdo, as: "{{seed.UserRegular1}}"}
+---
+name: s0-theme-hebdo-fault-500
+tags: [S0]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: theme-hebdos, mode: "500"}
+steps:
+  - {id: json, path: /theme_hebdo}
+  - {id: json-again, path: /theme_hebdo}
+  - {id: xml, path: "/theme_hebdo?mediaType=xml"}
+---
+name: s0-theme-hebdo-fault-malformed
+tags: [S0]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: theme-hebdos, mode: malformed}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-fault-nulldata
+tags: [S0]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: theme-hebdos, mode: nulldata}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-fault-missingfield
+tags: [S0]
+dbdiff: none
+# the first string field of the first element ("theme") is dropped: the whole list is undecodable, hence empty
+setup:
+  strapiFaults:
+    - {model: theme-hebdos, mode: missingfield}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-fault-slow
+tags: [S0]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: theme-hebdos, mode: slow, delayMs: 600}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-other-model-fault
+tags: [S0]
+dbdiff: none
+# a fault on another model changes nothing
+setup:
+  strapiFaults:
+    - {model: thematiques, mode: "500"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-current-without-optional-fields
+tags: [S0]
+dbdiff: none
+# current theme without photo, minister, function, periode (generated from the UTC dates) and est_theme_libre (default false)
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Courant minimal", date_debut: "{{now-1d}}", date_fin: "{{now+1d}}"}
+        - {theme: "Futur A", date_debut: "{{now+3d}}", date_fin: "{{now+4d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+  - {id: xml, path: "/theme_hebdo?mediaType=xml"}
+---
+name: s0-theme-hebdo-current-explicit-nulls
+tags: [S0]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Courant nulls", periode: null, photo: null, nom_ministre: null, fonction: null, est_theme_libre: null, date_debut: "{{now-1d}}", date_fin: "{{now+1d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-photo-variants
+tags: [S0]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Photo sans medium", periode: "photo", photo: {url: "https://cdn.example/original.jpg", formats: {thumbnail: {url: "https://cdn.example/thumb.jpg"}}}, date_debut: "{{now-1d}}", date_fin: "{{now+1d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-photo-formats-null
+tags: [S0]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Photo formats null", photo: {url: "https://cdn.example/original.jpg", formats: null, width: 3}, date_debut: "{{now-1d}}", date_fin: "{{now+1d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-photo-without-url
+tags: [S0]
+dbdiff: none
+# StrapiMediaPicture.url is required: the whole Strapi answer is undecodable → empty → default theme
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Photo sans url", photo: {formats: null}, date_debut: "{{now-1d}}", date_fin: "{{now+1d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-special-periode
+tags: [S0]
+dbdiff: none
+# periode is upper-cased with Locale.ROOT (full case mapping); est_theme_libre true replaces sousTitre
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Spécial", periode: "semaine spéciale: Straße ﬁn ŉ ǆ août février 😀 'ç' <b", est_theme_libre: true, date_debut: "{{now-1d}}", date_fin: "{{now+1d}}", nom_ministre: "Zoé \"Quote\" <&", fonction: "tab\there\nnewline"}
+steps:
+  - {id: json, path: /theme_hebdo}
+  - {id: xml, path: "/theme_hebdo?mediaType=xml"}
+---
+name: s0-theme-hebdo-coercions
+tags: [S0]
+dbdiff: none
+# Jackson scalar coercions: numbers / booleans as strings, "true" / 1 as booleans
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: 42, periode: 12.50, est_theme_libre: "true", nom_ministre: false, fonction: 7, date_debut: "{{now-1d}}", date_fin: "{{now+1d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-est-theme-libre-as-int
+tags: [S0]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Libre 1", est_theme_libre: 1, date_debut: "{{now-1d}}", date_fin: "{{now+1d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-theme-null
+tags: [S0]
+dbdiff: none
+# "theme" is required: the whole list is undecodable → default theme
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: null, date_debut: "{{now-1d}}", date_fin: "{{now+1d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-missing-date-fin
+tags: [S0]
+dbdiff: none
+# date_fin is required: the whole list is undecodable → default theme
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Sans fin", date_debut: "{{now-1d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-null-date
+tags: [S0]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Date nulle", date_debut: null, date_fin: "{{now+1d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-overlapping-current
+tags: [S0]
+dbdiff: none
+# two themes contain "now": the first of the Strapi list wins
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Premier courant", periode: "premier", date_debut: "{{now-2d}}", date_fin: "{{now+2d}}", est_theme_libre: false}
+        - {theme: "Second courant", periode: "second", date_debut: "{{now-1d}}", date_fin: "{{now+1d}}", est_theme_libre: true}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-prochains-themes
+tags: [S0]
+dbdiff: none
+# the 3 next themes by start date, whatever the Strapi order; equal start dates keep the Strapi order;
+# themes that start at the same instant as the current one, or earlier, are not "next"
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Loin 6", date_debut: "{{now+30d}}", date_fin: "{{now+31d}}"}
+        - {theme: "Proche 2", date_debut: "{{now+10d}}", date_fin: "{{now+11d}}"}
+        - {theme: "Courant", periode: "courant", date_debut: "{{now-1d}}", date_fin: "{{now+1d}}"}
+        - {theme: "Egal 3a", date_debut: "{{now+20d}}", date_fin: "{{now+21d}}"}
+        - {theme: "Passé", date_debut: "{{now-20d}}", date_fin: "{{now-19d}}"}
+        - {theme: "Egal 3b", date_debut: "{{now+20d}}", date_fin: "{{now+22d}}"}
+        - {theme: "Proche 1", date_debut: "{{now+2d}}", date_fin: "{{now+3d}}"}
+        - {theme: "Même début", date_debut: "{{now-1d}}", date_fin: "{{now-12h}}"}
+        - {theme: "Loin 7", date_debut: "{{now+40d}}", date_fin: "{{now+41d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+  - {id: xml, path: "/theme_hebdo?mediaType=xml"}
+---
+name: s0-theme-hebdo-only-future
+tags: [S0]
+dbdiff: none
+# nothing current: the default theme; the next themes are those starting after this week's default Monday 00:05 UTC
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Futur 1", date_debut: "{{now+3d}}", date_fin: "{{now+4d}}"}
+        - {theme: "Passé récent", date_debut: "{{now-3d}}", date_fin: "{{now-2d}}"}
+        - {theme: "Futur 2", date_debut: "{{now+8d}}", date_fin: "{{now+9d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-just-ended-just-started
+tags: [S0]
+dbdiff: none
+# bounds a few seconds around now: not current yet / not any more (inclusive bounds are covered by the unit tests)
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Fini", date_debut: "{{now-2d}}", date_fin: "{{now-30s}}"}
+        - {theme: "Pas commencé", date_debut: "{{now+3h}}", date_fin: "{{now+2d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}
+---
+name: s0-theme-hebdo-draft-not-published
+tags: [S0]
+dbdiff: none
+# publishedAt null: draft documents are not returned by Strapi without status=draft
+setup:
+  strapiOverrides:
+    - model: theme-hebdos
+      data:
+        - {theme: "Brouillon courant", publishedAt: null, date_debut: "{{now-1d}}", date_fin: "{{now+1d}}"}
+        - {theme: "Publié futur", date_debut: "{{now+2d}}", date_fin: "{{now+3d}}"}
+steps:
+  - {id: json, path: /theme_hebdo}

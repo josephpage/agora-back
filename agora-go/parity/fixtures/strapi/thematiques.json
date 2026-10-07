@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "documentId": "th0000000000000000000001",
+    "label": "Environnement",
+    "pictogramme": "🌳",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 2,
+    "documentId": "th0000000000000000000002",
+    "label": "Santé",
+    "pictogramme": "🏥",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 3,
+    "documentId": "th0000000000000000000003",
+    "label": "Éducation",
+    "pictogramme": "📚",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 4,
+    "documentId": "th0000000000000000000004",
+    "label": "Transports",
+    "pictogramme": "🚆",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 5,
+    "documentId": "th0000000000000000000005",
+    "label": "Numérique",
+    "pictogramme": "💻",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  },
+  {
+    "id": 6,
+    "documentId": "th0000000000000000000006",
+    "label": "Démocratie",
+    "pictogramme": "🗳️",
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-08-23T13:04:14.174Z",
+    "publishedAt": "2024-05-29T10:19:13.352Z",
+    "locale": null
+  }
+]

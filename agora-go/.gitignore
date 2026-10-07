@@ -1,0 +1,8 @@
+/bin/agora
+/bin/fakestrapi
+/bin/parity
+/bin/seed
+/agora
+parity/oracle/.build/
+parity/reports/
+*.test
