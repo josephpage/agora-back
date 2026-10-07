@@ -443,6 +443,9 @@ final class Functions {
         // ---- ACME AES-GCM (AcmeCryptoHelper with AcmeConfig.encryptionKey = key) ---------------------
         F.put("aesGcmEncrypt", a -> acmeHelper(s(a, "key")).encrypt(s(a, "plaintext")));
         F.put("aesGcmDecrypt", a -> acmeHelper(s(a, "key")).decrypt(s(a, "ciphertext")));
+
+        // ---- slice S0 (thematiques, theme hebdo, referentiels) ---------------------------------------
+        S0Functions.register(F);
     }
 
     static Object jsonRoundTrip(JsonNode a) throws Exception {

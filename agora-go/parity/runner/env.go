@@ -39,6 +39,9 @@ func (s *Side) reset(ctx context.Context, setup Setup, now time.Time) error {
 	if s.GoCache {
 		// immediate L1 flush on every Go instance
 		_ = rdb.Publish(ctx, "agora:go:inval", "*\x00").Err()
+		// the pub/sub delivery is asynchronous: without this pause the first request of the scenario could still
+		// be served from an L1 entry of the previous scenario (seen with a few ms of scheduling delay)
+		time.Sleep(50 * time.Millisecond)
 	}
 	for k, v := range setup.Redis {
 		if err := rdb.Set(ctx, k, v, 0).Err(); err != nil {
