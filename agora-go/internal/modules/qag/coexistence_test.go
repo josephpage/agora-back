@@ -48,7 +48,7 @@ func TestIntegrationCoexistenceEvictions(t *testing.T) {
 	if !ok || v.(userFeedbackEntry).answer == nil || !*v.(userFeedbackEntry).answer {
 		t.Fatalf("the new answer is kept locally: %v", v)
 	}
-	if coexistenceCap(a, time.Hour) != 5*time.Minute {
+	if coexistenceCap(a, time.Hour) != cache.CoexistenceMaxTTL {
 		t.Fatal("no Go entry shared with Kotlin cache events outlives 5 minutes in coexistence mode")
 	}
 }

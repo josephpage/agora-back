@@ -121,6 +121,11 @@ func firewallReject(method, rawURI string) bool {
 	if !isNormalized(rawPath) || !isNormalized(decoded) {
 		return true
 	}
+	// encoded and decoded line feed, carriage return, line and paragraph
+	// separators (allowUrlEncodedLineFeed & co. default to false)
+	if strings.ContainsAny(decoded, "\n\r\u2028\u2029") {
+		return true
+	}
 	return false
 }
 

@@ -58,9 +58,10 @@ bodies). Your handler only reproduces the controller method:
   decides the 400/415):
   - `@RequestHeader("X") x: String` → `c.RequiredHeader("X")`
   - `@RequestHeader("X", required=false) x: String?` → `c.OptionalHeader("X")`
-  - `@RequestParam("p") p: String` → `c.RequiredParam("p")`; `String?` → `c.OptionalParam("p")`
+  - `@RequestParam("p") p: String` → `c.RequiredParam("p")`; `String?` → `c.OptionalParam("p")` (repeated
+    values joined with `,` like Spring); `request.getParameter` → `c.Param`; all values → `c.ParamValues`
   - `@RequestParam(defaultValue=d)` → `c.ParamDefault("p", d)` (absent or empty → d)
-  - `List<String>?` params → `c.ParamList("p")` (comma splitting like Spring)
+  - `List<String>?` params → `c.ParamList("p")` (one value: split on `,` + `String.trim()`; several: kept as is)
   - `@PathVariable` → `c.PathVar("name")`; Int conversions → `httpx.SpringIntPathVar(v)`,
     Boolean → `httpx.SpringBoolParam(v)`; enums: exact `valueOf` after trim, else 400.
   - `@RequestBody dto` → `c.BindBody(&dto)`. It reproduces the whole Spring/Jackson chain (captured on the
@@ -80,6 +81,9 @@ bodies). Your handler only reproduces the controller method:
   - `.build()` → `httpx.Empty(status)` (no body)
   - `ResponseEntity<String>` bodies → `httpx.String(status, s)`
   - preset content type (e.g. TSV) → `httpx.Bytes(status, contentType, b)`
+  - `ResponseEntity<List<T>>` (declared list type): the XML root is the DECLARED type, `<List>`; return a named slice type whose
+    `JavaName()` is `"List"` (see `content.FicheInventaireListJSON`). A list returned through `ResponseEntity<*>` / `HttpEntity<*>` uses
+    the runtime class (`ArrayList`, the xmljava default).
   - `.cacheControl(CacheControl.maxAge(N, SECONDS).cachePublic())` → `.CacheControl(N, true)`
   - extra headers → `.With("Name", "value")` (keep Tomcat's casing)
 - Exceptions:
@@ -156,6 +160,10 @@ shorter) and apply the same eviction events:
 `a.Cache.Invalidate(ctx, "<name>", key)` / `InvalidateAll`.
 In coexistence mode also delete the Kotlin keys the Kotlin code would have
 evicted: `a.Cache.DeleteKotlinKeys(ctx, cache.KotlinKey("consultationResults", id))`.
+Conversely, Go cannot observe the evictions done by the Kotlin backend: every
+Go cache of data a Kotlin write can change (profile, feedbacks, results, has
+answered...) takes its TTL through `a.Cache.CoexistenceTTL(ttl)` (capped at
+5 s while `AGORA_COEXISTENCE=true`). Strapi data is not concerned.
 Keys shared with Kotlin in its exact format (rate limit, signup counters,
 feature flags) use `GetSharedJSON/SetSharedJSON`. Data Kotlin does NOT cache:
 only shared (non per-user) aggregates may be micro-cached for

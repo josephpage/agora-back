@@ -450,6 +450,9 @@ final class Functions {
 
         // ---- request layer (F5): byte decoding, Jackson tokens, media types -------------------------
         F5Functions.register(F);
+
+        // ---- slice S9 (CMS content pages, news, charter, fiches inventaire, app feedback) -----------
+        S9Functions.register(F);
     }
 
     static Object jsonRoundTrip(JsonNode a) throws Exception {

@@ -87,6 +87,21 @@ func (c *Cache) Redis() *redis.Client { return c.rdb }
 // Coexistence reports whether the Kotlin backend may still be serving traffic.
 func (c *Cache) Coexistence() bool { return c.coexistence }
 
+// CoexistenceMaxTTL is the longest a Go cache entry of data the Kotlin
+// backend can also write may live while both backends serve traffic: Go
+// cannot observe the Kotlin evictions (during the cutover a user may write
+// through Kotlin and read through Go).
+const CoexistenceMaxTTL = 5 * time.Second
+
+// CoexistenceTTL caps ttl to CoexistenceMaxTTL in coexistence mode. Use it for
+// every cache of data a Kotlin write can change (not for Strapi data).
+func (c *Cache) CoexistenceTTL(ttl time.Duration) time.Duration {
+	if c.coexistence && ttl > CoexistenceMaxTTL {
+		return CoexistenceMaxTTL
+	}
+	return ttl
+}
+
 // Run starts the invalidation subscriber and the epoch watcher.
 func (c *Cache) Run(ctx context.Context) {
 	if c.rdb == nil {

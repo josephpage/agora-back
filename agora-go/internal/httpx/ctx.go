@@ -153,9 +153,28 @@ func (c *Ctx) Param(name string) (string, bool) {
 	return v[0], true
 }
 
+// ParamValues returns every value of a query parameter (getParameterValues),
+// nil when absent.
+func (c *Ctx) ParamValues(name string) []string {
+	return c.params()[name]
+}
+
+// requestParam is @RequestParam's String value: several values are joined
+// with "," (String[] → String conversion).
+func (c *Ctx) requestParam(name string) (string, bool) {
+	vals := c.params()[name]
+	if len(vals) == 0 {
+		return "", false
+	}
+	if len(vals) == 1 {
+		return vals[0], true
+	}
+	return strings.Join(vals, ","), true
+}
+
 // RequiredParam is @RequestParam("name") on a non-null String: absent → 400.
 func (c *Ctx) RequiredParam(name string) string {
-	v, ok := c.Param(name)
+	v, ok := c.requestParam(name)
 	if !ok {
 		panic(&SpringError{Status: 400, Cause: "MissingServletRequestParameterException: " + name})
 	}
@@ -164,7 +183,7 @@ func (c *Ctx) RequiredParam(name string) string {
 
 // OptionalParam is @RequestParam(name) on a nullable Kotlin type (String?).
 func (c *Ctx) OptionalParam(name string) *string {
-	v, ok := c.Param(name)
+	v, ok := c.requestParam(name)
 	if !ok {
 		return nil
 	}
@@ -173,29 +192,30 @@ func (c *Ctx) OptionalParam(name string) *string {
 
 // ParamDefault is @RequestParam(name, defaultValue = def): absent or empty → def.
 func (c *Ctx) ParamDefault(name, def string) string {
-	v, ok := c.Param(name)
+	v, ok := c.requestParam(name)
 	if !ok || v == "" {
 		return def
 	}
 	return v
 }
 
-// ParamList is @RequestParam List<String>? : every value, each split on ','
-// (Spring's StringToCollectionConverter on single values), nil if absent.
+// ParamList is @RequestParam List<String>?: a single value is split on ","
+// with each element trimmed by String.trim() (StringToCollectionConverter,
+// "" → empty list), several values are kept as they are
+// (ArrayToCollectionConverter); nil when absent.
 func (c *Ctx) ParamList(name string) []string {
 	vals, ok := c.params()[name]
-	if !ok {
+	if !ok || len(vals) == 0 {
 		return nil
 	}
 	if len(vals) == 1 {
-		// a single value is split on commas and each element trimmed
-		parts := strings.Split(vals[0], ",")
-		out := make([]string, 0, len(parts))
-		for _, p := range parts {
-			out = append(out, strings.TrimSpace(p))
-		}
-		if len(out) == 1 && out[0] == "" {
+		if vals[0] == "" {
 			return []string{}
+		}
+		parts := strings.Split(vals[0], ",")
+		out := make([]string, len(parts))
+		for i, p := range parts {
+			out[i] = javacompat.JavaStringTrim(p)
 		}
 		return out
 	}

@@ -66,4 +66,39 @@ La migration est compatible avec le backend Kotlin. Hibernate (`ddl-auto=update`
 
 ## 2. Charge HTTP (Kotlin contre Go)
 
-À compléter quand les tranches des listes seront portées (S2, S3, S4, S5). Les profils de `parity/loadtest` (ouverture d'app, consultation, rafale de soutiens, pages web) seront lancés sur les deux backends, avec les mêmes limites CPU et mémoire (`parity/cgroup.sh`), la même base et le même Redis.
+### 2.1 Premières mesures : routes des tranches S0 et S1 (7 oct.)
+
+**Conditions :**
+- chaque backend est confiné à **1 CPU et 1 Go de RAM** (cgroup, `parity/cgroup.sh`) et testé seul, l'un après l'autre ;
+- même Postgres 16, même Redis, même faux Strapi ;
+- seed `-scale 50` (2 000 utilisateurs) ;
+- 200 utilisateurs virtuels, 15 s de chauffe (JIT), 30 s mesurées ;
+- profil `ported` de `parity/loadtest` : `/thematiques` 30 %, `/theme_hebdo` 20 %, `/referentiels/regions-et-departements` 10 %, `GET /profile` authentifié 40 %.
+
+La machine de test (4 CPU) faisait aussi tourner d'autres environnements de parité : ce sont des ordres de grandeur, pas une mesure de référence.
+
+| | Kotlin | Go | Rapport |
+|---|---:|---:|---:|
+| Débit total | 371 req/s | 14 271 req/s | **×38** |
+| p50 | 102 ms | 2,5 ms | |
+| p90 | 1 883 ms | 55,8 ms | |
+| p99 | 4 395 ms | 75,5 ms | |
+| `/thematiques` p99 | 3 307 ms | 50 ms | |
+| `GET /profile` p99 | 5 297 ms | 79 ms | |
+
+Les 500 de `/profile` sont identiques des deux côtés : environ 20 % des utilisateurs de ce seed ont un `last_connection_date` NULL. C'est une particularité Kotlin, reproduite telle quelle (voir `parity/ledger/S1.md`).
+
+**Commande :**
+```
+parity/loadtest -target http://localhost:<port> -profile ported -c 200 -d 30s -warmup 15s -users 1900 -jwt-secret "$JWT_SECRET"
+```
+
+### 2.2 À venir
+
+Campagne complète quand les listes (S3, S5) et les consultations (S4, S6) seront portées. Profils prévus :
+- `app-open` ;
+- `consultation` ;
+- `support` (S2 a mesuré environ 3 200 req/s en Go contre 360 en Kotlin sur son slot) ;
+- `web`.
+
+Ils tourneront sur la base `-scale 5000`, avec index, sur une machine dédiée, sans autre environnement en parallèle.

@@ -138,13 +138,14 @@ start_go() {
 }
 
 stop_go() { pkill -f "^$RUN/agora\$" 2>/dev/null || true; fuser -k $GO_PORT/tcp 2>/dev/null || true; sleep 1; }
-stop_ref() { fuser -k $REF_PORT/tcp 2>/dev/null || true; sleep 3; }
+# a restarted reference JVM has no stuck AgoraQueue slot (see parity/runner/kotlinlocks.go)
+stop_ref() { fuser -k $REF_PORT/tcp 2>/dev/null || true; rm -f "$RUN/kotlin-queue-locks"; sleep 3; }
 
 case "${1:-up}" in
   up) start_pg; start_redis; start_strapi; start_ref; start_go; echo "parity environment up" ;;
   restart-go) stop_go; start_go; echo "go restarted" ;;
   restart-ref) stop_ref; start_ref; echo "ref restarted" ;;
-  test) shift; exec go run ./parity/cmd/parity "$@" ;;
+  test) shift; PARITY_KOTLIN_LOCKS="$RUN/kotlin-queue-locks" exec go run ./parity/cmd/parity "$@" ;;
   down) stop_go; stop_ref; fuser -k $REF_STRAPI/tcp $GO_STRAPI/tcp 2>/dev/null || true; redis-cli -p $REF_REDIS -a refpass shutdown nosave 2>/dev/null || true; redis-cli -p $GO_REDIS -a gopass shutdown nosave 2>/dev/null || true ;;
   *) echo "usage: $0 up|restart-go|restart-ref|test|down" >&2; exit 2 ;;
 esac
