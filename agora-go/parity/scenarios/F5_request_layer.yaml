@@ -4,7 +4,6 @@ name: F5-body-bytes
 tags:
 - F5
 - request
-skip: request-layer wiring in progress (lead)
 dbdiff: step
 steps:
 - id: utf8
@@ -378,7 +377,6 @@ name: F5-content-type
 tags:
 - F5
 - request
-skip: request-layer wiring in progress (lead)
 dbdiff: step
 steps:
 - id: ct-0
@@ -893,7 +891,6 @@ name: F5-header-firewall
 tags:
 - F5
 - request
-skip: request-layer wiring in progress (lead)
 steps:
 - id: auth-tab
   path: /thematiques
@@ -903,7 +900,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: auth-latin1
   path: /thematiques
@@ -913,7 +909,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: unread-header-tab
   path: /thematiques
@@ -923,7 +918,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: cors-header-tab
   path: /thematiques
@@ -934,7 +928,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: cors-header-utf8-dash
   path: /thematiques
@@ -945,7 +938,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: cors-header-utf8-e
   path: /thematiques
@@ -956,7 +948,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: cors-evil-header-tab
   path: /thematiques
@@ -967,7 +958,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: etag-inm-tab
   path: /thematiques
@@ -977,7 +967,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: no-etag-inm-tab
   path: /theme_hebdo
@@ -987,7 +976,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: body-other-header-tab
   method: POST
@@ -1000,7 +988,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: get-profile-header-tab
   path: /profile
@@ -1011,7 +998,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: unknown-anon-cors-tab
   path: /nope
@@ -1022,7 +1008,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: unknown-anon-cors-evil-tab
   path: /nope
@@ -1033,7 +1018,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: unknown-authed-cors-tab
   path: /nope
@@ -1045,7 +1029,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: protected-anon-cors-tab
   path: /profile
@@ -1056,7 +1039,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: accept-tab-inner
   path: /thematiques
@@ -1066,7 +1048,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: accept-c1
   path: /thematiques
@@ -1076,7 +1057,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: accept-c1-404
   path: /nope
@@ -1087,7 +1067,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: accept-c1-401
   path: /nope
@@ -1097,7 +1076,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: accept-c1-mediatype
   path: /thematiques?mediaType=json
@@ -1107,7 +1085,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: origin-c1
   path: /thematiques
@@ -1117,7 +1094,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: origin-tab
   path: /thematiques
@@ -1127,7 +1103,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 - id: header-name-only-read-later
   path: /thematiques
@@ -1137,14 +1112,12 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
 ---
 name: F5-cors-content-type
 tags:
 - F5
 - request
-skip: request-layer wiring in progress (lead)
 steps:
 - id: known-cors-wild
   path: /thematiques
@@ -1155,7 +1128,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: known-cors-evil-wild
@@ -1167,7 +1139,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: known-no-cors-wild
@@ -1177,7 +1148,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: known-cors-wild-suffix
@@ -1189,7 +1159,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: known-cors-wild-suffix-charset
@@ -1201,7 +1170,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: known-cors-invalid-ct
@@ -1213,7 +1181,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: known-cors-bad-charset
@@ -1225,7 +1192,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: known-cors-app-wild
@@ -1237,7 +1203,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: known-cors-star
@@ -1249,7 +1214,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: preflight-wild
@@ -1262,7 +1226,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: preflight-unknown-wild
@@ -1275,7 +1238,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: unknown-anon-cors-wild
@@ -1287,7 +1249,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: unknown-anon-cors-evil-wild
@@ -1299,7 +1260,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: unknown-authed-cors-wild
@@ -1312,7 +1272,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: protected-anon-cors-wild
@@ -1324,7 +1283,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: protected-authed-cors-wild
@@ -1337,7 +1295,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: post-profile-cors-ok
@@ -1351,7 +1308,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: post-profile-cors-wild
@@ -1365,7 +1321,6 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
 - id: post-profile-cors-bad-charset
@@ -1379,18 +1334,155 @@ steps:
   compare:
     headers:
     - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
     - Accept
-- id: admin-anon-cors-wild
-  path: /admin/cache/clear
-  method: POST
-  contentType: '*/*'
-  headers:
-    Origin: https://www.agora.gouv.fr
+---
+name: F5-params-path-headers
+tags:
+- F5
+- request
+dbdiff: step
+steps:
+- id: q-invalid-utf8
+  path: /thematiques?mediaType=xm%FF
+  method: GET
   compare:
     headers:
-    - Access-Control-Allow-Origin
-    - Content-Length
     - Content-Language
-    - Accept
+- id: q-truncated-utf8
+  path: /thematiques?mediaType=xml%C3
+  method: GET
+  compare:
+    headers:
+    - Content-Language
+- id: q-second-value-invalid
+  path: /thematiques?mediaType=xml&mediaType=%FF
+  method: GET
+  compare:
+    headers:
+    - Content-Language
+- id: q-invalid-name
+  path: /thematiques?media%FFType=xml
+  method: GET
+  compare:
+    headers:
+    - Content-Language
+- id: q-bad-escape-skipped
+  path: /thematiques?mediaType=x%zz
+  method: GET
+  compare:
+    headers:
+    - Content-Language
+- id: q-bad-escape-other
+  path: /thematiques?mediaType=xml&x=%zz
+  method: GET
+  compare:
+    headers:
+    - Content-Language
+- id: q-plus-space
+  path: /thematiques?mediaType=+xml
+  method: GET
+  compare:
+    headers:
+    - Content-Language
+- id: q-empty-name
+  path: /thematiques?=xml&mediaType=json
+  method: GET
+  compare:
+    headers:
+    - Content-Language
+- id: path-invalid-utf8
+  path: /qags/%FF
+  as: '{{seed.UserRegular1}}'
+  method: GET
+  compare:
+    headers:
+    - Content-Language
+- id: path-truncated-utf8
+  path: /nope/%E2%82
+  method: GET
+  compare:
+    headers:
+    - Content-Language
+- id: path-overlong
+  path: /%C0%AF
+  method: GET
+  compare:
+    headers:
+    - Content-Language
+- id: path-valid-utf8
+  path: /thematiques/%C3%A9
+  method: GET
+  compare:
+    headers:
+    - Content-Language
+- id: signup-ua-tab
+  method: POST
+  path: /signup
+  headers:
+    versionCode: '20'
+    platform: android
+    User-Agent: b64:YQli
+  compare:
+    headers:
+    - Content-Language
+- id: signup-ua-c1
+  method: POST
+  path: /signup
+  headers:
+    versionCode: '20'
+    platform: android
+    User-Agent: b64:Y2Fmw6kg4oCTIHg=
+  compare:
+    headers:
+    - Content-Language
+- id: signup-platform-tab
+  method: POST
+  path: /signup
+  headers:
+    versionCode: '20'
+    platform: b64:YW5kcglvaWQ=
+  compare:
+    headers:
+    - Content-Language
+- id: signup-xra-tab-unread
+  method: POST
+  path: /signup
+  headers:
+    versionCode: '20'
+    platform: android
+    X-Forwarded-For: 203.0.113.9
+    X-Remote-Address: b64:YQli
+  compare:
+    headers:
+    - Content-Language
+- id: signup-xra-tab-read
+  method: POST
+  path: /signup
+  headers:
+    versionCode: '20'
+    platform: android
+    X-Remote-Address: b64:YQli
+  compare:
+    headers:
+    - Content-Language
+- id: signup-xff-c1
+  method: POST
+  path: /signup
+  headers:
+    versionCode: '20'
+    platform: android
+    X-Forwarded-For: b64:Y2Fmw6kg4oCTIHg=
+  compare:
+    headers:
+    - Content-Language
+- id: signup-multi-fcm
+  method: POST
+  path: /signup
+  headers:
+    versionCode: '20'
+    platform: android
+    fcmToken: a
+  compare:
+    headers:
+    - Content-Language

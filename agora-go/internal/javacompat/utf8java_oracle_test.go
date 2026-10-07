@@ -47,3 +47,12 @@ func TestDecodeUTF8JavaOracle(t *testing.T) {
 		t.Fatalf("%d/%d mismatches", bad, len(inputs))
 	}
 }
+
+func TestLatin1(t *testing.T) {
+	if got := Latin1("é"); got != "Ã©" { // the two UTF-8 bytes read as ISO-8859-1
+		t.Errorf("got %q", got)
+	}
+	if got := Latin1("plain"); got != "plain" {
+		t.Errorf("got %q", got)
+	}
+}

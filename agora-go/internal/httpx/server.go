@@ -107,6 +107,10 @@ type responseState struct {
 	headers []Header
 	// headersWritten marks that Spring Security's HeaderWriterFilter applies.
 	securityHeaders bool
+	// corsDeferred: a cross-origin request without handler; the MVC
+	// CorsInterceptor of /error processes it when the error is rendered.
+	corsDeferred bool
+	corsOrigin   string
 }
 
 func (st *responseState) add(name, value string) {
@@ -140,27 +144,35 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	path := r.URL.Path
+	m := s.router.match(r.Method, path)
+
 	// 1. StrictHttpFirewall (before HeaderWriterFilter: no security headers).
 	if firewallReject(r.Method, rawURI) {
+		if origin, cors := corsRequest(r); cors {
+			st.corsDeferred, st.corsOrigin = true, origin
+		}
 		s.writeSpringError(w, r, st, 400, rawPath, now)
 		return
 	}
 	st.securityHeaders = true
 
 	// 2. CORS (Spring Security CorsFilter with the MVC configuration).
-	if done := s.handleCORS(w, r, st); done {
+	if done := s.handleCORS(w, r, st, m); done {
 		return
 	}
 
-	// 3. AuthenticationTokenFilter
+	// 3. AuthenticationTokenFilter (reads Authorization through the firewall)
+	if !firstHeaderOK(r, "Authorization") {
+		s.writeSpringError(w, r, st, 400, rawPath, now)
+		return
+	}
 	user, authErr := s.authenticate(r)
 	if authErr != nil {
 		s.log.Error("uncaught exception in AuthenticationTokenFilter", "err", authErr)
 		s.writeSpringError(w, r, st, 500, rawPath, now)
 		return
 	}
-
-	path := r.URL.Path
 
 	// 4. AuthorizationFilter
 	switch decide(s.rules, r.Method, path, user) {
@@ -177,8 +189,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 5. DispatcherServlet handler lookup.
-	m := s.router.match(r.Method, path)
+	// 5. DispatcherServlet handler lookup. RequestMappingHandlerMapping first;
+	// on a miss the router function resources("/**") builds a ServerRequest
+	// (ServletServerHttpRequest.getHeaders(): firewall + Content-Type checks)
+	// before the static resource lookup fails (404) or springdoc's resource
+	// handler serves /swagger-ui/**.
+	if !m.pathMatched || s.isResourcePath(path) {
+		if status := springHeadersStatus(r); status != 0 {
+			s.writeSpringError(w, r, st, status, rawPath, now)
+			return
+		}
+	}
 	if !m.pathMatched {
 		s.writeSpringError(w, r, st, 404, rawPath, now)
 		return
@@ -190,11 +211,19 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			s.finish(w, r, st, &Response{Status: 200, Kind: BodyNone}, now, rawPath)
 			return
 		}
-		st.add("Allow", strings.Join(m.allowed, ","))
+		// HttpRequestMethodNotSupportedException headers: ", " (OPTIONS uses ",")
+		st.add("Allow", strings.Join(m.allowed, ", "))
 		s.writeSpringError(w, r, st, 405, rawPath, now)
 		return
 	}
 
+	// DispatcherServlet's last-modified support: for GET/HEAD,
+	// ServletWebRequest.checkNotModified(-1) reads If-None-Match before the
+	// handler runs.
+	if (r.Method == "GET" || r.Method == "HEAD") && !headerValuesOK(r, "If-None-Match") {
+		s.writeSpringError(w, r, st, 400, rawPath, now)
+		return
+	}
 	c := &Ctx{R: r, Vars: m.vars, User: user, Now: now, srv: s}
 	resp := s.invoke(c, m.route.Handler)
 	s.finish(w, r, st, resp, now, rawPath)
@@ -223,7 +252,12 @@ type errorResponse struct {
 func (s *Server) panicToResponse(r *http.Request, v any) *Response {
 	var se *SpringError
 	var ae *AdviceError
+	var hr *headerRejected
 	if err, ok := v.(error); ok {
+		if errors.As(err, &hr) {
+			// RequestRejectedException → HttpStatusRequestRejectedHandler: 400
+			return &Response{Status: 400, Kind: BodyValue, Value: errorMarker{400}}
+		}
 		if errors.As(err, &se) {
 			return &Response{Status: se.Status, Kind: BodyValue, Value: errorMarker{se.Status}, Headers: se.Headers}
 		}
@@ -260,7 +294,28 @@ func negotiate(r *http.Request) string {
 	return ""
 }
 
+// writeSpringError renders a sendError(status) through /error. For a
+// cross-origin request whose CORS processing was deferred, the MVC
+// CorsInterceptor of the /error handler runs first: its getHeaders() can be
+// rejected by the firewall (400, no body) or throw on the Content-Type
+// (Tomcat's own page for the current status), then the origin is checked.
 func (s *Server) writeSpringError(w http.ResponseWriter, r *http.Request, st *responseState, status int, rawPath string, now time.Time) {
+	if st.corsDeferred {
+		switch springHeadersStatus(r) {
+		case 400:
+			s.writeRejectedEmpty(w, r, st)
+			return
+		case 500:
+			s.writeTomcatPage(w, r, st, status)
+			return
+		}
+		allowOrigin, ok := s.cors.checkOrigin(st.corsOrigin)
+		if !ok || !methodAllowed(r.Method) {
+			s.rejectCORS(w, r, st)
+			return
+		}
+		st.add("Access-Control-Allow-Origin", allowOrigin)
+	}
 	s.finish(w, r, st, &Response{Status: status, Kind: BodyValue, Value: errorMarker{status}}, now, rawPath)
 }
 
