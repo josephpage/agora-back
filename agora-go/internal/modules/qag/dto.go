@@ -1,7 +1,6 @@
 package qag
 
 import (
-	"agora/internal/common"
 	"time"
 
 	"agora/internal/modules/thematique"
@@ -203,7 +202,7 @@ func ToQagJSON(q QagWithUserData) QagJSON {
 		Thematique:  thematique.ToNoIDJSON(d.Thematique),
 		Title:       d.Title,
 		Description: d.Description,
-		Date:        common.FormatDate(d.Date),
+		Date:        formatDate(d.Date),
 		Username:    d.Username,
 		CanShare:    q.CanShare,
 		CanSupport:  q.CanSupport,
@@ -216,7 +215,7 @@ func ToQagJSON(q QagWithUserData) QagJSON {
 			vj := &ResponseQagVideoJSON{
 				Author:               v.Author,
 				AuthorDescription:    v.AuthorDescription,
-				ResponseDate:         common.FormatDate(v.ResponseDate),
+				ResponseDate:         formatDate(v.ResponseDate),
 				VideoURL:             v.VideoURL,
 				VideoTitle:           v.VideoTitle,
 				VideoWidth:           v.VideoWidth,
@@ -255,7 +254,7 @@ func ToPublicQagJSON(d QagDetails) PublicQagJSON {
 		Thematique:   thematique.ToNoIDJSON(d.Thematique),
 		Title:        d.Title,
 		Description:  d.Description,
-		Date:         common.FormatDate(d.Date),
+		Date:         formatDate(d.Date),
 		Username:     d.Username,
 		SupportCount: d.SupportCount,
 	}
@@ -265,7 +264,7 @@ func ToPublicQagJSON(d QagDetails) PublicQagJSON {
 				Author:            v.Author,
 				AuthorDescription: v.AuthorDescription,
 				AuthorPortraitURL: v.AuthorPortraitURL,
-				ResponseDate:      common.FormatDate(v.ResponseDate),
+				ResponseDate:      formatDate(v.ResponseDate),
 				VideoURL:          v.VideoURL,
 				VideoTitle:        v.VideoTitle,
 				VideoWidth:        v.VideoWidth,

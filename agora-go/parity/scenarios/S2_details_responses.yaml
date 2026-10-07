@@ -1,0 +1,731 @@
+name: S2-details-response-empty-response-type
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-unknown-component
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.autre", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-missing-component
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-first-type-wins-text-then-video
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponsetextuelle", "label": "Libellé", "text": [{"type": "paragraph", "children": [{"type": "text", "text": "Bonjour ", "bold": true}, {"type": "text", "text": "le monde"}]}]}, {"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-first-type-wins-video-then-text
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}, {"__component": "reponse.reponsetextuelle", "label": "Libellé", "text": [{"type": "paragraph", "children": [{"type": "text", "text": "Bonjour ", "bold": true}, {"type": "text", "text": "le monde"}]}]}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-null-type-element
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [null], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-two-responses-for-the-same-qag
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Premier", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}, {"id": 1, "documentId": "re01", "auteur": "Second", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-datetime-z
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T23:30:00.000Z", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-datetime-no-zone
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T10:00:00", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-datetime-offset
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T23:30:00+02:00", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-invalid-day
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-02-30", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-empty-string
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-compact
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "20261004", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-number
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": 1759536000000, "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-array
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": [2026, 10, 4], "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-null
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": null, "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-long-year
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "+12026-10-04", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-short-month
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-1-4", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-video-media-and-function
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": "Fonction racine", "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": {"url": "https://v/media.mp4"}}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-video-additional-info
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": "Plus", "page_title": "Titre page", "informationAdditionnelleDescription": [{"type": "paragraph", "children": [{"type": "text", "text": "Détail"}]}], "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-video-additional-info-blank-title
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": "   ", "page_title": "Titre page", "informationAdditionnelleDescription": [{"type": "paragraph", "children": [{"type": "text", "text": "Détail"}]}], "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-video-additional-info-empty-description
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": "Plus", "page_title": "Titre page", "informationAdditionnelleDescription": [], "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-video-additional-info-title-only
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": "Plus", "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-video-numbers-as-strings
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": "1280", "videoHeight": "720.9", "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-video-numbers-null-or-missing
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoHeight": null, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-video-number-float
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920.7, "videoHeight": 1000.0, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-video-number-bool
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": true, "videoHeight": false, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-video-missing-required-string
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-video-null-required-string
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": null, "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-portrait-medium
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": {"url": "https://p/orig.jpg", "formats": {"medium": {"url": "https://p/medium.jpg"}}}, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-portrait-without-medium
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": {"url": "https://p/orig.jpg", "formats": {"thumbnail": {"url": "https://p/t.jpg"}}}, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-portrait-null-formats
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": {"url": "https://p/orig.jpg", "formats": null}, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-portrait-without-url
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": {"formats": null}, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-text-simple
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponsetextuelle", "label": "Libellé", "text": [{"type": "paragraph", "children": [{"type": "text", "text": "Bonjour ", "bold": true}, {"type": "text", "text": "le monde"}]}]}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-text-empty-rich-text
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponsetextuelle", "label": "Libellé", "text": []}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-text-rich-nodes
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponsetextuelle", "label": "Libellé", "text": [{"type": "heading", "level": 2, "children": [{"type": "text", "text": "Titre"}]}, {"type": "list", "format": "ordered", "children": [{"type": "list-item", "children": [{"type": "text", "text": "un", "italic": true}]}]}, {"type": "quote", "children": [{"type": "text", "text": "cité", "code": true}]}, {"type": "mystery", "children": [{"type": "text", "text": "x"}]}]}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-text-missing-label
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponsetextuelle", "text": [{"type": "paragraph", "children": [{"type": "text", "text": "Bonjour ", "bold": true}, {"type": "text", "text": "le monde"}]}]}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-text-null-element
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponsetextuelle", "label": "Libellé", "text": [null]}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-fonction-and-description-both
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": "Fonction", "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Description", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-missing-auteur
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-fonction-key-missing
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-extra-unknown-fields
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "{{date:now-2d}}", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null, "autre": 1}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z", "inconnu": {"a": [1, 2]}}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-with-spaces
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": " 2026-10-04 ", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-z-invalid-time
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T99:99:99Z", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-datetime-minutes-only
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T10:00", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-negative-year
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "-0001-10-04", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-five-digits-without-plus
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "12026-10-04", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-datetime-bare-dot
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T10:00:00.", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-datetime-hour-24
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T24:00:00", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-datetime-fraction-10-digits
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T10:00:00.1234567890", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-leap-day
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2024-02-29", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-array-invalid-month
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": [2026, 13, 4], "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-array-four-items
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": [2026, 10, 4, 1], "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-array-floats
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": [2026.0, 10, 4], "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-array-strings
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": ["2026", "10", "4"], "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-z-minutes-only
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T10:00Z", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-z-long-fraction
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T10:00:00.123456789012Z", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-z-hour-24
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T24:00:00Z", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-z-lowercase
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04T10:00:00z", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-t-lowercase
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-10-04t10:00:00", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+---
+name: S2-details-response-date-z-leap-second
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data: [{"id": 1, "documentId": "re01", "auteur": "Auteur", "auteurPortraitUrl": "https://p/a.jpg", "auteurFonction": null, "reponseDate": "2026-06-30T23:59:60Z", "feedbackQuestion": "Utile ?", "questionId": "00000000-0000-4000-8000-0000000000a1", "reponseType": [{"__component": "reponse.reponse-video", "auteurDescription": "Desc auteur", "urlVideo": "https://v/u.mp4", "videoWidth": 1920, "videoHeight": 1080, "transcription": "Ligne 1\\nLigne 2\\n\\nFin", "informationAdditionnelleTitre": null, "page_title": "Titre page", "informationAdditionnelleDescription": null, "video": null}], "auteurPortrait": null, "publishedAt": "2024-05-29T10:19:13.352Z"}]
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: details-without-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate", "$.textResponse.responseDate"]}}

@@ -22,7 +22,7 @@ type strapiResponseQag struct {
 	Auteur            string               `json:"auteur"`
 	AuteurPortraitURL string               `json:"auteurPortraitUrl"`
 	AuteurFonction    *string              `json:"auteurFonction"`
-	ReponseDate       strapiLocalDate      `json:"reponseDate"`
+	ReponseDate       localDate            `json:"reponseDate"`
 	FeedbackQuestion  string               `json:"feedbackQuestion"`
 	QuestionID        string               `json:"questionId"`
 	ReponseType       []strapiResponseType `json:"reponseType"`
@@ -100,46 +100,6 @@ func (v *strapiResponseQagVideo) getVideoURL() string {
 		return v.Video.URL
 	}
 	return v.URLVideo
-}
-
-// strapiLocalDate is a java.time.LocalDate read by Jackson's LocalDateDeserializer.
-type strapiLocalDate struct{ Year, Month, Day int }
-
-// UnmarshalJavaTree implements jsonjava.TreeUnmarshaler: "yyyy-MM-dd" (ISO_LOCAL_DATE,
-// strict), or a date-time string whose date is kept ("...Z" read as UTC).
-func (d *strapiLocalDate) UnmarshalJavaTree(tree any) error {
-	s, ok := tree.(string)
-	if !ok {
-		return errors.New("local date: expected string")
-	}
-	if len(s) > 10 && s[10] == 'T' {
-		var t time.Time
-		var err error
-		if strings.HasSuffix(s, "Z") {
-			t, err = time.Parse(time.RFC3339Nano, s)
-			t = t.UTC()
-		} else {
-			t, err = time.Parse("2006-01-02T15:04:05.999999999", s)
-		}
-		if err != nil {
-			return err
-		}
-		*d = strapiLocalDate{t.Year(), int(t.Month()), t.Day()}
-		return nil
-	}
-	t, err := time.Parse("2006-01-02", s)
-	if err != nil {
-		return err
-	}
-	*d = strapiLocalDate{t.Year(), int(t.Month()), t.Day()}
-	return nil
-}
-
-// toDate is DateUtils.LocalDate.toDate(): the start of the day with the CURRENT
-// time of day (LocalTime.now) in the process zone.
-func (d strapiLocalDate) toDate(now time.Time) time.Time {
-	n := now.In(time.Local)
-	return time.Date(d.Year, time.Month(d.Month), d.Day, n.Hour(), n.Minute(), n.Second(), n.Nanosecond(), time.Local)
 }
 
 // responseQagMapper is ResponseQagMapper.toDomain: the first response type decides.
