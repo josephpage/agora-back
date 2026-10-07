@@ -58,9 +58,10 @@ bodies). Your handler only reproduces the controller method:
   decides the 400/415):
   - `@RequestHeader("X") x: String` → `c.RequiredHeader("X")`
   - `@RequestHeader("X", required=false) x: String?` → `c.OptionalHeader("X")`
-  - `@RequestParam("p") p: String` → `c.RequiredParam("p")`; `String?` → `c.OptionalParam("p")`
+  - `@RequestParam("p") p: String` → `c.RequiredParam("p")`; `String?` → `c.OptionalParam("p")` (repeated
+    values joined with `,` like Spring); `request.getParameter` → `c.Param`; all values → `c.ParamValues`
   - `@RequestParam(defaultValue=d)` → `c.ParamDefault("p", d)` (absent or empty → d)
-  - `List<String>?` params → `c.ParamList("p")` (comma splitting like Spring)
+  - `List<String>?` params → `c.ParamList("p")` (one value: split on `,` + `String.trim()`; several: kept as is)
   - `@PathVariable` → `c.PathVar("name")`; Int conversions → `httpx.SpringIntPathVar(v)`,
     Boolean → `httpx.SpringBoolParam(v)`; enums: exact `valueOf` after trim, else 400.
   - `@RequestBody dto` → `c.BindBody(&dto)`. It reproduces the whole Spring/Jackson chain (captured on the

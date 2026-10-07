@@ -3,7 +3,6 @@ package content
 import (
 	"context"
 	"errors"
-	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -265,68 +264,11 @@ func getFiche(ctx context.Context, a *app.App, id string) (*ficheInventaire, err
 	return &f, nil
 }
 
-// queryValues parses the query string like Tomcat's getParameterValues sees it
-// (the same decoding as httpx.Ctx - split on '&' then on the first '=', percent
-// decoding, a malformed pair or an empty name skipped, UTF-8 decoded with Java's
-// replacement rules - but keeping every value of a repeated parameter:
-// httpx.Ctx.Param only exposes the first one, see "Foundation findings" 6).
-func queryValues(c *httpx.Ctx) url.Values {
-	out := url.Values{}
-	for _, pair := range strings.Split(c.R.URL.RawQuery, "&") {
-		if pair == "" {
-			continue
-		}
-		k, v, _ := strings.Cut(pair, "=")
-		kk, err1 := url.QueryUnescape(k)
-		vv, err2 := url.QueryUnescape(v)
-		if err1 != nil || err2 != nil || kk == "" {
-			continue
-		}
-		kk = javacompat.DecodeUTF8Java([]byte(kk))
-		out[kk] = append(out[kk], javacompat.DecodeUTF8Java([]byte(vv)))
-	}
-	return out
-}
-
-// stringParam is `@RequestParam(name) p: String?`: several values are joined with
-// "," (Spring's ArrayToStringConverter), absent is null.
-func stringParam(q url.Values, name string) *string {
-	vals := q[name]
-	if len(vals) == 0 {
-		return nil
-	}
-	s := strings.Join(vals, ",")
-	return &s
-}
-
-// listParam is `@RequestParam(name) p: List<String>?`: a single value is split on
-// "," and each element trimmed (StringToCollectionConverter: String.trim), several
-// values are kept as they are (ArrayToCollectionConverter).
-func listParam(q url.Values, name string) []string {
-	vals := q[name]
-	if len(vals) == 0 {
-		return nil
-	}
-	if len(vals) == 1 {
-		if vals[0] == "" {
-			return []string{}
-		}
-		parts := strings.Split(vals[0], ",")
-		out := make([]string, len(parts))
-		for i, p := range parts {
-			out[i] = javacompat.JavaStringTrim(p)
-		}
-		return out
-	}
-	return vals
-}
-
 // listHandler is FicheInventaireController.getFichesInventaireList.
 func listHandler(a *app.App) httpx.HandlerFunc {
 	return func(c *httpx.Ctx) *httpx.Response {
-		q := queryValues(c)
-		filters := newFicheFilters(stringParam(q, "titre"), stringParam(q, "thematique"), listParam(q, "etape"),
-			listParam(q, "conditionParticipation"), listParam(q, "modaliteParticipation"), stringParam(q, "anneeDeLancement"))
+		filters := newFicheFilters(c.OptionalParam("titre"), c.OptionalParam("thematique"), c.ParamList("etape"),
+			c.ParamList("conditionParticipation"), c.ParamList("modaliteParticipation"), c.OptionalParam("anneeDeLancement"))
 		fiches, err := getAllFiches(c.Context(), a, filters)
 		if err != nil {
 			panic(err)

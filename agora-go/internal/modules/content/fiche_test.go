@@ -3,7 +3,6 @@ package content
 import (
 	"context"
 	"encoding/json"
-	"net/url"
 	"reflect"
 	"strings"
 	"testing"
@@ -251,56 +250,6 @@ func TestFilters(t *testing.T) {
 	f := newFicheFilters(nil, nil, []string{"\U0001F600", "～", "é", "e", "Z"}, nil, nil, nil)
 	if got, want := f.cacheKey(), "titre=null|thematique=null|etape=Z,e,é,\U0001F600,～|condition=null|modalite=null|annee=null"; got != want {
 		t.Errorf("key %q, want %q", got, want)
-	}
-}
-
-// Spring's binding of @RequestParam String? / List<String>?.
-func TestParamBinding(t *testing.T) {
-	q := func(s string) url.Values {
-		v, err := url.ParseQuery(s)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return v
-	}
-	str := func(p *string) string {
-		if p == nil {
-			return "<nil>"
-		}
-		return "'" + *p + "'"
-	}
-	for _, tc := range []struct{ query, name, wantStr string }{
-		{"", "titre", "<nil>"},
-		{"titre=", "titre", "''"},
-		{"titre=a", "titre", "'a'"},
-		{"titre=a&titre=b", "titre", "'a,b'"},
-		{"titre=a,b", "titre", "'a,b'"},
-		{"titre=&titre=", "titre", "','"},
-	} {
-		if got := str(stringParam(q(tc.query), tc.name)); got != tc.wantStr {
-			t.Errorf("stringParam(%q): %s, want %s", tc.query, got, tc.wantStr)
-		}
-	}
-	for _, tc := range []struct {
-		query string
-		want  []string
-	}{
-		{"", nil},
-		{"etape=", []string{}},
-		{"etape=a", []string{"a"}},
-		{"etape=a,b", []string{"a", "b"}},
-		{"etape=%20a%20,b%20", []string{"a", "b"}},
-		{"etape=a,,b", []string{"a", "", "b"}},
-		{"etape=,", []string{"", ""}},
-		{"etape=a,b&etape=c,d", []string{"a,b", "c,d"}},
-		{"etape=%20a&etape=b%20", []string{" a", "b "}},
-		{"etape=&etape=", []string{"", ""}},
-		{"etape=%C2%85a", []string{"\u0085a"}},
-	} {
-		got := listParam(q(tc.query), "etape")
-		if !reflect.DeepEqual(got, tc.want) {
-			t.Errorf("listParam(%q) = %#v, want %#v", tc.query, got, tc.want)
-		}
 	}
 }
 
