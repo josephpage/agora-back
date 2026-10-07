@@ -1,6 +1,5 @@
 name: S1-suspicious-signups-then-support
 tags: [S1]
-skip: "needs POST /qags/{id}/support (QaG slice): the soft-ban counter is only read there. The login module logic (IsSuspiciousActivity, signupCount::<ipHash>/<userAgent>, nightly flagging) is covered by login/integration_test.go against the same sequence observed on the Kotlin reference; enable this scenario once the QaG support route is ported."
 dbdiff: step
 steps:
   - id: ten-signups-same-origin

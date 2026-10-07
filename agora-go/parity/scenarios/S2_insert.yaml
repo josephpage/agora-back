@@ -1,0 +1,234 @@
+name: S2-insert-success-then-weekly-limit
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: ask-status-before, path: /qags/ask_status, as: "{{seed.UserRegular1}}"}
+  - id: insert
+    method: POST
+    path: /qags
+    as: "{{seed.UserRegular1}}"
+    body: {title: "Pourquoi les trains sont-ils en retard ?", thematiqueId: "{{seed.Thematique4}}", description: "Une description de la question", author: "Camille"}
+    capture: {qagId: "$.qagId"}
+  - {id: details-as-author, path: "/qags/{{qagId}}", as: "{{seed.UserRegular1}}"}
+  - {id: details-as-other, path: "/qags/{{qagId}}", as: "{{seed.UserRegular4}}"}
+  - {id: details-as-moderator, path: "/qags/{{qagId}}", as: "{{seed.UserModerator}}"}
+  - {id: details-anonymous, path: "/qags/{{qagId}}", compare: {ignore: ["$.path"]}}
+  - {id: public-open-qag, path: "/api/public/qags/{{qagId}}"}
+  - {id: ask-status-after, path: /qags/ask_status, as: "{{seed.UserRegular1}}"}
+  - id: insert-again
+    method: POST
+    path: /qags
+    as: "{{seed.UserRegular1}}"
+    body: {title: "Deuxième question", thematiqueId: "{{seed.Thematique1}}", description: "d", author: "Camille"}
+  - {id: unsupport-own-support, method: DELETE, path: "/qags/{{qagId}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: details-after-unsupport, path: "/qags/{{qagId}}", as: "{{seed.UserRegular1}}"}
+  - {id: support-again, method: POST, path: "/qags/{{qagId}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: delete-the-new-qag, method: DELETE, path: "/qags/{{qagId}}", as: "{{seed.UserRegular1}}"}
+  - {id: ask-status-after-delete, path: /qags/ask_status, as: "{{seed.UserRegular1}}"}
+  - id: insert-after-delete
+    method: POST
+    path: /qags
+    as: "{{seed.UserRegular1}}"
+    body: {title: "Troisième question", thematiqueId: "{{seed.Thematique1}}", description: "d", author: "Camille"}
+---
+name: S2-insert-weekly-limit-users
+tags: [S2]
+dbdiff: step
+steps:
+  - id: limit-reached-user
+    method: POST
+    path: /qags
+    as: "{{seed.UserRegular2}}"
+    body: {title: "Encore une question", thematiqueId: "{{seed.Thematique1}}", description: "d", author: "Jean-Pierre"}
+  - {id: ask-status-limit-reached, path: /qags/ask_status, as: "{{seed.UserRegular2}}"}
+  - {id: ask-status-idle, path: /qags/ask_status, as: "{{seed.UserIdle}}"}
+  - {id: ask-status-old-qag-only, path: /qags/ask_status, as: "{{seed.UserProfile12}}"}
+  - id: user-with-only-archived-qag
+    method: POST
+    path: /qags
+    as: "{{seed.UserProfile12}}"
+    body: {title: "Question d'un utilisateur dont la dernière est archivée", thematiqueId: "{{seed.Thematique2}}", description: "d", author: "Alex"}
+  - {id: ask-status-regular3, path: /qags/ask_status, as: "{{seed.UserRegular3}}"}
+  - id: user-regular3
+    method: POST
+    path: /qags
+    as: "{{seed.UserRegular3}}"
+    body: {title: "Regular3", thematiqueId: "{{seed.Thematique2}}", description: "d", author: "Élodie"}
+  - {id: ask-status-regular5, path: /qags/ask_status, as: "{{seed.UserRegular5}}"}
+  - id: user-regular5
+    method: POST
+    path: /qags
+    as: "{{seed.UserRegular5}}"
+    body: {title: "Regular5", thematiqueId: "{{seed.Thematique2}}", description: "d", author: "Yann"}
+  - {id: ask-status-qag-only-rejected, path: /qags/ask_status, as: "{{seed.UserProfile8}}"}
+---
+name: S2-insert-html-is-sanitized
+tags: [S2]
+dbdiff: step
+steps:
+  - id: insert
+    method: POST
+    path: /qags
+    as: "{{seed.UserIdle}}"
+    body:
+      title: "<b>Gras</b> et <a href=\"http://x.fr\" onclick=\"evil()\">lien</a> &amp; <script>alert(1)</script>fin"
+      thematiqueId: "{{seed.Thematique3}}"
+      description: "<p>Para &lt;graphe&gt; &#65; &eacute; &unknown; <style>p{}</style><img src=x onerror=y>texte</p> 5 < 6 > 3 \"q\" 'a'"
+      author: "<i>Pseudo</i>&nbsp;&#x1F600;"
+    capture: {qagId: "$.qagId"}
+  - {id: details, path: "/qags/{{qagId}}", as: "{{seed.UserIdle}}"}
+---
+name: S2-insert-long-fields-are-cut
+tags: [S2]
+dbdiff: step
+steps:
+  - id: insert
+    method: POST
+    path: /qags
+    as: "{{seed.UserIdle}}"
+    body:
+      title: "T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789"
+      thematiqueId: "{{seed.Thematique3}}"
+      description: "D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789D123456789"
+      author: "A123456789A123456789A123456789A123456789A123456789A123456789A123456789"
+    capture: {qagId: "$.qagId"}
+  - {id: details, path: "/qags/{{qagId}}", as: "{{seed.UserIdle}}"}
+---
+name: S2-insert-surrogates-at-the-cut
+tags: [S2]
+dbdiff: step
+steps:
+  - id: insert
+    method: POST
+    path: /qags
+    as: "{{seed.UserIdle}}"
+    body:
+      title: "T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T123456789T12345678😀😀😀"
+      thematiqueId: "{{seed.Thematique3}}"
+      description: "😀😀😀 émoji 👨‍👩‍👧‍👦 ligature œ ﬁ"
+      author: "A123456789A123456789A123456789A123456789A12345678😀"
+    capture: {qagId: "$.qagId"}
+  - {id: details, path: "/qags/{{qagId}}", as: "{{seed.UserIdle}}"}
+---
+name: S2-insert-empty-and-odd-fields
+tags: [S2]
+dbdiff: step
+steps:
+  - id: empty-fields
+    method: POST
+    path: /qags
+    as: "{{seed.UserIdle}}"
+    body: {title: "", thematiqueId: "", description: "", author: ""}
+    capture: {qagId: "$.qagId"}
+  - {id: details-empty-thematique, path: "/qags/{{qagId}}", as: "{{seed.UserIdle}}"}
+---
+name: S2-insert-unknown-thematique
+tags: [S2]
+dbdiff: step
+steps:
+  - id: unknown-thematique
+    method: POST
+    path: /qags
+    as: "{{seed.UserIdle}}"
+    body: {title: "Thématique inconnue", thematiqueId: "does-not-exist", description: "d", author: "Alex"}
+    capture: {qagId: "$.qagId"}
+  - {id: details-unknown-thematique, path: "/qags/{{qagId}}", as: "{{seed.UserIdle}}"}
+  - {id: support-it, method: POST, path: "/qags/{{qagId}}/support", as: "{{seed.UserRegular1}}"}
+---
+name: S2-insert-coerced-and-extra-fields
+tags: [S2]
+dbdiff: step
+steps:
+  - id: numbers-and-booleans
+    method: POST
+    path: /qags
+    as: "{{seed.UserIdle}}"
+    body: {title: 123, thematiqueId: true, description: 1.50, author: 1e3, extra: {a: [1]}, unknown: null}
+    capture: {qagId: "$.qagId"}
+  - {id: details-coerced, path: "/qags/{{qagId}}", as: "{{seed.UserIdle}}"}
+---
+name: S2-insert-body-rejections
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: missing-title, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {thematiqueId: "t", description: "d", author: "a"}}
+  - {id: missing-thematique, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {title: "t", description: "d", author: "a"}}
+  - {id: missing-description, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {title: "t", thematiqueId: "t", author: "a"}}
+  - {id: missing-author, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {title: "t", thematiqueId: "t", description: "d"}}
+  - {id: null-title, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {title: null, thematiqueId: "t", description: "d", author: "a"}}
+  - {id: object-title, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {title: {a: 1}, thematiqueId: "t", description: "d", author: "a"}}
+  - {id: array-title, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {title: ["x"], thematiqueId: "t", description: "d", author: "a"}}
+  - {id: empty-object, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {}}
+  - {id: array-body, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: [1]}
+  - {id: null-body, method: POST, path: /qags, as: "{{seed.UserIdle}}", bodyRaw: "null", contentType: application/json}
+  - {id: empty-body, method: POST, path: /qags, as: "{{seed.UserIdle}}", bodyRaw: "", contentType: application/json}
+  - {id: truncated-json, method: POST, path: /qags, as: "{{seed.UserIdle}}", bodyRaw: "{\"title\":", contentType: application/json}
+  - {id: not-json, method: POST, path: /qags, as: "{{seed.UserIdle}}", bodyRaw: "title=a&thematiqueId=b", contentType: application/json}
+  - {id: trailing-garbage, method: POST, path: /qags, as: "{{seed.UserIdle}}", bodyRaw: "{\"title\":\"t\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"} trailing", contentType: application/json}
+  - {id: details-nothing-inserted, path: /qags/ask_status, as: "{{seed.UserIdle}}"}
+---
+name: S2-insert-json-variants
+tags: [S2]
+dbdiff: step
+steps:
+  - id: trailing-garbage-accepted
+    method: POST
+    path: /qags
+    as: "{{seed.UserIdle}}"
+    bodyRaw: "{\"title\":\"t\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"} trailing"
+    contentType: application/json
+  - id: charset-content-type
+    method: POST
+    path: /qags
+    as: "{{seed.UserProfile1}}"
+    bodyRaw: "{\"title\":\"é\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}"
+    contentType: "application/json; charset=UTF-8"
+  - id: duplicate-keys-last-wins
+    method: POST
+    path: /qags
+    as: "{{seed.UserProfile2}}"
+    bodyRaw: "{\"title\":\"first\",\"title\":\"second\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}"
+    contentType: application/json
+  - id: case-sensitive-names
+    method: POST
+    path: /qags
+    as: "{{seed.UserProfile3}}"
+    bodyRaw: "{\"Title\":\"t\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}"
+    contentType: application/json
+  - id: plus-json-content-type
+    method: POST
+    path: /qags
+    as: "{{seed.UserProfile4}}"
+    bodyRaw: "{\"title\":\"t\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}"
+    contentType: application/vnd.api+json
+---
+name: S2-insert-auth-and-formats
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: anonymous, method: POST, path: /qags, body: {title: "t", thematiqueId: "t", description: "d", author: "a"}}
+  - {id: bad-jwt, method: POST, path: /qags, bearer: "abc.def.ghi", body: {title: "t", thematiqueId: "t", description: "d", author: "a"}}
+  - {id: banned, method: POST, path: /qags, as: "{{seed.UserBanned}}", body: {title: "t", thematiqueId: "t", description: "d", author: "a"}}
+  - {id: moderator, method: POST, path: /qags, as: "{{seed.UserModerator}}", body: {title: "mod", thematiqueId: "t", description: "d", author: "a"}}
+  - {id: xml-response, method: POST, path: "/qags?mediaType=xml", as: "{{seed.UserAdmin}}", body: {title: "xml", thematiqueId: "t", description: "d", author: "a"}, compare: {body: status}}
+  - {id: media-type-foo, method: POST, path: "/qags?mediaType=foo", as: "{{seed.UserPublisher}}", body: {title: "foo", thematiqueId: "t", description: "d", author: "a"}}
+  - {id: ask-status-after-406, path: /qags/ask_status, as: "{{seed.UserPublisher}}"}
+  - {id: get-not-routed, method: GET, path: /qags, as: "{{seed.UserIdle}}"}
+---
+name: S2-insert-concurrent-same-user
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: parallel-inserts, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {title: "parallel", thematiqueId: "t", description: "d", author: "a"}, parallel: 6}
+  - {id: ask-status, path: /qags/ask_status, as: "{{seed.UserIdle}}"}
+---
+name: S2-insert-thematique-too-long-for-the-column
+tags: [S2]
+dbdiff: step
+steps:
+  - id: thematique-id-over-255-characters
+    method: POST
+    path: /qags
+    as: "{{seed.UserProfile5}}"
+    body: {title: "t", description: "d", author: "a", thematiqueId: "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"}
+  - {id: ask-status, path: /qags/ask_status, as: "{{seed.UserProfile5}}"}
