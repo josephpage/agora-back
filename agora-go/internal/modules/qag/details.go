@@ -2,7 +2,6 @@ package qag
 
 import (
 	"context"
-	"time"
 
 	"agora/internal/app"
 	"agora/internal/javacompat"
@@ -36,8 +35,6 @@ type feedbackReader interface {
 
 // supportReader is SupportQagUseCase / GetSupportQagRepository as the details need it.
 type supportReader interface {
-	// GetUserSupportedQagIDs is getUserSupportedQagIds.
-	GetUserSupportedQagIDs(ctx context.Context, userID string) ([]string, error)
 	// isQagSupportedByUser is `getUserSupportedQagIds(userId).any { it == qagId }` in one query.
 	isQagSupportedByUser(ctx context.Context, userID, qagID string) (bool, error)
 }
@@ -200,5 +197,3 @@ func (m microResponses) getResponseQag(ctx context.Context, qagID string) *Respo
 	})
 	return r
 }
-
-var _ time.Duration
