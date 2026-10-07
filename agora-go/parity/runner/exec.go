@@ -3,6 +3,7 @@ package runner
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -80,7 +81,13 @@ func (s *Side) buildRequest(st Step, vars map[string]string, mint func(string) s
 	}
 	var body io.Reader
 	contentType := st.ContentType
-	if st.BodyRaw != nil {
+	if st.BodyB64 != nil {
+		b, err := base64.StdEncoding.DecodeString(*st.BodyB64)
+		if err != nil {
+			return nil, fmt.Errorf("bodyB64: %w", err)
+		}
+		body = bytes.NewReader(b)
+	} else if st.BodyRaw != nil {
 		body = strings.NewReader(expand(*st.BodyRaw, vars))
 	} else if st.Body != nil {
 		b, err := json.Marshal(expandAny(normalizeYAML(st.Body), vars))
@@ -108,7 +115,15 @@ func (s *Side) buildRequest(st Step, vars map[string]string, mint func(string) s
 		if strings.EqualFold(k, "User-Agent") {
 			hasUA = true
 		}
-		req.Header[k] = append(req.Header[k], expand(v, vars))
+		v = expand(v, vars)
+		if raw, ok := strings.CutPrefix(v, "b64:"); ok {
+			b, err := base64.StdEncoding.DecodeString(raw)
+			if err != nil {
+				return nil, fmt.Errorf("header %s: %w", k, err)
+			}
+			v = string(b)
+		}
+		req.Header[k] = append(req.Header[k], v)
 	}
 	if !hasUA {
 		req.Header.Set("User-Agent", "parity-runner")

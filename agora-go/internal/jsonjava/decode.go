@@ -1,7 +1,6 @@
 package jsonjava
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +8,9 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"unicode/utf8"
+
+	"agora/internal/javacompat"
 )
 
 // Decoding rules (Jackson 2.14 + jackson-module-kotlin, FAIL_ON_UNKNOWN_PROPERTIES=false):
@@ -30,23 +32,34 @@ func (e *DecodeError) Error() string { return e.Msg }
 
 func fail(format string, a ...any) error { return &DecodeError{fmt.Sprintf(format, a...)} }
 
-// Unmarshal decodes data into v (pointer to struct or slice) with Jackson rules.
+// Unmarshal decodes a JSON document received as text (a Strapi response, read
+// as a String by the Kotlin client: invalid UTF-8 replaced by U+FFFD) into v
+// (pointer to struct or slice) with Jackson rules.
 func Unmarshal(data []byte, v any) error {
-	dec := json.NewDecoder(bytes.NewReader(data))
-	dec.UseNumber()
-	var root any
-	if err := dec.Decode(&root); err != nil {
-		return fail("unreadable JSON: %v", err)
+	if !utf8.Valid(data) {
+		data = []byte(javacompat.DecodeUTF8Java(data))
 	}
+	return unmarshalDecoder(&decoder{b: data, chars: true}, v)
+}
+
+// unmarshalDecoder decodes the first JSON value of the stream into v.
+func unmarshalDecoder(d *decoder, v any) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Pointer || rv.IsNil() {
 		return errors.New("jsonjava: Unmarshal needs a non-nil pointer")
 	}
-	if root == nil {
+	c, ok := d.ws()
+	if !ok {
+		return fail("no content to map due to end-of-input")
+	}
+	if c == 'n' {
+		if err := d.literal("null"); err != nil {
+			return err
+		}
 		// readValue returns null → "Required request body is missing"
 		return fail("null body")
 	}
-	return bind(rv.Elem(), root, "$")
+	return d.bind(rv.Elem(), "$")
 }
 
 // UnmarshalTree binds an already parsed tree (from encoding/json with UseNumber).
@@ -187,6 +200,17 @@ func bind(v reflect.Value, tree any, path string) error {
 		}
 		v.Set(m)
 		return nil
+	case reflect.String, reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Float32, reflect.Float64:
+		return bindScalar(v, tree, path)
+	}
+	return fail("%s: unsupported kind %s", path, v.Kind())
+}
+
+// bindScalar binds a scalar (string, json.Number, bool) with Jackson's
+// coercions; containers are errors.
+func bindScalar(v reflect.Value, tree any, path string) error {
+	switch v.Kind() {
 	case reflect.String:
 		switch t := tree.(type) {
 		case string:
