@@ -1,0 +1,70 @@
+name: S2-delete-own-accepted-qag
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: delete, method: DELETE, path: "/qags/{{seed.QagAcceptedWeeklyArchive1}}", as: "{{seed.UserRegular1}}"}
+  - {id: details-after-delete, path: "/qags/{{seed.QagAcceptedWeeklyArchive1}}", as: "{{seed.UserRegular1}}"}
+  - {id: public-after-delete, path: "/api/public/qags/{{seed.QagAcceptedWeeklyArchive1}}"}
+  - {id: delete-twice, method: DELETE, path: "/qags/{{seed.QagAcceptedWeeklyArchive1}}", as: "{{seed.UserRegular1}}"}
+  - {id: support-deleted, method: POST, path: "/qags/{{seed.QagAcceptedWeeklyArchive1}}/support", as: "{{seed.UserRegular4}}"}
+  - {id: unsupport-deleted, method: DELETE, path: "/qags/{{seed.QagAcceptedWeeklyArchive1}}/support", as: "{{seed.UserRegular4}}"}
+---
+name: S2-delete-statuses
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: delete-open-own, method: DELETE, path: "/qags/{{seed.QagOpenPlain}}", as: "{{seed.UserRegular4}}"}
+  - {id: delete-rejected-own, method: DELETE, path: "/qags/{{seed.QagRejectedRecent}}", as: "{{seed.UserRegular2}}"}
+  - {id: delete-archived-own, method: DELETE, path: "/qags/{{seed.QagArchivedOld}}", as: "{{seed.UserRegular1}}"}
+  - {id: delete-selected-own, method: DELETE, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}"}
+  - {id: delete-selected-text-own, method: DELETE, path: "/qags/{{seed.QagSelectedText}}", as: "{{seed.UserRegular2}}"}
+  - {id: details-selected-still-there, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: delete-accepted-with-many-supports, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular2}}"}
+  - {id: delete-open-with-banned-support, method: DELETE, path: "/qags/{{seed.QagOpenWeeklyLimit}}", as: "{{seed.UserRegular2}}"}
+---
+name: S2-delete-not-allowed
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: other-user, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: moderator, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserModerator}}"}
+  - {id: admin, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserAdmin}}"}
+  - {id: anonymous, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}"}
+  - {id: bad-jwt, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}", bearer: "abc.def.ghi"}
+  - {id: unknown-id, method: DELETE, path: "/qags/00000000-0000-4000-8000-0000000000ff", as: "{{seed.UserRegular1}}"}
+  - {id: not-a-uuid, method: DELETE, path: "/qags/not-a-uuid", as: "{{seed.UserRegular1}}"}
+  - {id: already-deleted, method: DELETE, path: "/qags/{{seed.QagDeleted1}}", as: "{{seed.UserRegular1}}"}
+  - {id: anonymised-owner, method: DELETE, path: "/qags/{{seed.QagRejectedAnonymized}}", as: "{{seed.UserRegular1}}"}
+  - {id: anonymised-owner-zero-uuid, method: DELETE, path: "/qags/{{seed.QagRejectedAnonymized}}", as: "00000000-0000-0000-0000-000000000000"}
+  - {id: banned-author-deletes-own-open, method: DELETE, path: "/qags/{{seed.QagOpenBannedAuthor}}", as: "{{seed.UserBanned}}"}
+  - {id: xml, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}?mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: media-type-foo-own, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}?mediaType=foo", as: "{{seed.UserRegular2}}"}
+  - {id: details-after-406, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular2}}"}
+---
+name: S2-delete-lenient-ids
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: uppercase-id, method: DELETE, path: "/qags/00000000-0000-4000-8000-00000000000B", as: "{{seed.UserRegular1}}"}
+  - {id: details-after, path: "/qags/{{seed.QagAcceptedWeeklyArchive1}}", as: "{{seed.UserRegular1}}"}
+  - {id: short-form-id, method: DELETE, path: "/qags/0-0-4000-8000-27", as: "{{seed.UserRegular1}}"}
+  - {id: details-after-short, path: "/qags/{{seed.QagOpenOwnerOld}}", as: "{{seed.UserRegular1}}"}
+---
+name: S2-delete-then-recreate-flow
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: ask-status-limit, path: /qags/ask_status, as: "{{seed.UserRegular2}}"}
+  - {id: delete-last-qag, method: DELETE, path: "/qags/{{seed.QagOpenWeeklyLimit}}", as: "{{seed.UserRegular2}}"}
+  - {id: ask-status-previous-accepted-qag-still-limits, path: /qags/ask_status, as: "{{seed.UserRegular2}}"}
+---
+name: S2-delete-null-and-invalid-rows
+tags: [S2]
+dbdiff: step
+setup:
+  sql:
+    - "UPDATE qags SET status = 5 WHERE id = '00000000-0000-4000-8000-000000000004'"
+    - "UPDATE qags SET title = NULL WHERE id = '00000000-0000-4000-8000-000000000005'"
+steps:
+  - {id: invalid-status, method: DELETE, path: "/qags/{{seed.QagAcceptedEducation}}", as: "{{seed.UserRegular4}}"}
+  - {id: null-title, method: DELETE, path: "/qags/{{seed.QagAcceptedEconomie}}", as: "{{seed.UserProfile2}}"}

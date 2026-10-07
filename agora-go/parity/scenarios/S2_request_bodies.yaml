@@ -1,0 +1,23 @@
+name: S2-request-bodies-insert-encodings
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: utf8-bom, method: POST, path: /qags, as: "{{seed.UserProfile1}}", bodyRaw: "\uFEFF{\"title\":\"bom\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: application/json}
+  - {id: charset-utf8-uppercase, method: POST, path: /qags, as: "{{seed.UserProfile2}}", bodyRaw: "{\"title\":\"é\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "application/json; charset=UTF-8"}
+  - {id: charset-latin1-ascii-body, method: POST, path: /qags, as: "{{seed.UserProfile3}}", bodyRaw: "{\"title\":\"ascii\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "application/json;charset=ISO-8859-1"}
+  - {id: unknown-charset, method: POST, path: /qags, as: "{{seed.UserProfile4}}", bodyRaw: "{\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "application/json;charset=nope"}
+  - {id: extra-parameter, method: POST, path: /qags, as: "{{seed.UserProfile6}}", bodyRaw: "{\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "application/json; foo=bar"}
+  - {id: wildcard-suffix-media-type, method: POST, path: /qags, as: "{{seed.UserProfile7}}", bodyRaw: "{\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "application/hal+json"}
+  - {id: json-comments-rejected, method: POST, path: /qags, as: "{{seed.UserProfile8}}", bodyRaw: "/* c */ {\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: application/json}
+  - {id: escaped-unicode, method: POST, path: /qags, as: "{{seed.UserProfile9}}", bodyRaw: "{\"title\":\"\\u00e9\\ud83d\\ude00\",\"thematiqueId\":\"\\u0074\",\"description\":\"d\",\"author\":\"a\"}", contentType: application/json}
+---
+name: S2-request-bodies-feedback-encodings
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: bom, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular1}}", bodyRaw: "\uFEFF{\"isHelpful\":true}", contentType: application/json}
+  - {id: charset-utf8, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular2}}", bodyRaw: "{\"isHelpful\":false}", contentType: "application/json;charset=utf-8"}
+  - {id: first-value-only, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular3}}", bodyRaw: "{\"isHelpful\":true}{\"isHelpful\":false}", contentType: application/json}
+  - {id: duplicates-last-wins, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular4}}", bodyRaw: "{\"isHelpful\":false,\"isHelpful\":true}", contentType: application/json}
+  - {id: whitespace-only, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "   ", contentType: application/json}
+  - {id: details-after, path: "/qags/{{seed.QagSelectedDocument}}", as: "{{seed.UserIdle}}", compare: {ignore: ["$.response.responseDate"]}}

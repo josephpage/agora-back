@@ -1,0 +1,29 @@
+name: S2-request-layer-bodies-and-allow
+tags: [S2]
+dbdiff: step
+steps:
+  # no Content-Type and no body: 400 (Required request body is missing)
+  - {id: feedback-without-body-nor-content-type, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}"}
+  - {id: insert-without-body-nor-content-type, method: POST, path: /qags, as: "{{seed.UserIdle}}"}
+  # 415: the Accept header lists the media types of Spring's converters
+  - {id: feedback-form-content-type, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserIdle}}", bodyRaw: "isHelpful=true", contentType: application/x-www-form-urlencoded}
+  - {id: insert-form-content-type, method: POST, path: /qags, as: "{{seed.UserIdle}}", bodyRaw: "title=a", contentType: application/x-www-form-urlencoded}
+  - {id: insert-text-plain, method: POST, path: /qags, as: "{{seed.UserIdle}}", bodyRaw: "{}", contentType: text/plain}
+  # 405 with a single allowed method (the order of several is not stable on the Kotlin side)
+  - {id: get-on-feedback, method: GET, path: "/qags/{{seed.QagAcceptedTransport}}/feedback", as: "{{seed.UserRegular1}}"}
+---
+name: S2-support-latin1-user-agent-suspicious
+tags: [S2]
+dbdiff: step
+steps:
+  - id: ten-signups-with-a-non-ascii-user-agent
+    method: POST
+    path: /signup
+    repeat: 10
+    headers: {User-Agent: "Mozilla/5.0 suspect é", versionCode: "20", platform: android, X-Forwarded-For: "203.0.113.77"}
+    compare: {body: status}
+  - id: support-from-the-same-origin-is-ignored
+    method: POST
+    path: "/qags/{{seed.QagOpenPlain}}/support"
+    as: "{{seed.UserRegular1}}"
+    headers: {User-Agent: "Mozilla/5.0 suspect é", X-Forwarded-For: "203.0.113.77"}
