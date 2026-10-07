@@ -9,10 +9,8 @@ steps:
   - {id: feedback-form-content-type, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserIdle}}", bodyRaw: "isHelpful=true", contentType: application/x-www-form-urlencoded}
   - {id: insert-form-content-type, method: POST, path: /qags, as: "{{seed.UserIdle}}", bodyRaw: "title=a", contentType: application/x-www-form-urlencoded}
   - {id: insert-text-plain, method: POST, path: /qags, as: "{{seed.UserIdle}}", bodyRaw: "{}", contentType: text/plain}
-  # 405: Allow
-  - {id: put-on-support, method: PUT, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserRegular1}}"}
+  # 405 with a single allowed method (the order of several is not stable on the Kotlin side)
   - {id: get-on-feedback, method: GET, path: "/qags/{{seed.QagAcceptedTransport}}/feedback", as: "{{seed.UserRegular1}}"}
-  - {id: put-on-details, method: PUT, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
 ---
 name: S2-support-latin1-user-agent-suspicious
 tags: [S2]

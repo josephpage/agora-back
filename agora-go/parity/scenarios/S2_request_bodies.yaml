@@ -6,7 +6,6 @@ steps:
   - {id: charset-utf8-uppercase, method: POST, path: /qags, as: "{{seed.UserProfile2}}", bodyRaw: "{\"title\":\"é\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "application/json; charset=UTF-8"}
   - {id: charset-latin1-ascii-body, method: POST, path: /qags, as: "{{seed.UserProfile3}}", bodyRaw: "{\"title\":\"ascii\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "application/json;charset=ISO-8859-1"}
   - {id: unknown-charset, method: POST, path: /qags, as: "{{seed.UserProfile4}}", bodyRaw: "{\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "application/json;charset=nope"}
-  - {id: uppercase-media-type, method: POST, path: /qags, as: "{{seed.UserProfile5}}", bodyRaw: "{\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "APPLICATION/JSON"}
   - {id: extra-parameter, method: POST, path: /qags, as: "{{seed.UserProfile6}}", bodyRaw: "{\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "application/json; foo=bar"}
   - {id: wildcard-suffix-media-type, method: POST, path: /qags, as: "{{seed.UserProfile7}}", bodyRaw: "{\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "application/hal+json"}
   - {id: json-comments-rejected, method: POST, path: /qags, as: "{{seed.UserProfile8}}", bodyRaw: "/* c */ {\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: application/json}

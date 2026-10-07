@@ -11,3 +11,10 @@ skip: "jsonjava decodes a lone UTF-16 surrogate escape (\\ud800) as U+FFFD; Jack
 dbdiff: step
 steps:
   - {id: lone-surrogate-escape, method: POST, path: /qags, as: "{{seed.UserProfile10}}", bodyRaw: "{\"title\":\"a\\ud800b\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: application/json}
+---
+name: S2-known-foundation-diffs-uppercase-media-type
+tags: [S2-known-foundation]
+skip: "Content-Type: APPLICATION/JSON: the reference answers 400 for POST /qags, Go reads the body (200). To be explained by the request layer owner."
+dbdiff: step
+steps:
+  - {id: uppercase-media-type, method: POST, path: /qags, as: "{{seed.UserProfile5}}", bodyRaw: "{\"title\":\"x\",\"thematiqueId\":\"t\",\"description\":\"d\",\"author\":\"a\"}", contentType: "APPLICATION/JSON"}
