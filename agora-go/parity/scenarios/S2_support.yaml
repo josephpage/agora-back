@@ -1,0 +1,157 @@
+name: S2-support-add-remove-cycle
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: details-before, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+  - {id: support, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: details-after-support, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+  - {id: details-other-user-sees-count, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular5}}"}
+  - {id: public-count, path: "/api/public/qags/{{seed.QagAcceptedTransport}}"}
+  - {id: support-twice, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: details-unchanged, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+  - {id: unsupport, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: details-after-unsupport, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+  - {id: unsupport-twice, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: support-again, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: details-after-resupport, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+---
+name: S2-support-existing-supports
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: already-supported, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: unsupport-existing, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: details-after, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: unsupport-duplicated-rows, method: DELETE, path: "/qags/{{seed.QagAcceptedDupSupport}}/support", as: "{{seed.UserRegular5}}"}
+  - {id: details-dup-after, path: "/qags/{{seed.QagAcceptedDupSupport}}", as: "{{seed.UserRegular5}}"}
+  - {id: unsupport-never-supported, method: DELETE, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserIdle}}"}
+---
+name: S2-support-own-and-open-qags
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: support-own-accepted-qag, method: POST, path: "/qags/{{seed.QagAcceptedEducation}}/support", as: "{{seed.UserRegular4}}"}
+  - {id: details-own-accepted, path: "/qags/{{seed.QagAcceptedEducation}}", as: "{{seed.UserRegular4}}"}
+  - {id: support-own-open-qag, method: POST, path: "/qags/{{seed.QagOpenPlain}}/support", as: "{{seed.UserRegular4}}"}
+  - {id: details-own-open, path: "/qags/{{seed.QagOpenPlain}}", as: "{{seed.UserRegular4}}"}
+  - {id: support-open-qag-of-another-user, method: POST, path: "/qags/{{seed.QagOpenFresh}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: details-open-of-another-user, path: "/qags/{{seed.QagOpenFresh}}", as: "{{seed.UserRegular1}}"}
+  - {id: details-open-as-author, path: "/qags/{{seed.QagOpenFresh}}", as: "{{seed.UserProfile7}}"}
+  - {id: unsupport-open-qag-of-another-user, method: DELETE, path: "/qags/{{seed.QagOpenLocked1}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: unsupport-own-open-with-supports, method: DELETE, path: "/qags/{{seed.QagOpenWeeklyLimit}}/support", as: "{{seed.UserRegular2}}"}
+---
+name: S2-support-invalid-status
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: support-archived, method: POST, path: "/qags/{{seed.QagArchivedRecent}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: support-rejected, method: POST, path: "/qags/{{seed.QagRejectedRecent}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: support-selected, method: POST, path: "/qags/{{seed.QagSelectedText}}/support", as: "{{seed.UserIdle}}"}
+  - {id: support-selected-already-supported, method: POST, path: "/qags/{{seed.QagSelectedText}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: unsupport-selected-supported, method: DELETE, path: "/qags/{{seed.QagSelectedText}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: unsupport-archived-supported-by-banned, method: DELETE, path: "/qags/{{seed.QagArchivedRecent}}/support", as: "{{seed.UserBanned}}"}
+  - {id: unsupport-archived-not-supported, method: DELETE, path: "/qags/{{seed.QagArchivedRecent}}/support", as: "{{seed.UserIdle}}"}
+  - {id: details-selected-still-supported, path: "/qags/{{seed.QagSelectedText}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.textResponse.responseDate"]}}
+---
+name: S2-support-unknown-and-invalid-ids
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: support-unknown, method: POST, path: "/qags/00000000-0000-4000-8000-0000000000ff/support", as: "{{seed.UserRegular1}}"}
+  - {id: support-deleted, method: POST, path: "/qags/{{seed.QagDeleted1}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: support-not-a-uuid, method: POST, path: "/qags/not-a-uuid/support", as: "{{seed.UserRegular1}}"}
+  - {id: unsupport-unknown, method: DELETE, path: "/qags/00000000-0000-4000-8000-0000000000ff/support", as: "{{seed.UserRegular1}}"}
+  - {id: unsupport-not-a-uuid, method: DELETE, path: "/qags/not-a-uuid/support", as: "{{seed.UserRegular1}}"}
+  - {id: support-uppercase-uuid, method: POST, path: "/qags/00000000-0000-4000-8000-00000000000E/support", as: "{{seed.UserRegular1}}"}
+  - {id: details-after-uppercase-support, path: "/qags/{{seed.QagAcceptedNoUpdate}}", as: "{{seed.UserRegular1}}"}
+  - {id: unsupport-lenient-uuid, method: DELETE, path: "/qags/00000000-0000-4000-8000-00000000000e/support", as: "{{seed.UserRegular1}}"}
+  - {id: support-lenient-short-uuid, method: POST, path: "/qags/0-0-4000-8000-e/support", as: "{{seed.UserRegular1}}"}
+  - {id: support-long-id, method: POST, path: "/qags/00000000-0000-4000-8000-0000000000000000000000/support", as: "{{seed.UserRegular1}}"}
+---
+name: S2-support-auth
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: anonymous-support, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support"}
+  - {id: anonymous-unsupport, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support"}
+  - {id: bad-jwt, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", bearer: "abc.def.ghi"}
+  - {id: banned-support, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserBanned}}"}
+  - {id: banned-unsupport, method: DELETE, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserBanned}}"}
+  - {id: moderator-support, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserModerator}}"}
+  - {id: admin-support, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserAdmin}}"}
+  - {id: publisher-support, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserPublisher}}"}
+  - {id: unknown-user, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "00000000-0000-4000-9000-0000000000ff"}
+---
+name: S2-support-headers-and-formats
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: no-user-agent, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}", headers: {User-Agent: ""}}
+  - {id: details-after-no-user-agent, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+  - {id: user-agent-with-spaces, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}", headers: {User-Agent: "  Agora 1.0  "}}
+  - {id: support-xml, method: POST, path: "/qags/{{seed.QagAcceptedTop}}/support?mediaType=xml", as: "{{seed.UserIdle}}"}
+  - {id: unsupport-xml, method: DELETE, path: "/qags/{{seed.QagAcceptedTop}}/support?mediaType=xml", as: "{{seed.UserIdle}}"}
+  - {id: support-media-type-foo, method: POST, path: "/qags/{{seed.QagAcceptedEducation}}/support?mediaType=foo", as: "{{seed.UserIdle}}"}
+  - {id: details-after-406, path: "/qags/{{seed.QagAcceptedEducation}}", as: "{{seed.UserIdle}}"}
+  - {id: support-with-body-ignored, method: POST, path: "/qags/{{seed.QagAcceptedSante}}/support", as: "{{seed.UserIdle}}", body: {anything: [1, 2]}}
+  - {id: support-trailing-slash, method: POST, path: "/qags/{{seed.QagAcceptedSante}}/support/", as: "{{seed.UserIdle}}"}
+  - {id: unsupport-with-body, method: DELETE, path: "/qags/{{seed.QagAcceptedSante}}/support", as: "{{seed.UserIdle}}", body: "x"}
+---
+name: S2-support-concurrent-same-user
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: parallel-supports, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}", parallel: 6}
+  - {id: details-after-parallel-supports, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+  - {id: parallel-unsupports, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}", parallel: 6}
+  - {id: details-after-parallel-unsupports, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+---
+name: S2-support-different-users-in-parallel
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: sequential-supports-repeat, method: POST, path: "/qags/{{seed.QagAcceptedEducation}}/support", as: "{{seed.UserIdle}}", repeat: 3}
+  - {id: other-user, method: POST, path: "/qags/{{seed.QagAcceptedEducation}}/support", as: "{{seed.UserProfile3}}"}
+  - {id: count, path: "/qags/{{seed.QagAcceptedEducation}}", as: "{{seed.UserProfile3}}"}
+---
+name: S2-support-invalid-qag-status-5
+tags: [S2]
+dbdiff: step
+setup:
+  sql:
+    - "UPDATE qags SET status = 5 WHERE id = '00000000-0000-4000-8000-000000000002'"
+steps:
+  # An exception inside AgoraQueue.executeTask leaves the user locked on the Kotlin side until it restarts
+  # (class B-AGORAQUEUE, Go releases the lock): every user that makes Kotlin throw is used for that task only once.
+  - {id: support-invalid-status, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserProfile1}}"}
+  - {id: support-already-supported-invalid-status, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: unsupport-invalid-status, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserRegular6}}"}
+  - {id: unsupport-not-supported-invalid-status, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: details-invalid-status, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: public-invalid-status, path: "/api/public/qags/{{seed.QagAcceptedTransport}}"}
+  - {id: details-delete-invalid-status, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular2}}"}
+---
+name: S2-support-null-columns
+tags: [S2]
+dbdiff: step
+setup:
+  sql:
+    - "UPDATE qags SET title = NULL WHERE id = '00000000-0000-4000-8000-000000000002'"
+    - "UPDATE qags SET description = NULL WHERE id = '00000000-0000-4000-8000-000000000003'"
+    - "UPDATE qags SET username = NULL WHERE id = '00000000-0000-4000-8000-000000000004'"
+    - "UPDATE qags SET thematique_id = NULL WHERE id = '00000000-0000-4000-8000-000000000005'"
+    - "UPDATE qags SET post_date = NULL WHERE id = '00000000-0000-4000-8000-000000000006'"
+    - "UPDATE qags SET user_id = NULL WHERE id = '00000000-0000-4000-8000-000000000007'"
+steps:
+  - {id: details-null-title, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: details-null-description, path: "/qags/{{seed.QagAcceptedSante}}", as: "{{seed.UserRegular1}}"}
+  - {id: details-null-username, path: "/qags/{{seed.QagAcceptedEducation}}", as: "{{seed.UserRegular1}}"}
+  - {id: details-null-thematique, path: "/qags/{{seed.QagAcceptedEconomie}}", as: "{{seed.UserRegular1}}"}
+  - {id: details-null-post-date, path: "/qags/{{seed.QagAcceptedDupSupport}}", as: "{{seed.UserRegular1}}"}
+  - {id: details-null-user, path: "/qags/{{seed.QagAccepted73h}}", as: "{{seed.UserRegular1}}"}
+  - {id: public-null-title, path: "/api/public/qags/{{seed.QagAcceptedTransport}}"}
+  - {id: support-null-title, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserProfile2}}"}
+  - {id: support-already-supported-null-title, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: unsupport-null-title, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserRegular3}}"}
+  - {id: delete-null-title, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular2}}"}
+  - {id: details-ok-neighbour, path: "/qags/{{seed.QagAcceptedTop}}", as: "{{seed.UserRegular1}}"}

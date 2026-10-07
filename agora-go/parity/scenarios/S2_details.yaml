@@ -1,0 +1,214 @@
+name: S2-details-accepted-users
+tags: [S2]
+dbdiff: none
+steps:
+  - {id: as-author, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular2}}"}
+  - {id: as-supporter, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: as-other-user, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+  - {id: anonymous, path: "/qags/{{seed.QagAcceptedTransport}}"}
+  - {id: banned-supporter, path: "/qags/{{seed.QagAcceptedTop}}", as: "{{seed.UserBanned}}"}
+  - {id: banned-other, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserBanned}}"}
+  - {id: moderator, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserModerator}}"}
+  - {id: admin, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserAdmin}}"}
+  - {id: publisher, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserPublisher}}"}
+  - {id: top-qag-as-regular1, path: "/qags/{{seed.QagAcceptedTop}}", as: "{{seed.UserRegular1}}"}
+  - {id: duplicate-support-rows, path: "/qags/{{seed.QagAcceptedDupSupport}}", as: "{{seed.UserRegular5}}"}
+  - {id: duplicate-support-rows-other, path: "/qags/{{seed.QagAcceptedDupSupport}}", as: "{{seed.UserIdle}}"}
+  - {id: author-of-weekly-archive, path: "/qags/{{seed.QagAcceptedWeeklyArchive1}}", as: "{{seed.UserRegular1}}"}
+  - {id: special-chars, path: "/qags/{{seed.QagAcceptedSpecialChars}}", as: "{{seed.UserRegular1}}"}
+  - {id: long-description, path: "/qags/{{seed.QagAcceptedOlder}}", as: "{{seed.UserRegular1}}"}
+  - {id: no-updates-no-supports, path: "/qags/{{seed.QagAcceptedNoUpdate}}", as: "{{seed.UserRegular1}}"}
+  - {id: two-updates, path: "/qags/{{seed.QagAcceptedTwoUpdates}}", as: "{{seed.UserRegular2}}"}
+  - {id: accepted-with-banned-supports, path: "/qags/{{seed.QagAcceptedSante}}", as: "{{seed.UserRegular2}}"}
+---
+name: S2-details-formats
+tags: [S2]
+dbdiff: none
+steps:
+  - {id: xml, path: "/qags/{{seed.QagAcceptedTransport}}?mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: xml-upper, path: "/qags/{{seed.QagAcceptedTransport}}?mediaType=XML", as: "{{seed.UserRegular1}}"}
+  - {id: json-param, path: "/qags/{{seed.QagAcceptedTransport}}?mediaType=json", as: "{{seed.UserRegular1}}"}
+  - {id: unknown-media-type, path: "/qags/{{seed.QagAcceptedTransport}}?mediaType=foo", as: "{{seed.UserRegular1}}"}
+  - {id: empty-media-type, path: "/qags/{{seed.QagAcceptedTransport}}?mediaType=", as: "{{seed.UserRegular1}}"}
+  - {id: accept-xml, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}", headers: {Accept: "application/xml"}}
+  - {id: head, method: HEAD, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: head-anonymous, method: HEAD, path: "/qags/{{seed.QagAcceptedTransport}}"}
+  - {id: head-rejected, method: HEAD, path: "/qags/{{seed.QagRejectedRecent}}", as: "{{seed.UserRegular2}}"}
+  - {id: xml-open-as-author, path: "/qags/{{seed.QagOpenPlain}}?mediaType=xml", as: "{{seed.UserRegular4}}"}
+  - {id: xml-rejected, path: "/qags/{{seed.QagRejectedRecent}}?mediaType=xml", as: "{{seed.UserRegular2}}"}
+  - {id: xml-not-found, path: "/qags/{{seed.QagArchivedOld}}?mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: xml-special-chars, path: "/qags/{{seed.QagAcceptedSpecialChars}}?mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: xml-selected-video, path: "/qags/{{seed.QagSelectedVideo}}?mediaType=xml", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"], body: status}}
+  - {id: trailing-slash, path: "/qags/{{seed.QagAcceptedTransport}}/", as: "{{seed.UserRegular1}}"}
+  - {id: post-not-allowed-on-details-sub, method: PUT, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserRegular1}}"}
+  - {id: options-no-origin, method: OPTIONS, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: cors-origin, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}", headers: {Origin: "https://www.agora.gouv.fr"}}
+---
+name: S2-details-status
+tags: [S2]
+dbdiff: none
+steps:
+  - {id: open-as-author, path: "/qags/{{seed.QagOpenPlain}}", as: "{{seed.UserRegular4}}"}
+  - {id: open-as-other, path: "/qags/{{seed.QagOpenPlain}}", as: "{{seed.UserRegular1}}"}
+  - {id: open-as-moderator, path: "/qags/{{seed.QagOpenPlain}}", as: "{{seed.UserModerator}}"}
+  - {id: open-anonymous, path: "/qags/{{seed.QagOpenPlain}}"}
+  - {id: open-locked-as-author, path: "/qags/{{seed.QagOpenLocked1}}", as: "{{seed.UserRegular3}}"}
+  - {id: open-old-as-author, path: "/qags/{{seed.QagOpenOwnerOld}}", as: "{{seed.UserRegular1}}"}
+  - {id: open-banned-author, path: "/qags/{{seed.QagOpenBannedAuthor}}", as: "{{seed.UserBanned}}"}
+  - {id: open-with-banned-support, path: "/qags/{{seed.QagOpenWeeklyLimit}}", as: "{{seed.UserRegular2}}"}
+  - {id: rejected-as-author, path: "/qags/{{seed.QagRejectedRecent}}", as: "{{seed.UserRegular2}}"}
+  - {id: rejected-as-other, path: "/qags/{{seed.QagRejectedRecent}}", as: "{{seed.UserRegular1}}"}
+  - {id: rejected-anonymised, path: "/qags/{{seed.QagRejectedAnonymized}}", as: "{{seed.UserRegular1}}"}
+  - {id: rejected-no-reason, path: "/qags/{{seed.QagRejectedNoReason}}", as: "{{seed.UserRegular1}}"}
+  - {id: archived-as-author, path: "/qags/{{seed.QagArchivedOld}}", as: "{{seed.UserRegular1}}"}
+  - {id: archived-as-other, path: "/qags/{{seed.QagArchivedOld}}", as: "{{seed.UserRegular2}}"}
+  - {id: archived-no-update, path: "/qags/{{seed.QagArchivedNoUpdate}}", as: "{{seed.UserRegular1}}"}
+  - {id: deleted-qag, path: "/qags/{{seed.QagDeleted1}}", as: "{{seed.UserRegular1}}"}
+---
+name: S2-details-ids
+tags: [S2]
+dbdiff: none
+steps:
+  - {id: unknown-uuid, path: "/qags/00000000-0000-4000-8000-0000000000ff", as: "{{seed.UserRegular1}}"}
+  - {id: not-a-uuid, path: "/qags/not-a-uuid", as: "{{seed.UserRegular1}}"}
+  - {id: lenient-short-uuid, path: "/qags/1-1-1-1-1", as: "{{seed.UserRegular1}}"}
+  - {id: uppercase-existing-uuid, path: "/qags/00000000-0000-4000-8000-0000000000A1", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: uppercase-accepted, path: "/qags/00000000-0000-4000-8000-00000000000F", as: "{{seed.UserRegular1}}"}
+  - {id: plus-sign-uuid, path: "/qags/%2B0000000-0000-4000-8000-000000000001", as: "{{seed.UserRegular1}}"}
+  - {id: negative-segments, path: "/qags/-0-0-0-0-1", as: "{{seed.UserRegular1}}"}
+  - {id: too-long, path: "/qags/00000000-0000-4000-8000-0000000000000000000000", as: "{{seed.UserRegular1}}"}
+  - {id: with-spaces, path: "/qags/%20%20", as: "{{seed.UserRegular1}}"}
+  - {id: unicode-digits, path: "/qags/%EF%BC%90%EF%BC%90%EF%BC%90%EF%BC%90%EF%BC%90%EF%BC%90%EF%BC%90%EF%BC%90-0000-4000-8000-000000000001", as: "{{seed.UserRegular1}}"}
+  - {id: dots, path: "/qags/..", as: "{{seed.UserRegular1}}"}
+  - {id: ask-status-is-not-an-id, path: "/qags/ask_status", as: "{{seed.UserRegular1}}"}
+  - {id: public-unknown, path: "/api/public/qags/00000000-0000-4000-8000-0000000000ff"}
+  - {id: public-not-a-uuid, path: "/api/public/qags/not-a-uuid"}
+  - {id: public-uppercase-existing, path: "/api/public/qags/00000000-0000-4000-8000-00000000000F"}
+  - {id: public-lenient, path: "/api/public/qags/0-0-0-0-1"}
+---
+name: S2-details-selected-feedback
+tags: [S2]
+dbdiff: none
+steps:
+  - {id: video-feedback-helpful, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: video-feedback-not-helpful, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular2}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: video-no-feedback-yet, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: video-other-user, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserIdle}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: video-as-moderator, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserModerator}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: video-banned-user, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserBanned}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: text-helpful-not, path: "/qags/{{seed.QagSelectedText}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.textResponse.responseDate"]}}
+  - {id: text-helpful, path: "/qags/{{seed.QagSelectedText}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.textResponse.responseDate"]}}
+  - {id: text-author, path: "/qags/{{seed.QagSelectedText}}", as: "{{seed.UserRegular2}}", compare: {ignore: ["$.textResponse.responseDate"]}}
+  - {id: document-no-feedback, path: "/qags/{{seed.QagSelectedDocument}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: document-author, path: "/qags/{{seed.QagSelectedDocument}}", as: "{{seed.UserIdle}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: video-xml, path: "/qags/{{seed.QagSelectedVideo}}?mediaType=xml", as: "{{seed.UserRegular1}}", compare: {body: status}}
+  - {id: video-head, method: HEAD, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}"}
+---
+name: S2-details-selected-feedback-flag-off
+tags: [S2]
+dbdiff: none
+setup:
+  redis: {"featureFlags::IS_FEEDBACK_ON_RESPONSE_QAG_ENABLED": "false"}
+steps:
+  - {id: video-helpful, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: video-no-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: text, path: "/qags/{{seed.QagSelectedText}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.textResponse.responseDate"]}}
+  - {id: public-text, path: "/api/public/qags/{{seed.QagSelectedText}}", compare: {ignore: ["$.textResponse.responseDate"]}}
+---
+name: S2-details-selected-flag-garbage
+tags: [S2]
+dbdiff: none
+setup:
+  redis: {"featureFlags::IS_FEEDBACK_ON_RESPONSE_QAG_ENABLED": "garbage"}
+steps:
+  - {id: video-with-response, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}"}
+  - {id: public-with-response, path: "/api/public/qags/{{seed.QagSelectedVideo}}"}
+  - {id: accepted-no-flag-read, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: public-accepted-no-flag-read, path: "/api/public/qags/{{seed.QagAcceptedTransport}}"}
+---
+name: S2-details-strapi-response-fault-500
+tags: [S2]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: reponse-du-gouvernements, mode: "500"}
+steps:
+  - {id: video-without-response, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}"}
+  - {id: public-without-response, path: "/api/public/qags/{{seed.QagSelectedVideo}}"}
+  - {id: public-xml-without-response, path: "/api/public/qags/{{seed.QagSelectedVideo}}?mediaType=xml"}
+---
+name: S2-details-strapi-response-fault-malformed
+tags: [S2]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: reponse-du-gouvernements, mode: malformed}
+steps:
+  - {id: text-without-response, path: "/qags/{{seed.QagSelectedText}}", as: "{{seed.UserRegular1}}"}
+  - {id: public-without-response, path: "/api/public/qags/{{seed.QagSelectedText}}"}
+---
+name: S2-details-strapi-response-fault-nulldata
+tags: [S2]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: reponse-du-gouvernements, mode: nulldata}
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedText}}", as: "{{seed.UserRegular1}}"}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedText}}"}
+---
+name: S2-details-strapi-response-fault-missingfield
+tags: [S2]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: reponse-du-gouvernements, mode: missingfield}
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}"}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}"}
+---
+name: S2-details-strapi-response-slow
+tags: [S2]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: reponse-du-gouvernements, mode: slow, delayMs: 700}
+steps:
+  - {id: details, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: public, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate"]}}
+---
+name: S2-details-strapi-no-response-for-selected
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: reponse-du-gouvernements, data: []}
+steps:
+  - {id: selected-without-response, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}"}
+  - {id: public-selected-without-response, path: "/api/public/qags/{{seed.QagSelectedVideo}}"}
+  - {id: public-selected-without-response-xml, path: "/api/public/qags/{{seed.QagSelectedText}}?mediaType=xml"}
+---
+name: S2-details-strapi-suspended-thematiques-empty
+tags: [S2]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: thematiques, data: []}
+steps:
+  - {id: accepted-without-thematique, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: open-without-thematique, path: "/qags/{{seed.QagOpenPlain}}", as: "{{seed.UserRegular4}}"}
+  - {id: rejected-without-thematique, path: "/qags/{{seed.QagRejectedRecent}}", as: "{{seed.UserRegular2}}"}
+  - {id: public-without-thematique, path: "/api/public/qags/{{seed.QagAcceptedTransport}}"}
+---
+name: S2-details-unknown-thematique-of-one-qag
+tags: [S2]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET thematique_id = 'th-unknown' WHERE id = '00000000-0000-4000-8000-000000000002'"
+    - "UPDATE qags SET thematique_id = 'th-unknown' WHERE id = '00000000-0000-4000-8000-000000000031'"
+steps:
+  - {id: unknown-thematique, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: unknown-thematique-rejected, path: "/qags/{{seed.QagRejectedRecent}}", as: "{{seed.UserRegular2}}"}
+  - {id: public-unknown-thematique, path: "/api/public/qags/{{seed.QagAcceptedTransport}}"}
+  - {id: other-qag-fine, path: "/qags/{{seed.QagAcceptedSante}}", as: "{{seed.UserRegular1}}"}
