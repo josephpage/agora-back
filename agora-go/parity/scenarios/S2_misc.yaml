@@ -1,0 +1,71 @@
+name: S2-support-suspicious-origin-variants
+tags: [S2]
+dbdiff: step
+steps:
+  - id: ten-signups
+    method: POST
+    path: /signup
+    repeat: 10
+    headers: {User-Agent: "Mozilla/5.0 farm", versionCode: "20", platform: android, X-Forwarded-For: "203.0.113.50"}
+    compare: {body: status}
+  - {id: support-ignored-answers-200, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}", headers: {User-Agent: "Mozilla/5.0 farm", X-Forwarded-For: "203.0.113.50"}}
+  - {id: details-shows-no-support, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+  - {id: unsupport-is-not-checked, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserRegular1}}", headers: {User-Agent: "Mozilla/5.0 farm", X-Forwarded-For: "203.0.113.50"}}
+  - {id: same-ip-other-user-agent, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}", headers: {User-Agent: "Mozilla/5.0 other", X-Forwarded-For: "203.0.113.50"}}
+  - {id: same-user-agent-other-ip, method: POST, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserIdle}}", headers: {User-Agent: "Mozilla/5.0 farm", X-Forwarded-For: "203.0.113.51"}}
+  - {id: suspicious-and-already-supported-still-200, method: POST, path: "/qags/{{seed.QagAcceptedEducation}}/support", as: "{{seed.UserRegular1}}", headers: {User-Agent: "Mozilla/5.0 farm", X-Forwarded-For: "203.0.113.50"}}
+  - {id: suspicious-on-unknown-qag-still-200, method: POST, path: "/qags/00000000-0000-4000-8000-0000000000ff/support", as: "{{seed.UserRegular1}}", headers: {User-Agent: "Mozilla/5.0 farm", X-Forwarded-For: "203.0.113.50"}}
+---
+name: S2-support-suspicious-detection-disabled
+tags: [S2]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_SUSPICIOUS_USER_DETECTION_ENABLED": "false"}
+steps:
+  - id: ten-signups
+    method: POST
+    path: /signup
+    repeat: 10
+    headers: {User-Agent: "Mozilla/5.0 farm2", versionCode: "20", platform: android, X-Forwarded-For: "203.0.113.60"}
+    compare: {body: status}
+  - {id: support-recorded, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}", headers: {User-Agent: "Mozilla/5.0 farm2", X-Forwarded-For: "203.0.113.60"}}
+---
+name: S2-support-suspicious-flag-garbage
+tags: [S2]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_SUSPICIOUS_USER_DETECTION_ENABLED": "garbage"}
+steps:
+  - {id: flag-read-fails, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserProfile11}}"}
+  - {id: unsupport-does-not-read-the-flag, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserRegular1}}"}
+---
+name: S2-details-extreme-dates
+tags: [S2]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET post_date = '12026-03-04 05:06:07.891' WHERE id = '00000000-0000-4000-8000-000000000002'"
+    - "UPDATE qags SET post_date = '1990-01-02 03:04:05' WHERE id = '00000000-0000-4000-8000-000000000003'"
+    - "UPDATE qags SET post_date = '2038-01-19 03:14:08.999999' WHERE id = '00000000-0000-4000-8000-000000000004'"
+steps:
+  - {id: year-over-9999, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: year-1990, path: "/qags/{{seed.QagAcceptedSante}}", as: "{{seed.UserRegular1}}"}
+  - {id: microseconds, path: "/qags/{{seed.QagAcceptedEducation}}", as: "{{seed.UserRegular1}}"}
+  - {id: public, path: "/api/public/qags/{{seed.QagAcceptedTransport}}"}
+  - {id: xml, path: "/qags/{{seed.QagAcceptedTransport}}?mediaType=xml", as: "{{seed.UserRegular1}}"}
+---
+name: S2-details-cache-and-writes-by-sql
+tags: [S2]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET status = 2 WHERE id = '00000000-0000-4000-8000-000000000009'"
+steps:
+  - {id: archived-from-the-start, path: "/qags/{{seed.QagAcceptedEdge}}", as: "{{seed.UserRegular1}}"}
+  - {id: support-count-read-twice-1, path: "/qags/{{seed.QagAcceptedTop}}", as: "{{seed.UserRegular4}}"}
+  - {id: support-count-read-twice-2, path: "/qags/{{seed.QagAcceptedTop}}", as: "{{seed.UserRegular4}}"}
+  - {id: support-by-another-user, method: POST, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserIdle}}"}
+  - {id: count-follows-the-support, path: "/qags/{{seed.QagAcceptedTop}}", as: "{{seed.UserRegular4}}"}
+  - {id: public-count-follows-the-support, path: "/api/public/qags/{{seed.QagAcceptedTop}}"}
+  - {id: unsupport, method: DELETE, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserIdle}}"}
+  - {id: count-follows-the-unsupport, path: "/qags/{{seed.QagAcceptedTop}}", as: "{{seed.UserRegular4}}"}

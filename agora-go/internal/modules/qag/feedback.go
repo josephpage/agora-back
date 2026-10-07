@@ -236,7 +236,10 @@ func (u *FeedbackUseCase) GetFeedbackResults(ctx context.Context, qagID string) 
 	if err != nil || !enabled {
 		return nil, err
 	}
-	res, err := u.results.getOrLoad(ctx, qagID, func() (FeedbackResults, error) { return u.buildResults(ctx, qagID) })
+	// the shared load must not die with the request that started it
+	res, err := u.results.getOrLoad(ctx, qagID, func() (FeedbackResults, error) {
+		return u.buildResults(context.WithoutCancel(ctx), qagID)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +250,7 @@ func (u *FeedbackUseCase) GetFeedbackResults(ctx context.Context, qagID string) 
 // answer of the user (nil = none yet), from the cache or the database.
 func (u *FeedbackUseCase) GetFeedbackForQagAndUser(ctx context.Context, qagID, userID string) (*bool, error) {
 	return u.users.getOrLoad(ctx, userID, qagID, func() (*bool, error) {
-		return u.repo.GetFeedbackResponseForUser(ctx, qagID, userID)
+		return u.repo.GetFeedbackResponseForUser(context.WithoutCancel(ctx), qagID, userID)
 	})
 }
 
