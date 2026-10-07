@@ -34,7 +34,7 @@ func (c l1AskDateCache) getDate(userUUID string) *time.Time {
 }
 
 func (c l1AskDateCache) insertDate(ctx context.Context, userUUID string, askDate time.Time) {
-	c.a.Cache.Put(askDateCacheName, userUUID, askDate, askDateCacheTTL)
+	c.a.Cache.Put(askDateCacheName, userUUID, askDate, c.a.Cache.CoexistenceTTL(askDateCacheTTL))
 	c.a.Cache.DeleteKotlinKeys(ctx, cache.KotlinKey(askDateCacheName, userUUID))
 }
 

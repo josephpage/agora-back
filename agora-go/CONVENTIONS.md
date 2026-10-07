@@ -81,6 +81,9 @@ bodies). Your handler only reproduces the controller method:
   - `.build()` → `httpx.Empty(status)` (no body)
   - `ResponseEntity<String>` bodies → `httpx.String(status, s)`
   - preset content type (e.g. TSV) → `httpx.Bytes(status, contentType, b)`
+  - `ResponseEntity<List<T>>` (declared list type): the XML root is the DECLARED type, `<List>`; return a named slice type whose
+    `JavaName()` is `"List"` (see `content.FicheInventaireListJSON`). A list returned through `ResponseEntity<*>` / `HttpEntity<*>` uses
+    the runtime class (`ArrayList`, the xmljava default).
   - `.cacheControl(CacheControl.maxAge(N, SECONDS).cachePublic())` → `.CacheControl(N, true)`
   - extra headers → `.With("Name", "value")` (keep Tomcat's casing)
 - Exceptions:
@@ -157,6 +160,10 @@ shorter) and apply the same eviction events:
 `a.Cache.Invalidate(ctx, "<name>", key)` / `InvalidateAll`.
 In coexistence mode also delete the Kotlin keys the Kotlin code would have
 evicted: `a.Cache.DeleteKotlinKeys(ctx, cache.KotlinKey("consultationResults", id))`.
+Conversely, Go cannot observe the evictions done by the Kotlin backend: every
+Go cache of data a Kotlin write can change (profile, feedbacks, results, has
+answered...) takes its TTL through `a.Cache.CoexistenceTTL(ttl)` (capped at
+5 s while `AGORA_COEXISTENCE=true`). Strapi data is not concerned.
 Keys shared with Kotlin in its exact format (rate limit, signup counters,
 feature flags) use `GetSharedJSON/SetSharedJSON`. Data Kotlin does NOT cache:
 only shared (non per-user) aggregates may be micro-cached for

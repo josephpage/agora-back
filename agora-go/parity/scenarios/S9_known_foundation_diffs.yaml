@@ -3,6 +3,7 @@
 # "Foundation findings" of parity/ledger/S9.md. Tag S9-known, not part of -tags S9.
 name: "s9-known-content-xml-control-char"
 tags: ["S9-known"]
+skip: "class C divergence C-XML-CONTROL-CHAR (DIVERGENCES.md): a control character forbidden by XML in a value written as XML; the reference commits a truncated 200 with an appended error body, Go answers a clean 500. XML is only consumed by Moderatus."
 dbdiff: "none"
 setup: {"strapiOverrides": [{"model": "site-vitrine-question-au-gouvernement", "data": {"documentId": "x", "titre": "a\u0000b", "sous_titre": "s", "texte_soutien": []}}]}
 steps:
@@ -11,6 +12,7 @@ steps:
 ---
 name: "s9-known-feedback-xml-body"
 tags: ["S9-known"]
+skip: "class C divergence C-XML-BODY (DIVERGENCES.md): XML request bodies are refused by Go."
 dbdiff: "step"
 steps:
   - {"id": "xml", "method": "POST", "path": "/feedback", "as": "{{seed.UserRegular1}}", "bodyRaw": "<AppFeedbackJson><type>bug</type><description>d</description></AppFeedbackJson>", "contentType": "application/xml"}
@@ -20,43 +22,43 @@ steps:
   - {"id": "xml-unknown-type", "method": "POST", "path": "/feedback", "as": "{{seed.UserRegular1}}", "bodyRaw": "<AppFeedbackJson><type>zzz</type><description>d</description></AppFeedbackJson>", "contentType": "application/xml"}
 ---
 name: "s9-known-fiches-detail-control-char"
-tags: ["S9-known"]
+tags: ["S9"]
 dbdiff: "none"
 steps:
   - {"id": "id", "path": "/fiches_inventaire/a%0Ab"}
 ---
 name: "s9-known-fiches-list-fffd-invalid-byte"
-tags: ["S9-known"]
+tags: ["S9"]
 dbdiff: "none"
 steps:
   - {"id": "q", "path": "/fiches_inventaire?titre=%E9"}
 ---
 name: "s9-known-fiches-list-fffd-invalid-bytes"
-tags: ["S9-known"]
+tags: ["S9"]
 dbdiff: "none"
 steps:
   - {"id": "q", "path": "/fiches_inventaire?titre=a%FFb%FE"}
 ---
 name: "s9-known-fiches-list-fffd-surrogate"
-tags: ["S9-known"]
+tags: ["S9"]
 dbdiff: "none"
 steps:
   - {"id": "q", "path": "/fiches_inventaire?titre=%ED%A0%80"}
 ---
 name: "s9-known-fiches-list-fffd-genuine"
-tags: ["S9-known"]
+tags: ["S9"]
 dbdiff: "none"
 steps:
   - {"id": "q", "path": "/fiches_inventaire?titre=%EF%BF%BD"}
 ---
 name: "s9-known-fiches-list-fffd-etape"
-tags: ["S9-known"]
+tags: ["S9"]
 dbdiff: "none"
 steps:
   - {"id": "q", "path": "/fiches_inventaire?etape=%EF%BF%BD,a"}
 ---
 name: "s9-known-fiches-list-fffd-thematique"
-tags: ["S9-known"]
+tags: ["S9"]
 dbdiff: "none"
 steps:
   - {"id": "q", "path": "/fiches_inventaire?thematique=%EF%BF%BD"}

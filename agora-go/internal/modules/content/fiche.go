@@ -289,37 +289,11 @@ func detailHandler(a *app.App) httpx.HandlerFunc {
 			panic(err)
 		}
 		if fiche == nil {
-			return notFoundAdvice(c, "Veuillez renseigner un id de fiche inventaire existant.")
+			// FicheInventaireNotFound → DefaultControllerAdvice (404 {"title"})
+			panic(&httpx.AdviceError{Status: 404, Title: "Veuillez renseigner un id de fiche inventaire existant."})
 		}
 		return httpx.OK(toFicheInventaireJSON(*fiche))
 	}
-}
-
-// mediaTypeUnacceptable tells whether the ?mediaType= parameter makes the content
-// negotiation fail (neither json nor xml nor empty, case insensitive).
-func mediaTypeUnacceptable(c *httpx.Ctx) bool {
-	v, ok := c.Param("mediaType")
-	if !ok {
-		return false
-	}
-	switch strings.ToLower(v) {
-	case "", "json", "xml":
-		return false
-	}
-	return true
-}
-
-// notFoundAdvice is a DefaultControllerAdvice handler (@ResponseStatus(NOT_FOUND),
-// body ErrorResponse(title)). When the ?mediaType= parameter makes the content
-// negotiation fail, Spring cannot write the body: the status chosen by the
-// handler (>= 400) is kept and the body is empty (observed on the reference),
-// whereas httpx answers 406 (foundation finding "status >= 400 and
-// ?mediaType=foo" in parity/ledger/S9.md).
-func notFoundAdvice(c *httpx.Ctx, title string) *httpx.Response {
-	if mediaTypeUnacceptable(c) {
-		return httpx.Empty(404)
-	}
-	panic(&httpx.AdviceError{Status: 404, Title: title})
 }
 
 // utf16Lead is the first UTF-16 code unit of r.

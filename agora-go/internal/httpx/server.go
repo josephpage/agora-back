@@ -340,6 +340,13 @@ func (s *Server) finish(w http.ResponseWriter, r *http.Request, st *responseStat
 			body = resp.Bytes
 			contentType = resp.ContentType
 		case BodyValue, BodyString:
+			if format == "" && status >= 400 {
+				// an error entity (handler or @ExceptionHandler) whose writing
+				// fails the negotiation keeps its status, with an empty body
+				body = nil
+				dropHandlerHeaders = true
+				break
+			}
 			if format == "" {
 				// HttpMediaTypeNotAcceptableException after the handler ran.
 				status = 406

@@ -977,7 +977,7 @@ func TestMicroLoadStoresOnlyWhenAsked(t *testing.T) {
 func TestCoexistenceCap(t *testing.T) {
 	short := &app.App{Cache: cache.New(nil, nil, false)}
 	capped := &app.App{Cache: cache.New(nil, nil, true)}
-	if coexistenceCap(short, time.Hour) != time.Hour || coexistenceCap(capped, time.Hour) != 5*time.Minute || coexistenceCap(capped, time.Minute) != time.Minute {
+	if coexistenceCap(short, time.Hour) != time.Hour || coexistenceCap(capped, time.Hour) != cache.CoexistenceMaxTTL || coexistenceCap(capped, time.Second) != time.Second {
 		t.Fatal("cap")
 	}
 }

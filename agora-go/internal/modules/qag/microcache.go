@@ -34,13 +34,7 @@ func microLoad[T any](a *app.App, name, key string, ttl time.Duration, load func
 	return v, err
 }
 
-// coexistenceCap is the "cap Go caches" rule of AGORA_COEXISTENCE: while the
-// Kotlin backend may still write the data, long-lived Go entries shared with
-// Kotlin cache events live at most 5 minutes (their Kotlin evictions cannot be
-// observed).
+// coexistenceCap is cache.CoexistenceTTL (AGORA_COEXISTENCE).
 func coexistenceCap(a *app.App, ttl time.Duration) time.Duration {
-	if a.Cache.Coexistence() && ttl > 5*time.Minute {
-		return 5 * time.Minute
-	}
-	return ttl
+	return a.Cache.CoexistenceTTL(ttl)
 }

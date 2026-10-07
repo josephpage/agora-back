@@ -444,7 +444,9 @@ func KotlinToIntOrNull(s string) (int, bool) {
 func URLEncode(s string) string {
 	var b strings.Builder
 	const hex = "0123456789ABCDEF"
-	for _, r := range s {
+	for i := 0; i < len(s); {
+		r, size := utf8.DecodeRuneInString(s[i:])
+		i += size
 		switch {
 		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9',
 			r == '.', r == '-', r == '*', r == '_':
@@ -452,7 +454,9 @@ func URLEncode(s string) string {
 		case r == ' ':
 			b.WriteByte('+')
 		default:
-			if r == utf8.RuneError {
+			if r == utf8.RuneError && size == 1 {
+				// an invalid byte stands for an unpaired surrogate, which
+				// String.getBytes(UTF_8) writes as '?'; a real U+FFFD is encoded
 				r = '?'
 			}
 			var buf [4]byte

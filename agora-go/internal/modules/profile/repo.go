@@ -117,7 +117,7 @@ func (c l1ProfileCache) getProfile(userUUID string) profileCacheResult {
 }
 
 func (c l1ProfileCache) insertProfile(ctx context.Context, userUUID string, row *profileRow) {
-	c.a.Cache.Put(profileCacheName, userUUID, row, profileCacheTTL)
+	c.a.Cache.Put(profileCacheName, userUUID, row, c.a.Cache.CoexistenceTTL(profileCacheTTL))
 	// coexistence: the Kotlin entry is now older than the database
 	c.a.Cache.DeleteKotlinKeys(ctx, cache.KotlinKey(profileCacheName, userUUID))
 }

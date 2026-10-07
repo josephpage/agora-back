@@ -83,10 +83,6 @@ func feedbackHandler(a *app.App) httpx.HandlerFunc {
 		c.BindBody(&body) // @RequestBody is bound first
 		fb, ok := feedbackToDomain(body, c.UserID())
 		if !ok || !insertAppFeedback(a, c, fb) {
-			if mediaTypeUnacceptable(c) {
-				// the status of a ResponseEntity >= 400 survives a failed negotiation (see notFoundAdvice)
-				return httpx.Empty(400)
-			}
 			return httpx.Unit(400) // ResponseEntity.badRequest().body(Unit)
 		}
 		return httpx.Unit(200) // ResponseEntity.ok().body(Unit)
