@@ -1,0 +1,144 @@
+name: S2-feedback-insert-update-and-results
+tags: [S2]
+dbdiff: step
+steps:
+  # UserRegular1 already answered: the details fill the user feedback cache with the stored answer.
+  - {id: details-before-as-answered-user, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: details-before-as-unanswered-user, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: first-feedback-helpful, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: true}}
+  - {id: details-answered-user-sees-new-results, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: details-unanswered-user-still-sees-no-results, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserIdle}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: same-answer-again, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: true}}
+  - {id: changed-answer, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: false}}
+  - {id: details-answered-user-sees-changed-results, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular2}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: public-has-no-feedback, path: "/api/public/qags/{{seed.QagSelectedVideo}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: update-existing-answer-of-seeded-user, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular6}}", body: {isHelpful: true}}
+  - {id: details-after-update-of-seeded-user, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+---
+name: S2-feedback-rounding-of-ratios
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: f1, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular1}}", body: {isHelpful: true}}
+  - {id: f2, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular2}}", body: {isHelpful: false}}
+  - {id: f3, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular3}}", body: {isHelpful: false}}
+  - {id: f4, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular4}}", body: {isHelpful: false}}
+  - {id: f5, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: false}}
+  - {id: f6, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular6}}", body: {isHelpful: false}}
+  - {id: f7, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserRegular7}}", body: {isHelpful: false}}
+  - {id: f8, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserProfile1}}", body: {isHelpful: true}}
+  - {id: f9, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserProfile2}}", body: {isHelpful: true}}
+  - {id: f10, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserProfile3}}", body: {isHelpful: true}}
+  - {id: f11, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserProfile4}}", body: {isHelpful: true}}
+  - {id: f12, method: POST, path: "/qags/{{seed.QagSelectedDocument}}/feedback", as: "{{seed.UserProfile5}}", body: {isHelpful: true}}
+  - {id: details-as-a-participant, path: "/qags/{{seed.QagSelectedDocument}}", as: "{{seed.UserIdle}}", compare: {ignore: ["$.response.responseDate"]}}
+---
+name: S2-feedback-on-text-response
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: details-before, path: "/qags/{{seed.QagSelectedText}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.textResponse.responseDate"]}}
+  - {id: feedback-from-seeded-user, method: POST, path: "/qags/{{seed.QagSelectedText}}/feedback", as: "{{seed.UserRegular1}}", body: {isHelpful: true}}
+  - {id: details-other-answered-user, path: "/qags/{{seed.QagSelectedText}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.textResponse.responseDate"]}}
+  - {id: feedback-new-user, method: POST, path: "/qags/{{seed.QagSelectedText}}/feedback", as: "{{seed.UserRegular3}}", body: {isHelpful: false}}
+  - {id: details-after-new-user, path: "/qags/{{seed.QagSelectedText}}", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.textResponse.responseDate"]}}
+---
+name: S2-feedback-before-or-without-response
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: on-accepted-qag, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/feedback", as: "{{seed.UserRegular1}}", body: {isHelpful: true}}
+  - {id: on-accepted-qag-second-user, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/feedback", as: "{{seed.UserRegular2}}", body: {isHelpful: false}}
+  - {id: details-accepted-unchanged, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserRegular1}}"}
+  - {id: on-open-qag, method: POST, path: "/qags/{{seed.QagOpenPlain}}/feedback", as: "{{seed.UserRegular1}}", body: {isHelpful: true}}
+  - {id: on-rejected-qag, method: POST, path: "/qags/{{seed.QagRejectedRecent}}/feedback", as: "{{seed.UserRegular1}}", body: {isHelpful: true}}
+  - {id: on-unknown-qag, method: POST, path: "/qags/00000000-0000-4000-8000-0000000000ff/feedback", as: "{{seed.UserRegular1}}", body: {isHelpful: false}}
+  - {id: on-deleted-qag, method: POST, path: "/qags/{{seed.QagDeleted1}}/feedback", as: "{{seed.UserRegular1}}", body: {isHelpful: true}}
+  - {id: on-not-a-uuid, method: POST, path: "/qags/not-a-uuid/feedback", as: "{{seed.UserRegular1}}", body: {isHelpful: true}}
+  - {id: on-not-a-uuid-again, method: POST, path: "/qags/not-a-uuid/feedback", as: "{{seed.UserRegular2}}", body: {isHelpful: true}}
+  - {id: raw-uppercase-id, method: POST, path: "/qags/00000000-0000-4000-8000-0000000000A1/feedback", as: "{{seed.UserIdle}}", body: {isHelpful: true}}
+  - {id: details-selected-ignores-uppercase-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserIdle}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: details-selected-uppercase-id, path: "/qags/00000000-0000-4000-8000-0000000000A1", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: encoded-id, method: POST, path: "/qags/a%20b%2Bc/feedback", as: "{{seed.UserRegular1}}", body: {isHelpful: true}}
+---
+name: S2-feedback-flag-off
+tags: [S2]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_FEEDBACK_ON_RESPONSE_QAG_ENABLED": "false"}
+steps:
+  - {id: feedback-recorded-without-results, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: true}}
+  - {id: update-without-results, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: false}}
+  - {id: details-without-feedback-results, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: feedback-xml, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback?mediaType=xml", as: "{{seed.UserRegular6}}", body: {isHelpful: true}}
+---
+name: S2-feedback-flag-garbage
+tags: [S2]
+dbdiff: step
+setup:
+  redis: {"featureFlags::IS_FEEDBACK_ON_RESPONSE_QAG_ENABLED": "garbage"}
+steps:
+  - {id: feedback-recorded-then-flag-fails, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserProfile7}}", body: {isHelpful: true}}
+---
+name: S2-feedback-id-too-long-for-the-column
+tags: [S2]
+dbdiff: step
+steps:
+  - id: id-over-255-characters
+    method: POST
+    path: "/qags/IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII/feedback"
+    as: "{{seed.UserProfile6}}"
+    body: {isHelpful: true}
+---
+name: S2-feedback-body-variants
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: empty-object-is-false, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {}}
+  - {id: string-true, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: "true"}}
+  - {id: string-false, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: "false"}}
+  - {id: int-one, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: 1}}
+  - {id: int-zero, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: 0}}
+  - {id: int-two, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: 2}}
+  - {id: null-is-false, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: null}}
+  - {id: extra-fields, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: true, comment: "ignored"}}
+  - {id: string-yes, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: "yes"}}
+  - {id: string-upper-true, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: "TRUE"}}
+  - {id: float, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: 0.5}}
+  - {id: object, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: {a: 1}}}
+  - {id: array, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {isHelpful: [true]}}
+  - {id: array-body, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: [true]}
+  - {id: string-body, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: "true"}
+  - {id: null-body, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "null", contentType: application/json}
+  - {id: no-body, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}"}
+  - {id: empty-body, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "", contentType: application/json}
+  - {id: truncated, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":", contentType: application/json}
+  - {id: trailing-garbage, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{\"isHelpful\":true} garbage", contentType: application/json}
+  - {id: case-sensitive-name, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", body: {ishelpful: true}}
+  - {id: not-json, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "isHelpful=true", contentType: application/json}
+  - {id: invalid-path-and-invalid-body, method: POST, path: "/qags/not-a-uuid/feedback", as: "{{seed.UserRegular5}}", bodyRaw: "{", contentType: application/json}
+---
+name: S2-feedback-auth-and-formats
+tags: [S2]
+dbdiff: step
+steps:
+  - {id: anonymous, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", body: {isHelpful: true}}
+  - {id: bad-jwt, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", bearer: "abc.def.ghi", body: {isHelpful: true}}
+  - {id: banned, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserBanned}}", body: {isHelpful: true}}
+  - {id: moderator, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserModerator}}", body: {isHelpful: false}}
+  - {id: admin-xml, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback?mediaType=xml", as: "{{seed.UserAdmin}}", body: {isHelpful: true}}
+  - {id: publisher-media-type-foo, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback?mediaType=foo", as: "{{seed.UserPublisher}}", body: {isHelpful: true}}
+  - {id: accept-xml, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserNoFcm2}}", body: {isHelpful: true}, headers: {Accept: "application/xml"}}
+  - {id: trailing-slash, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback/", as: "{{seed.UserIdle}}", body: {isHelpful: true}}
+  - {id: form-content-type, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserIdle}}", bodyRaw: "isHelpful=true", contentType: application/x-www-form-urlencoded}
+---
+name: S2-feedback-null-helpful-column
+tags: [S2]
+dbdiff: step
+setup:
+  sql:
+    - "UPDATE feedbacks_qag SET is_helpful = NULL WHERE user_id = '00000000-0000-4000-9000-000000000003' AND qag_id = '00000000-0000-4000-8000-0000000000a1'"
+steps:
+  - {id: details-with-null-feedback-of-another-user, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: details-of-the-user-with-null-feedback, path: "/qags/{{seed.QagSelectedVideo}}", as: "{{seed.UserRegular3}}", compare: {ignore: ["$.response.responseDate"]}}
+  - {id: feedback-recomputes-results, method: POST, path: "/qags/{{seed.QagSelectedVideo}}/feedback", as: "{{seed.UserProfile8}}", body: {isHelpful: true}}
