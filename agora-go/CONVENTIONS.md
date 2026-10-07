@@ -101,6 +101,8 @@ bodies). Your handler only reproduces the controller method:
   fields are required (missing or null → 400 / empty Strapi list), pointers are
   nullable, primitives default to zero; Kotlin default values → tag option
   `def` and pre-initialize the struct before `BindBody`.
+- A JSON `null` element inside a list decodes to the element's zero value; when
+  Kotlin would keep the `null` (and later NPE → 500), use `[]*T`.
 - Verify byte parity of every DTO with the oracle (`jsonRoundTrip`, className =
   the Kotlin FQCN) in a test guarded by `oracle.Available()`.
 
@@ -183,7 +185,9 @@ Rich text: `strapi.RichText` (`ToHTML()`, `ToHTMLBody()`); media:
    ```
    Iterate until **0 unexplained diffs**. Use `compare.unordered` only for
    genuinely unordered outputs (SQL ties, random), never to hide a bug.
-4. Record the file mapping in `parity/ledger/<slice>.md`: every Kotlin file of
+4. New JVM oracle functions go in your own `parity/oracle/java/<SLICE>Functions.java`,
+   registered with ONE line in `Functions.java` (`<SLICE>Functions.register(F);`).
+5. Record the file mapping in `parity/ledger/<slice>.md`: every Kotlin file of
    the slice → Go file(s), tests ported, scenarios, divergences, open questions.
 
 ## 10. Hygiene

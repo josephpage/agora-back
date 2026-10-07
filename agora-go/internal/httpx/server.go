@@ -267,10 +267,10 @@ func (s *Server) writeSpringError(w http.ResponseWriter, r *http.Request, st *re
 // finish serializes the response body, applies the ETag filter and the
 // Spring Security header writers, then writes everything.
 func (s *Server) finish(w http.ResponseWriter, r *http.Request, st *responseState, resp *Response, now time.Time, rawPath string) {
-	for _, h := range resp.Headers {
-		st.add(h.Name, h.Value)
-	}
 	status := resp.Status
+	// ResponseEntity headers only reach the servlet response when the body is
+	// written: they are lost on 406 (not acceptable) and on serialization errors.
+	dropHandlerHeaders := false
 	var body []byte
 	contentType := ""
 	format := negotiate(r)
@@ -290,6 +290,7 @@ func (s *Server) finish(w http.ResponseWriter, r *http.Request, st *responseStat
 				status = 406
 				st.add("Accept", "application/xml, application/json")
 				body = nil
+				dropHandlerHeaders = true
 				break
 			}
 			switch resp.Kind {
@@ -300,6 +301,7 @@ func (s *Server) finish(w http.ResponseWriter, r *http.Request, st *responseStat
 						// HttpMessageNotWritableException → 500 error page
 						status = 500
 						body, contentType = s.renderError(500, rawPath, now, format)
+						dropHandlerHeaders = true
 						break
 					}
 					body = b
@@ -320,6 +322,12 @@ func (s *Server) finish(w http.ResponseWriter, r *http.Request, st *responseStat
 					contentType = "application/json"
 				}
 			}
+		}
+	}
+
+	if !dropHandlerHeaders {
+		for _, h := range resp.Headers {
+			st.add(h.Name, h.Value)
 		}
 	}
 
@@ -383,9 +391,8 @@ func ifNoneMatchMatches(values []string, etag string) bool {
 	for _, v := range values {
 		for _, tok := range strings.Split(v, ",") {
 			tok = strings.TrimSpace(tok)
-			if tok == "*" {
-				return true
-			}
+			// Spring 6.0 (ETAG_HEADER_VALUE_PATTERN): "*" is NOT a match,
+			// only quoted (optionally weak) tags are compared.
 			if tok != "" && strip(tok) == target {
 				return true
 			}

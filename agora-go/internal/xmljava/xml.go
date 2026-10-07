@@ -17,6 +17,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"unicode/utf16"
+	"unicode/utf8"
 
 	"agora/internal/jsonjava"
 )
@@ -238,8 +240,13 @@ func appendElement(b []byte, name string, v reflect.Value, cdata bool) []byte {
 	text := scalarText(v)
 	b = append(append(append(b, '<'), name...), '>')
 	if cdata {
+		// Jackson/Woodstox refuses "]]>" inside CDATA (JsonMappingException → 500):
+		// the marker byte makes MarshalChecked fail.
+		if strings.Contains(text, "]]>") {
+			b = append(b, 0x00)
+		}
 		b = append(b, "<![CDATA["...)
-		b = append(b, strings.ReplaceAll(text, "]]>", "]]]]><![CDATA[>")...)
+		b = append(b, text...)
 		b = append(b, "]]>"...)
 	} else {
 		b = appendEscapedText(b, text)
@@ -266,28 +273,59 @@ func scalarText(v reflect.Value) string {
 	return string(jsonjava.Marshal(v.Interface()))
 }
 
-// appendEscapedText escapes like Woodstox BufferingXmlWriter.writeCharacters
-// (verified with the JVM oracle): '&' and '<' always, '>' only after "]]",
-// '\r' as &#xd;.
+// appendEscapedText escapes element text exactly like Woodstox
+// BufferingXmlWriter (verified with the JVM oracle):
+//   - '&' → &amp;, '<' → &lt;, '\r' → &#xd;;
+//   - '>' → &gt; only when it may be part of "]]>": short strings (< 12 UTF-16
+//     units, String code path) escape it at index 0 or after ']'; longer strings
+//     go through the char[] code path, processed in 512-unit chunks, where '>'
+//     is escaped at the start of a segment (chunk start, or right after an
+//     escaped character) or after ']'.
 func appendEscapedText(b []byte, s string) []byte {
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		switch c {
+	units := utf16.Encode([]rune(s))
+	n := len(units)
+	short := n < 12
+	segStart := 0
+	for i, u := range units {
+		if !short && i%512 == 0 {
+			segStart = i
+		}
+		switch u {
 		case '&':
 			b = append(b, "&amp;"...)
+			segStart = i + 1
+			continue
 		case '<':
 			b = append(b, "&lt;"...)
-		case '>':
-			if i >= 2 && s[i-1] == ']' && s[i-2] == ']' {
-				b = append(b, "&gt;"...)
-			} else {
-				b = append(b, c)
-			}
+			segStart = i + 1
+			continue
 		case '\r':
 			b = append(b, "&#xd;"...)
-		default:
-			b = append(b, c)
+			segStart = i + 1
+			continue
+		case '>':
+			esc := false
+			if short {
+				esc = i == 0 || units[i-1] == ']'
+			} else {
+				esc = i == segStart || units[i-1] == ']'
+			}
+			if esc {
+				b = append(b, "&gt;"...)
+				segStart = i + 1
+				continue
+			}
 		}
+		// re-encode this unit (surrogate pairs are handled by decoding pairs)
+		if u >= 0xD800 && u < 0xDC00 && i+1 < n && units[i+1] >= 0xDC00 && units[i+1] < 0xE000 {
+			r := utf16.DecodeRune(rune(u), rune(units[i+1]))
+			b = utf8.AppendRune(b, r)
+			continue
+		}
+		if u >= 0xDC00 && u < 0xE000 && i > 0 && units[i-1] >= 0xD800 && units[i-1] < 0xDC00 {
+			continue // second half already written
+		}
+		b = utf8.AppendRune(b, rune(u))
 	}
 	return b
 }
