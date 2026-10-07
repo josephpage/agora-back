@@ -79,7 +79,7 @@ func (u *DetailsUseCase) feedbackStatsQuestionFirst(ctx context.Context, update 
 	if err != nil || !enabled {
 		return nil, err
 	}
-	return loadCached(u.a, feedbackStatsCacheName, update.ID, u.a.Cfg.MicroCacheTTL, func() (*FeedbackStats, bool, error) {
+	return loadCached(u.a, feedbackStatsCacheName, update.ID, u.a.Cache.CoexistenceTTL(u.a.Cfg.MicroCacheTTL), func() (*FeedbackStats, bool, error) {
 		stats, err := u.feedback.GetFeedbackStats(context.WithoutCancel(ctx), update.ID)
 		return stats, err == nil, err
 	})
@@ -90,7 +90,7 @@ func (u *DetailsUseCase) feedbackStatsQuestionFirst(ctx context.Context, update 
 // restarts its 5 minutes: the count never changed while the page was visited at
 // least every 5 minutes (class B, S4-B3). Here it is recomputed every 5 minutes.
 func (u *DetailsUseCase) participantCount(ctx context.Context, consultationID string) (int, error) {
-	return loadCached(u.a, participantCountCacheName, consultationID, participantCountTTL, func() (int, bool, error) {
+	return loadCached(u.a, participantCountCacheName, consultationID, u.a.Cache.CoexistenceTTL(participantCountTTL), func() (int, bool, error) {
 		n, err := u.answered.GetParticipantCount(context.WithoutCancel(ctx), consultationID)
 		return n, err == nil, err
 	})
@@ -140,60 +140,26 @@ func (u *DetailsUseCase) GetConsultation(ctx context.Context, idOrSlug string, u
 		return nil, err
 	}
 
-	// has the user answered (and, when the latest update asks for it, the feedback)?
-	// The latest update is looked up in the cache to ask for both at once.
+	// Has the user answered the consultation? The feedback of the user on the
+	// latest update is read by the same query when that update is already known
+	// (cached): the whole user specific part is then one round trip.
 	var answered bool
-	var feedback *bool
-	var feedbackRead bool
+	var guessID *string
+	var guessFeedback *bool
 	if userID != nil {
-		var guess *string
 		if v, ok := u.a.Cache.Get(latestDetailsCacheName, info.ID); ok {
 			if d := v.(*Details); d.Update.FeedbackQuestion != nil {
-				guess = &d.Update.ID
+				id := d.Update.ID
+				guessID = &id
 			}
 		}
-		answered, feedback, err = u.userState(ctx, info.ID, *userID, guess)
+		answered, guessFeedback, err = u.userState(ctx, info.ID, *userID, guessID)
 		if err != nil {
 			return nil, err
 		}
-		feedbackRead = guess != nil
-		if guess == nil {
-			feedback = nil
-		}
-		_ = feedbackRead
-		details, err := u.consultationDetails(ctx, info, answered)
-		if err != nil {
-			return nil, err
-		}
-		participants, err := u.participantCount(ctx, details.Consultation.ID)
-		if err != nil {
-			return nil, err
-		}
-		// getUserFeedback
-		var userFeedback *bool
-		if details.Update.FeedbackQuestion != nil {
-			if guess != nil && *guess == details.Update.ID {
-				userFeedback = feedback
-			} else {
-				id := details.Update.ID
-				_, userFeedback, err = u.userState(ctx, info.ID, *userID, &id)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-		return &DetailsWithInfo{
-			Consultation:           details.Consultation,
-			Update:                 details.Update,
-			FeedbackStats:          details.FeedbackStats,
-			History:                history,
-			ParticipantCount:       participants,
-			IsUserFeedbackPositive: userFeedback,
-			IsAnsweredByUser:       answered,
-		}, nil
 	}
 
-	details, err := u.consultationDetails(ctx, info, false)
+	details, err := u.consultationDetails(ctx, info, answered)
 	if err != nil {
 		return nil, err
 	}
@@ -201,12 +167,27 @@ func (u *DetailsUseCase) GetConsultation(ctx context.Context, idOrSlug string, u
 	if err != nil {
 		return nil, err
 	}
+
+	// getUserFeedback
+	var userFeedback *bool
+	if userID != nil && details.Update.FeedbackQuestion != nil {
+		if guessID != nil && *guessID == details.Update.ID {
+			userFeedback = guessFeedback
+		} else {
+			id := details.Update.ID
+			if _, userFeedback, err = u.userState(ctx, info.ID, *userID, &id); err != nil {
+				return nil, err
+			}
+		}
+	}
 	return &DetailsWithInfo{
-		Consultation:     details.Consultation,
-		Update:           details.Update,
-		FeedbackStats:    details.FeedbackStats,
-		History:          history,
-		ParticipantCount: participants,
+		Consultation:           details.Consultation,
+		Update:                 details.Update,
+		FeedbackStats:          details.FeedbackStats,
+		History:                history,
+		ParticipantCount:       participants,
+		IsUserFeedbackPositive: userFeedback,
+		IsAnsweredByUser:       answered,
 	}, nil
 }
 
@@ -231,7 +212,7 @@ func (u *DetailsUseCase) consultationDetails(ctx context.Context, info *Consulta
 }
 
 func (u *DetailsUseCase) unansweredDetails(ctx context.Context, info *ConsultationInfo) (*Details, error) {
-	return loadCached(u.a, detailsCacheName, "unanswered//"+info.ID, coexistenceCap(u.a, detailsCacheTTL), func() (*Details, bool, error) {
+	return loadCached(u.a, detailsCacheName, "unanswered//"+info.ID, detailsCacheTTL, func() (*Details, bool, error) {
 		lctx := context.WithoutCancel(ctx)
 		update := u.updates.GetUnansweredUsersConsultationUpdateWithUnpublished(lctx, info.ID)
 		if update == nil {
@@ -246,7 +227,7 @@ func (u *DetailsUseCase) unansweredDetails(ctx context.Context, info *Consultati
 }
 
 func (u *DetailsUseCase) lastDetails(ctx context.Context, info *ConsultationInfo) (*Details, error) {
-	return loadCached(u.a, latestDetailsCacheName, info.ID, coexistenceCap(u.a, detailsCacheTTL), func() (*Details, bool, error) {
+	return loadCached(u.a, latestDetailsCacheName, info.ID, u.a.Cache.CoexistenceTTL(detailsCacheTTL), func() (*Details, bool, error) {
 		lctx := context.WithoutCancel(ctx)
 		update := u.updates.GetLatestConsultationUpdate(lctx, info.ID)
 		if update == nil {

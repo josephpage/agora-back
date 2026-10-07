@@ -217,7 +217,7 @@ const hasGivenFeedbackCacheName = "hasGivenFeedbackConsultationUpdateV2"
 // updateFeedbackStatsCache is updateFeedbackStatsCache: the cached latest details
 // of the consultation get the new statistics when they show this update.
 func (u *FeedbackUseCase) updateFeedbackStatsCache(ctx context.Context, consultationID, updateID string, stats *FeedbackStats) {
-	ttl := coexistenceCap(u.a, detailsCacheTTL)
+	ttl := u.a.Cache.CoexistenceTTL(detailsCacheTTL)
 	if v, ok := u.a.Cache.Get(latestDetailsCacheName, consultationID); ok {
 		if d := v.(*Details); d.Update.ID == updateID {
 			updated := *d

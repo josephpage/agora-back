@@ -82,17 +82,6 @@ func loadCached[T any](a *app.App, name, key string, ttl time.Duration, load fun
 	return v, err
 }
 
-// coexistenceCap is the "cap Go caches" rule of AGORA_COEXISTENCE: while the
-// Kotlin backend may still write the data, long-lived Go entries shared with
-// Kotlin cache events live at most 5 minutes (their Kotlin evictions cannot be
-// observed).
-func coexistenceCap(a *app.App, ttl time.Duration) time.Duration {
-	if a.Cache.Coexistence() && ttl > 5*time.Minute {
-		return 5 * time.Minute
-	}
-	return ttl
-}
-
 // randomUUID is UUID.randomUUID() (also what Hibernate's GenerationType.UUID
 // produces): a random version 4 UUID in canonical lowercase form.
 func randomUUID() string {

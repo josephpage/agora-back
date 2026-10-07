@@ -118,7 +118,7 @@ func (r *InfoRepository) GetConsultationsToAggregate(ctx context.Context) []Cons
 // putInCacheUnderBothKeys is putInCacheUnderBothKeys: the id and the slug of the
 // consultation point to the same entry as the string that was asked for.
 func (r *InfoRepository) putInCacheUnderBothKeys(requested string, info *ConsultationInfo) {
-	ttl := coexistenceCap(r.a, consultationCacheTTL)
+	ttl := consultationCacheTTL
 	if info.ID != requested {
 		r.a.Cache.Put(consultationCacheName, info.ID, info, ttl)
 	}
@@ -130,7 +130,7 @@ func (r *InfoRepository) putInCacheUnderBothKeys(requested string, info *Consult
 // cachedInfo reads or builds an entry of "consultationCache"; a consultation
 // that is not found is never cached.
 func (r *InfoRepository) cachedInfo(ctx context.Context, key string, load func(ctx context.Context) *ConsultationInfo) *ConsultationInfo {
-	info, _ := loadCached(r.a, consultationCacheName, key, coexistenceCap(r.a, consultationCacheTTL), func() (*ConsultationInfo, bool, error) {
+	info, _ := loadCached(r.a, consultationCacheName, key, consultationCacheTTL, func() (*ConsultationInfo, bool, error) {
 		// the shared load must not die with the request that started it
 		info := load(context.WithoutCancel(ctx))
 		return info, info != nil, nil
