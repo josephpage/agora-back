@@ -1,0 +1,107 @@
+name: S3-responses-list-basic
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: anonymous, path: /qags/responses, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: regular, path: /qags/responses, as: "{{seed.UserRegular1}}", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: banned, path: /qags/responses, as: "{{seed.UserBanned}}", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: moderator, path: /qags/responses, as: "{{seed.UserModerator}}", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: xml, path: "/qags/responses?mediaType=xml", as: "{{seed.UserRegular1}}", compare: {body: status}}
+  - {id: media-type-foo, path: "/qags/responses?mediaType=foo", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: json-explicit, path: "/qags/responses?mediaType=json", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: head, method: HEAD, path: /qags/responses, as: "{{seed.UserRegular1}}", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: head-anonymous, method: HEAD, path: /qags/responses, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: post-not-allowed, method: POST, path: /qags/responses, as: "{{seed.UserRegular1}}", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: trailing-slash, path: /qags/responses/, as: "{{seed.UserRegular1}}", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: bad-jwt, path: /qags/responses, bearer: "abc.def.ghi", compare: {ignore: ["$.responses[*].responseDate"]}}
+---
+name: S3-responses-list-min-date
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: min-date-old, path: "/qags/responses?minDate=2020-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-3-days-ago, path: "/qags/responses?minDate=2026-10-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-future, path: "/qags/responses?minDate=2099-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-empty, path: "/qags/responses?minDate=", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-invalid, path: "/qags/responses?minDate=abc", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-month-13, path: "/qags/responses?minDate=2024-13-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-feb-30, path: "/qags/responses?minDate=2024-02-30", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-feb-29-leap, path: "/qags/responses?minDate=2024-02-29", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-feb-29-not-leap, path: "/qags/responses?minDate=2023-02-29", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-short-fields, path: "/qags/responses?minDate=2024-1-1", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-trailing-text, path: "/qags/responses?minDate=2024-01-01T10:00:00", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-compact, path: "/qags/responses?minDate=20240101", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-slashes, path: "/qags/responses?minDate=2024/01/01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-spaces, path: "/qags/responses?minDate=%202024-%201-%201", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-tabs, path: "/qags/responses?minDate=%092024-%091-%091", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-two-digit-year, path: "/qags/responses?minDate=24-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-negative-year, path: "/qags/responses?minDate=-2024-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-plus-sign, path: "/qags/responses?minDate=%2B2024-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-exponent, path: "/qags/responses?minDate=2E3-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-decimal, path: "/qags/responses?minDate=2024.5-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-nan, path: "/qags/responses?minDate=NaN-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-arabic-digits, path: "/qags/responses?minDate=%D9%A2%D9%A0%D9%A2%D9%A4-%D9%A0%D9%A1-%D9%A0%D9%A1", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-fullwidth-digits, path: "/qags/responses?minDate=%EF%BC%92%EF%BC%90%EF%BC%92%EF%BC%94-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-year-0, path: "/qags/responses?minDate=0000-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-year-1, path: "/qags/responses?minDate=0001-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-cutover-gap, path: "/qags/responses?minDate=1582-10-10", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-cutover-first, path: "/qags/responses?minDate=1582-10-15", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-julian-leap, path: "/qags/responses?minDate=1500-02-29", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-gregorian-century, path: "/qags/responses?minDate=1700-02-29", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-big-year, path: "/qags/responses?minDate=292278994-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-too-big-year, path: "/qags/responses?minDate=292278995-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-huge-number, path: "/qags/responses?minDate=99999999999999999999-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-repeated, path: "/qags/responses?minDate=2020-01-01&minDate=2099-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-repeated-invalid, path: "/qags/responses?minDate=2020-01-01&minDate=x", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-xml, path: "/qags/responses?minDate=2020-01-01&mediaType=xml", compare: {body: status}}
+  - {id: min-date-invalid-xml, path: "/qags/responses?minDate=zzz&mediaType=xml", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: min-date-invalid-foo, path: "/qags/responses?minDate=zzz&mediaType=foo", compare: {ignore: ["$.responses[*].responseDate"]}}
+---
+name: S3-responses-paginated-basic
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: page-1, path: /qags/responses/1, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-1-user, path: /qags/responses/1, as: "{{seed.UserRegular1}}", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-2, path: /qags/responses/2, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-beyond-count, path: /qags/responses/3, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-zero, path: /qags/responses/0, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-negative, path: /qags/responses/-1, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-not-a-number, path: /qags/responses/abc, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-plus, path: "/qags/responses/+1", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-leading-zero, path: /qags/responses/01, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-space, path: "/qags/responses/%201", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-decimal, path: /qags/responses/1.0, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-huge, path: /qags/responses/99999999999, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-int-max, path: /qags/responses/2147483647, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-int-max-plus-1, path: /qags/responses/2147483648, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-wrap-to-zero, path: /qags/responses/858993460, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-wrap-negative, path: /qags/responses/858993461, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-wrap-positive-small, path: /qags/responses/1717986919, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-arabic-digit, path: "/qags/responses/%D9%A1", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-xml, path: "/qags/responses/1?mediaType=xml", compare: {body: status}}
+  - {id: page-xml-null-body, path: "/qags/responses/0?mediaType=xml", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-media-type-foo, path: "/qags/responses/1?mediaType=foo", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-null-media-type-foo, path: "/qags/responses/0?mediaType=foo", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-head, method: HEAD, path: /qags/responses/1, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-head-null-body, method: HEAD, path: /qags/responses/0, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-post, method: POST, path: /qags/responses/1, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-trailing-slash, path: /qags/responses/1/, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-min-date, path: "/qags/responses/1?minDate=2020-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-min-date-future, path: "/qags/responses/1?minDate=2099-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-min-date-future-page-2, path: "/qags/responses/2?minDate=2099-01-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-min-date-invalid, path: "/qags/responses/1?minDate=abc", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-invalid-and-invalid-date, path: "/qags/responses/abc?minDate=abc", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-zero-and-invalid-date, path: "/qags/responses/0?minDate=abc", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-min-date-3-days-ago, path: "/qags/responses/1?minDate=2026-10-01", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-min-date-8-days-ago, path: "/qags/responses/1?minDate=2026-09-28", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: page-min-date-8-days-ago-p2, path: "/qags/responses/2?minDate=2026-09-28", compare: {ignore: ["$.responses[*].responseDate"]}}
+
+---
+name: S3-responses-xml-deterministic
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: list-xml-all-incoming, path: "/qags/responses?minDate=2099-01-01&mediaType=xml"}
+  - {id: paginated-xml-empty, path: "/qags/responses/1?minDate=2099-01-01&mediaType=xml"}
+  - {id: paginated-xml-beyond, path: "/qags/responses/2?minDate=2099-01-01&mediaType=xml"}
