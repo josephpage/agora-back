@@ -1,0 +1,14 @@
+name: S3-qags-top-latest-supporting-basic
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: top-regular1, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: top-regular2, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular2}}"}
+  - {id: top-idle, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: latest-regular1, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: latest-regular4, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular4}}"}
+  - {id: supporting-regular1, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: supporting-regular2, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular2}}"}
+  - {id: supporting-idle, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: trending-regular1, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trending-idle, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserIdle}}"}
