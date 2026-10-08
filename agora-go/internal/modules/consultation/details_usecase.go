@@ -6,7 +6,6 @@ import (
 
 	"agora/internal/app"
 	"agora/internal/javacompat"
-	"agora/internal/modules/consultation/answered"
 	"agora/internal/modules/login"
 )
 
@@ -50,7 +49,9 @@ type DetailsUseCase struct {
 	flags    featureFlags
 	info     *InfoRepository
 	updates  *UpdateRepository
-	answered *answered.Repository
+	answered interface {
+		GetParticipantCount(ctx context.Context, consultationID string) (int, error)
+	}
 	feedback *FeedbackRepository
 	history  *HistoryRepository
 }

@@ -10,7 +10,13 @@ import (
 
 // PreviewUseCase is ConsultationPreviewUseCase (GET /consultations).
 type PreviewUseCase struct {
-	info     *InfoRepository
+	info interface {
+		GetAnsweredConsultations(ctx context.Context, userID string) ([]ConsultationPreviewFinished, error)
+		GetOngoingConsultations(ctx context.Context, territories []domain.Territoire) []ConsultationPreview
+		GetOngoingConsultationsWithUnpublished(ctx context.Context, territories []domain.Territoire) []ConsultationPreview
+		GetFinishedConsultations(ctx context.Context, territories []domain.Territoire) []ConsultationPreviewFinished
+		GetFinishedConsultationsWithUnpublished(ctx context.Context, territories []domain.Territoire) []ConsultationPreviewFinished
+	}
 	profiles interface {
 		GetProfile(ctx context.Context, userID string) (*profile.Profile, error)
 	}
