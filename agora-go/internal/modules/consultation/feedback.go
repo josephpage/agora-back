@@ -189,6 +189,9 @@ func (u *FeedbackUseCase) InsertFeedback(ctx context.Context, in FeedbackInserti
 	// indexed query); a Kotlin instance must not keep the previous answer
 	u.a.Cache.DeleteKotlinKeys(ctx, cache.KotlinKey(hasGivenFeedbackCacheName, in.ConsultationUpdateID+"/"+in.UserID))
 
+	// the statistics shared by the readers of the update route are out of date
+	u.a.Cache.Invalidate(ctx, feedbackStatsCacheName, in.ConsultationUpdateID)
+
 	var stats *FeedbackStats
 	enabled, err := u.flags.IsFeatureEnabled(ctx, login.FeatureFeedbackConsultationUpdate)
 	if err != nil {
