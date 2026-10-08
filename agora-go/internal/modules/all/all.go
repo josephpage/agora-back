@@ -7,6 +7,7 @@ import (
 	"agora/internal/modules/acme"
 	"agora/internal/modules/admin"
 	"agora/internal/modules/apidocs"
+	"agora/internal/modules/concertation"
 	"agora/internal/modules/consultation"
 	"agora/internal/modules/consultationlist"
 	"agora/internal/modules/consultationresponse"
@@ -28,6 +29,7 @@ func Routes(a *app.App) {
 	acme.Routes(a)
 	admin.Routes(a)
 	content.Routes(a)
+	concertation.Routes(a)
 	consultation.Routes(a)
 	consultationlist.Routes(a)
 	consultationresponse.Routes(a)
