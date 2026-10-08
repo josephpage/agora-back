@@ -105,7 +105,12 @@ bodies). Your handler only reproduces the controller method:
   written unless the Kotlin class has `@JsonInclude(NON_NULL)` → add `omitnull`
   to every field of that class.
 - Kotlin `List<T>` (non-null) → `[]T` (nil is written `[]`); `List<T>?` → `[]T`
-  with `json:"x,nullable"` (nil → `null`).
+  with `json:"x,nullable"` (nil → `null`; in XML a null `List?` is omitted, a
+  null object is an empty element, like Jackson XML).
+- Jackson date readers for Strapi payloads: `common.LocalDate` (LocalDate);
+  `LocalDateTime`: use `consultation.LocalDateTime` in the consultation slices
+  (S4, S5, S6), `content.LocalDateTime` in the content ones (S9, S3). Both are
+  checked against the JVM oracle; do not write a third one.
 - `Int`→`int`, `Long`→`int64`, `Double`→`float64` (formatted like Java),
   `Boolean`→`bool`. Dates are almost always pre-formatted strings:
   `common.FormatDate(t)` = DateMapper `yyyy-MM-dd HH:mm:ss` (process zone).
