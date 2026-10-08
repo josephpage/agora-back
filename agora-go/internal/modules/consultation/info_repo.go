@@ -9,7 +9,6 @@ import (
 	"agora/internal/app"
 	"agora/internal/domain"
 	"agora/internal/javacompat"
-	"agora/internal/modules/consultation/answered"
 )
 
 // Kotlin caches of ConsultationInfoRepositoryImpl.
@@ -33,8 +32,10 @@ const (
 type InfoRepository struct {
 	a        *app.App
 	strapi   *StrapiRepository
-	answered *answered.Repository
-	mapper   infoMapper
+	answered interface {
+		GetAnsweredConsultationIDs(ctx context.Context, userID string) ([]string, error)
+	}
+	mapper infoMapper
 }
 
 // territoryKey is ConsultationStrapiCacheRepositoryImpl.toTerritoryKey.

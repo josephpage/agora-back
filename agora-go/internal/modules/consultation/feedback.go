@@ -119,28 +119,41 @@ func (r *FeedbackRepository) GetFeedbackStats(ctx context.Context, updateID stri
 		return nil, err
 	}
 	defer rows.Close()
-	var positive, negative int
+	var groups []statGroup
 	for rows.Next() {
-		var value int32
+		var g statGroup
 		var count int64
-		if err := rows.Scan(&value, &count); err != nil {
+		if err := rows.Scan(&g.hasPositiveValue, &count); err != nil {
 			return nil, err
 		}
-		switch value {
-		case isPositiveTrueValue:
-			positive += int(count)
-		case isPositiveFalseValue:
-			negative += int(count)
-		}
+		g.responseCount = int(count)
+		groups = append(groups, g)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	return statsOf(positive, positive+negative), nil
+	return toStats(groups), nil
 }
 
-// statsOf is FeedbackConsultationUpdateMapper.toStats: positiveRatio =
-// (positive * 100.0 / total).roundToInt(), negativeRatio = 100 - positiveRatio.
+// statGroup is FeedbackConsultationUpdateStatsDTO: the number of feedbacks with one is_positive value.
+type statGroup struct{ hasPositiveValue, responseCount int }
+
+// toStats is FeedbackConsultationUpdateMapper.toStats: only the values 1 and 0 are
+// counted; positiveRatio = (positive * 100.0 / total).roundToInt(), negativeRatio = 100 - positiveRatio.
+func toStats(groups []statGroup) *FeedbackStats {
+	var positive, negative int
+	for _, g := range groups {
+		switch g.hasPositiveValue {
+		case isPositiveTrueValue:
+			positive += g.responseCount
+		case isPositiveFalseValue:
+			negative += g.responseCount
+		}
+	}
+	return statsOf(positive, positive+negative)
+}
+
+// statsOf computes the ratios of toStats.
 func statsOf(positive, total int) *FeedbackStats {
 	if total > 0 {
 		positiveRatio := javacompat.KotlinRoundToInt(float64(positive) * 100.0 / float64(total))
