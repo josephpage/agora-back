@@ -16,8 +16,8 @@ import (
 	"agora/internal/cache"
 	"agora/internal/config"
 	"agora/internal/modules/qag"
-	"agora/internal/modules/themehebdo"
 	"agora/internal/modules/thematique"
+	"agora/internal/modules/themehebdo"
 )
 
 var ctx = context.Background()
@@ -684,7 +684,10 @@ type countingInfo struct {
 	err                     error
 }
 
-func (c *countingInfo) GetQagsCount(context.Context, *string) (int, error) { c.counts++; return 7, c.err }
+func (c *countingInfo) GetQagsCount(context.Context, *string) (int, error) {
+	c.counts++
+	return 7, c.err
+}
 func (c *countingInfo) GetPopularQagsPaginatedV2(context.Context, int, *string) ([]qag.QagInfoWithSupportCount, error) {
 	c.pages++
 	return c.list, c.err

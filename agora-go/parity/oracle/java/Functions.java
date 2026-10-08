@@ -453,6 +453,9 @@ final class Functions {
 
         // ---- slice S9 (CMS content pages, news, charter, fiches inventaire, app feedback) -----------
         S9Functions.register(F);
+
+        // ---- slice S3 (QaG lists and responses) ------------------------------------------------------
+        S3Functions.register(F);
     }
 
     static Object jsonRoundTrip(JsonNode a) throws Exception {

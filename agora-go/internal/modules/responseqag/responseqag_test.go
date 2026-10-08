@@ -513,9 +513,12 @@ type fakeStrapi struct {
 	calls int
 }
 
-func (f *fakeStrapi) GetResponsesQag(context.Context, []string) []qag.ResponseQag { f.calls++; return f.all }
-func (f *fakeStrapi) GetAllResponsesQag(context.Context) []qag.ResponseQag         { f.calls++; return f.all }
-func (f *fakeStrapi) GetResponsesTotal(context.Context) int                         { f.calls++; return f.total }
+func (f *fakeStrapi) GetResponsesQag(context.Context, []string) []qag.ResponseQag {
+	f.calls++
+	return f.all
+}
+func (f *fakeStrapi) GetAllResponsesQag(context.Context) []qag.ResponseQag { f.calls++; return f.all }
+func (f *fakeStrapi) GetResponsesTotal(context.Context) int                { f.calls++; return f.total }
 
 func testRepo(ttl time.Duration, s *fakeStrapi) *repository {
 	return &repository{a: &app.App{Cfg: &config.Config{MicroCacheTTL: ttl}, Cache: cache.New(nil, nil, false)}, strapi: s}
