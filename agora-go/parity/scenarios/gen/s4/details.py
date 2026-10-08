@@ -88,7 +88,8 @@ def run_details():
     sql = ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES "
            "('aaaaaaaa-0000-4000-a000-000000000001', 'co0000000000000000000002', now(), '00000000-0000-4000-9000-000000000001'), "
            "('aaaaaaaa-0000-4000-a000-000000000002', 'co0000000000000000000002', now(), '00000000-0000-4000-9000-000000000001'), "
-           "('aaaaaaaa-0000-4000-a000-000000000003', 'co0000000000000000000002', now(), '00000000-0000-4000-9000-000000000002')"]
+           "('aaaaaaaa-0000-4000-a000-000000000003', 'co0000000000000000000002', now(), '00000000-0000-4000-9000-000000000002')",
+           "ANALYZE user_answered_consultation"]
     steps = [step("c2-count-1", "/v2/consultations/" + CONS[1]), step("c2-user", "/v2/consultations/" + CONS[1], **{"as": U1}),
              step("c2-count-2", "/v2/consultations/" + CONS[1]), step("c2-updates", "/v2/consultations/%s/updates/lancement" % CONS[1], **{"as": U("UserRegular2")}),
              step("c4-count", "/v2/consultations/" + CONS[3])]

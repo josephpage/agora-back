@@ -185,7 +185,10 @@ def answered_sql(ids):
         for user in ("00000000-0000-4000-9000-000000000001", "00000000-0000-4000-9000-000000000002"):
             n += 1
             rows.append("('cccccccc-0000-4000-a000-%012d', '%s', now(), '%s')" % (n, cid, user))
-    return ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES " + ", ".join(rows)]
+    # ANALYZE: the order of a DISTINCT without ORDER BY depends on the plan, which depends on the statistics (the two
+    # databases would otherwise be analyzed by autovacuum at different times)
+    return ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES " + ", ".join(rows),
+            "ANALYZE user_answered_consultation"]
 
 
 def cons_steps(c, with_writes=True):

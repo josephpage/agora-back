@@ -2,7 +2,7 @@
 name: "S4-invalid-date-offset"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0201', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0201', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-date-offset.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0201', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0201', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-date-offset.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0201"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-201"}
@@ -18,7 +18,7 @@ steps:
 name: "S4-invalid-date-number"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0202', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0202', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-date-number.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0202', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0202', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-date-number.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0202"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-202"}
@@ -34,7 +34,7 @@ steps:
 name: "S4-invalid-date-empty"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0203', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0203', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-date-empty.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0203', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0203', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-date-empty.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0203"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-203"}
@@ -50,7 +50,7 @@ steps:
 name: "S4-invalid-date-date-only"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0204', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0204', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-date-date-only.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0204', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0204', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-date-date-only.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0204"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-204"}
@@ -66,7 +66,7 @@ steps:
 name: "S4-invalid-date-null"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0205', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0205', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-date-null.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0205', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0205', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-date-null.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0205"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-205"}
@@ -82,7 +82,7 @@ steps:
 name: "S4-invalid-missing-titre"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0206', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0206', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-missing-titre.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0206', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0206', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-missing-titre.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0206"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-206"}
@@ -98,7 +98,7 @@ steps:
 name: "S4-invalid-null-slug"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0207', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0207', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-null-slug.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0207', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0207', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-null-slug.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0207"}
   - {"id": "details-slug", "path": "/v2/consultations/none"}
@@ -114,7 +114,7 @@ steps:
 name: "S4-invalid-null-thematique"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0208', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0208', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-null-thematique.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0208', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0208', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-null-thematique.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0208"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-208"}
@@ -130,7 +130,7 @@ steps:
 name: "S4-invalid-thematique-without-label"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0209', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0209', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-thematique-without-label.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0209', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0209', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-thematique-without-label.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0209"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-209"}
@@ -146,7 +146,7 @@ steps:
 name: "S4-invalid-null-avant"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0210', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0210', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-null-avant.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0210', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0210', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-null-avant.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0210"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-210"}
@@ -162,7 +162,7 @@ steps:
 name: "S4-invalid-missing-apres"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0211', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0211', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-missing-apres.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0211', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0211', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-missing-apres.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0211"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-211"}
@@ -178,7 +178,7 @@ steps:
 name: "S4-invalid-apres-without-feedback-message"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0212', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0212', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-apres-without-feedback-message.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0212', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0212', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-apres-without-feedback-message.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0212"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-212"}
@@ -194,7 +194,7 @@ steps:
 name: "S4-invalid-null-questions"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0213', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0213', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-null-questions.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0213', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0213', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-null-questions.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0213"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-213"}
@@ -210,7 +210,7 @@ steps:
 name: "S4-invalid-missing-questions"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0214', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0214', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-missing-questions.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0214', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0214', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-missing-questions.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0214"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-214"}
@@ -226,7 +226,7 @@ steps:
 name: "S4-invalid-missing-autres"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0215', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0215', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-missing-autres.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0215', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0215', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-missing-autres.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0215"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-215"}
@@ -242,7 +242,7 @@ steps:
 name: "S4-invalid-null-autres"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0216', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0216', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-null-autres.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0216', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0216', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-null-autres.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0216"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-216"}
@@ -258,7 +258,7 @@ steps:
 name: "S4-invalid-autre-null-date"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0217', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0217', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-autre-null-date.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0217', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0217', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-autre-null-date.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0217"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-217"}
@@ -274,7 +274,7 @@ steps:
 name: "S4-invalid-section-unknown-component"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0218', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0218', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-unknown-component.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0218', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0218', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-unknown-component.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0218"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-218"}
@@ -290,7 +290,7 @@ steps:
 name: "S4-invalid-section-missing-component"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0219', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0219', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-missing-component.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0219', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0219', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-missing-component.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0219"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-219"}
@@ -306,7 +306,7 @@ steps:
 name: "S4-invalid-section-null-component"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0220', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0220', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-null-component.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0220', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0220', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-null-component.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0220"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-220"}
@@ -322,7 +322,7 @@ steps:
 name: "S4-invalid-section-numeric-component"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0221', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0221', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-numeric-component.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0221', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0221', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-numeric-component.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0221"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-221"}
@@ -338,7 +338,7 @@ steps:
 name: "S4-invalid-section-not-an-object"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0222', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0222', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-not-an-object.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0222', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0222', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-not-an-object.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0222"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-222"}
@@ -354,7 +354,7 @@ steps:
 name: "S4-invalid-section-missing-field"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0223', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0223', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-missing-field.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0223', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0223', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-missing-field.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0223"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-223"}
@@ -370,7 +370,7 @@ steps:
 name: "S4-invalid-section-video-missing-author"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0224', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0224', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-video-missing-author.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0224', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0224', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-section-video-missing-author.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0224"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-224"}
@@ -386,7 +386,7 @@ steps:
 name: "S4-invalid-sections-null"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0225', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0225', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-sections-null.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0225', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0225', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-sections-null.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0225"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-225"}
@@ -402,7 +402,7 @@ steps:
 name: "S4-invalid-sections-not-a-list"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0226', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0226', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-sections-not-a-list.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0226', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0226', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-sections-not-a-list.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0226"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-226"}
@@ -418,7 +418,7 @@ steps:
 name: "S4-invalid-question-unknown-component"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0227', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0227', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-unknown-component.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0227', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0227', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-unknown-component.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0227"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-227"}
@@ -434,7 +434,7 @@ steps:
 name: "S4-invalid-question-missing-component"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0228', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0228', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-missing-component.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0228', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0228', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-missing-component.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0228"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-228"}
@@ -450,7 +450,7 @@ steps:
 name: "S4-invalid-question-missing-titre"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0229', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0229', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-missing-titre.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0229', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0229', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-missing-titre.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0229"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-229"}
@@ -466,7 +466,7 @@ steps:
 name: "S4-invalid-question-choix-null"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0230', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0230', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-choix-null.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0230', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0230', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-choix-null.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0230"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-230"}
@@ -482,7 +482,7 @@ steps:
 name: "S4-invalid-question-choix-missing-label"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0231', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0231', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-choix-missing-label.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0231', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0231', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-choix-missing-label.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0231"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-231"}
@@ -498,7 +498,7 @@ steps:
 name: "S4-invalid-question-numero-missing"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0232', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0232', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-numero-missing.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0232', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0232', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-question-numero-missing.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0232"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-232"}
@@ -514,7 +514,7 @@ steps:
 name: "S4-invalid-richtext-bad-children"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0233', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0233', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-bad-children.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0233', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0233', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-bad-children.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0233"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-233"}
@@ -530,7 +530,7 @@ steps:
 name: "S4-invalid-richtext-not-a-list"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0234', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0234', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-not-a-list.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0234', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0234', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-not-a-list.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0234"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-234"}
@@ -546,7 +546,7 @@ steps:
 name: "S4-invalid-richtext-null"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0235', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0235', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-null.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0235', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0235', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-null.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0235"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-235"}
@@ -562,7 +562,7 @@ steps:
 name: "S4-invalid-richtext-link-child-not-text"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0236', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0236', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-link-child-not-text.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0236', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0236', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-link-child-not-text.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0236"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-236"}
@@ -578,7 +578,7 @@ steps:
 name: "S4-invalid-analyse-without-link"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0237', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0237', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-analyse-without-link.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0237', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0237', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-analyse-without-link.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0237"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-237"}
@@ -594,7 +594,7 @@ steps:
 name: "S4-invalid-string-number"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0238', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0238', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-string-number.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0238', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0238', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-string-number.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0238"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-238"}
@@ -610,7 +610,7 @@ steps:
 name: "S4-invalid-float-number"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0239', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0239', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-float-number.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0239', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0239', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-float-number.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0239"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-239"}
@@ -626,7 +626,7 @@ steps:
 name: "S4-invalid-bool-for-string"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0240', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0240', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-bool-for-string.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0240', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0240', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-bool-for-string.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0240"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-240"}
@@ -642,7 +642,7 @@ steps:
 name: "S4-invalid-autres-null-element"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0241', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0241', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-autres-null-element.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0241', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0241', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-autres-null-element.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0241"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-241"}
@@ -658,7 +658,7 @@ steps:
 name: "S4-invalid-autres-null-element-after"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0242', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0242', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-autres-null-element-after.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0242', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0242', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-autres-null-element-after.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0242"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-242"}
@@ -674,7 +674,7 @@ steps:
 name: "S4-invalid-avant-sections-null-element"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0243', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0243', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-avant-sections-null-element.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0243', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0243', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-avant-sections-null-element.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0243"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-243"}
@@ -690,7 +690,7 @@ steps:
 name: "S4-invalid-apres-sections-null-element"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0244', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0244', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-apres-sections-null-element.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0244', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0244', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-apres-sections-null-element.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0244"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-244"}
@@ -706,7 +706,7 @@ steps:
 name: "S4-invalid-autre-sections-null-element"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0245', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0245', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-autre-sections-null-element.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0245', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0245', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-autre-sections-null-element.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0245"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-245"}
@@ -722,7 +722,7 @@ steps:
 name: "S4-invalid-questions-null-element"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0246', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0246', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-questions-null-element.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0246', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0246', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-questions-null-element.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0246"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-246"}
@@ -738,7 +738,7 @@ steps:
 name: "S4-invalid-questions-null-element-last"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0247', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0247', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-questions-null-element-last.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0247', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0247', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-questions-null-element-last.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0247"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-247"}
@@ -754,7 +754,7 @@ steps:
 name: "S4-invalid-choix-null-element"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0248', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0248', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-choix-null-element.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0248', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0248', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-choix-null-element.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0248"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-248"}
@@ -770,7 +770,7 @@ steps:
 name: "S4-invalid-popup-null-element"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0249', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0249', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-popup-null-element.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0249', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0249', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-popup-null-element.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0249"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-249"}
@@ -786,7 +786,7 @@ steps:
 name: "S4-invalid-richtext-null-element"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0250', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0250', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-null-element.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0250', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0250', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-null-element.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0250"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-250"}
@@ -802,7 +802,7 @@ steps:
 name: "S4-invalid-richtext-null-child"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0251', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0251', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-null-child.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0251', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0251', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-richtext-null-child.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0251"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-251"}
@@ -818,7 +818,7 @@ steps:
 name: "S4-invalid-sections-body-null-element-of-list-of-list"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0252', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0252', now(), '00000000-0000-4000-9000-000000000002')"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-sections-body-null-element-of-list-of-list.json"}]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0252', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0252', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-sections-body-null-element-of-list-of-list.json"}]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0252"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-252"}
@@ -875,7 +875,7 @@ steps:
 name: "S4-invalid-second-unreadable"
 tags: ["S4"]
 dbdiff: "end"
-setup: {"strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-second-unreadable.json"}], "sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0310', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0310', now(), '00000000-0000-4000-9000-000000000002')"]}
+setup: {"strapiOverrides": [{"model": "consultations", "fixture": "variants/s4-invalid-second-unreadable.json"}], "sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-000000000001', 'vc0310', now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-000000000002', 'vc0310', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"]}
 steps:
   - {"id": "details-anon", "path": "/v2/consultations/vc0310"}
   - {"id": "details-slug", "path": "/v2/consultations/variante-310"}

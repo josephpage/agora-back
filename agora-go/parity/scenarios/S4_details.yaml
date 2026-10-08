@@ -303,7 +303,7 @@ steps:
 name: "S4-details-answered-by-sql"
 tags: ["S4"]
 dbdiff: "none"
-setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('aaaaaaaa-0000-4000-a000-000000000001', 'co0000000000000000000002', now(), '00000000-0000-4000-9000-000000000001'), ('aaaaaaaa-0000-4000-a000-000000000002', 'co0000000000000000000002', now(), '00000000-0000-4000-9000-000000000001'), ('aaaaaaaa-0000-4000-a000-000000000003', 'co0000000000000000000002', now(), '00000000-0000-4000-9000-000000000002')"]}
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('aaaaaaaa-0000-4000-a000-000000000001', 'co0000000000000000000002', now(), '00000000-0000-4000-9000-000000000001'), ('aaaaaaaa-0000-4000-a000-000000000002', 'co0000000000000000000002', now(), '00000000-0000-4000-9000-000000000001'), ('aaaaaaaa-0000-4000-a000-000000000003', 'co0000000000000000000002', now(), '00000000-0000-4000-9000-000000000002')", "ANALYZE user_answered_consultation"]}
 steps:
   - {"id": "c2-count-1", "path": "/v2/consultations/{{seed.Consultation2}}"}
   - {"id": "c2-user", "path": "/v2/consultations/{{seed.Consultation2}}", "as": "{{seed.UserRegular1}}"}
