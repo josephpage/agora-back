@@ -447,6 +447,7 @@ final class Functions {
         // ---- slice S0 (thematiques, theme hebdo, referentiels) ---------------------------------------
         S0Functions.register(F);
         S2Functions.register(F);
+        S4Functions.register(F);
 
         // ---- request layer (F5): byte decoding, Jackson tokens, media types -------------------------
         F5Functions.register(F);
