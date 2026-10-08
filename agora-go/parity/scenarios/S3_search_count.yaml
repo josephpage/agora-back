@@ -1,0 +1,146 @@
+name: S3-search-keywords
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: transport, path: "/qags/search?keywords=transport", as: "{{seed.UserRegular1}}"}
+  - {id: transport-anonymous, path: "/qags/search?keywords=transport"}
+  - {id: transport-upper, path: "/qags/search?keywords=TRANSPORT", as: "{{seed.UserRegular2}}"}
+  - {id: accent-in-keyword, path: "/qags/search?keywords=%C3%A9cologie", as: "{{seed.UserRegular1}}"}
+  - {id: accent-upper, path: "/qags/search?keywords=%C3%89COLOGIE", as: "{{seed.UserRegular1}}"}
+  - {id: decomposed-accent, path: "/qags/search?keywords=e%CC%81cologie", as: "{{seed.UserRegular1}}"}
+  - {id: sante-accent, path: "/qags/search?keywords=sant%C3%A9", as: "{{seed.UserRegular2}}"}
+  - {id: coeur-matches-oe-ligature, path: "/qags/search?keywords=coeur", as: "{{seed.UserRegular1}}"}
+  - {id: ligature-in-keyword, path: "/qags/search?keywords=c%C5%93ur", as: "{{seed.UserRegular1}}"}
+  - {id: two-words-both-in-title, path: "/qags/search?keywords=%C3%A9cologie%20transports", as: "{{seed.UserRegular1}}"}
+  - {id: two-words-title-and-description, path: "/qags/search?keywords=%C3%A9cologie%20transport", as: "{{seed.UserRegular1}}"}
+  - {id: two-words-plus, path: "/qags/search?keywords=%C3%A9cologie+transport", as: "{{seed.UserRegular1}}"}
+  - {id: many-spaces, path: "/qags/search?keywords=%20%20transport%20%20%20sant%C3%A9%20%20", as: "{{seed.UserRegular1}}"}
+  - {id: missing, path: "/qags/search", as: "{{seed.UserRegular1}}"}
+  - {id: empty, path: "/qags/search?keywords=", as: "{{seed.UserRegular1}}"}
+  - {id: blank, path: "/qags/search?keywords=%20%20%20%20", as: "{{seed.UserRegular1}}"}
+  - {id: blank-nbsp, path: "/qags/search?keywords=%C2%A0%C2%A0%C2%A0", as: "{{seed.UserRegular1}}"}
+  - {id: two-chars, path: "/qags/search?keywords=tr", as: "{{seed.UserRegular1}}"}
+  - {id: three-chars, path: "/qags/search?keywords=tra", as: "{{seed.UserRegular1}}"}
+  - {id: single-letters-with-space, path: "/qags/search?keywords=a%20b", as: "{{seed.UserRegular1}}"}
+  - {id: single-letters, path: "/qags/search?keywords=a%20e%20i", as: "{{seed.UserRegular1}}"}
+  - {id: accents-shorten-below-three, path: "/qags/search?keywords=%C3%A9%C3%A9", as: "{{seed.UserRegular1}}"}
+  - {id: percent-only, path: "/qags/search?keywords=%25%25%25", as: "{{seed.UserRegular1}}"}
+  - {id: underscore-only, path: "/qags/search?keywords=___", as: "{{seed.UserRegular1}}"}
+  - {id: percent-inside, path: "/qags/search?keywords=100%25", as: "{{seed.UserRegular1}}"}
+  - {id: percent-and-words, path: "/qags/search?keywords=100%25%20rembours%C3%A9", as: "{{seed.UserRegular1}}"}
+  - {id: underscore-inside, path: "/qags/search?keywords=le_budget", as: "{{seed.UserRegular1}}"}
+  - {id: backslash, path: "/qags/search?keywords=%5C%5C%5C%5Ctransport", as: "{{seed.UserRegular1}}"}
+  - {id: sql-injection, path: "/qags/search?keywords=%27%3B%20DROP%20TABLE%20qags%3B--", as: "{{seed.UserRegular1}}"}
+  - {id: sql-injection-words, path: "/qags/search?keywords=transport%27%20OR%20%271%27%3D%271", as: "{{seed.UserRegular1}}"}
+  - {id: html, path: "/qags/search?keywords=%3Cb%3Egras%3C%2Fb%3E", as: "{{seed.UserRegular1}}"}
+  - {id: emoji-only, path: "/qags/search?keywords=%F0%9F%9A%80%F0%9F%9A%80%F0%9F%9A%80", as: "{{seed.UserRegular1}}"}
+  - {id: emoji-and-word, path: "/qags/search?keywords=%F0%9F%9A%80transport%F0%9F%9A%80", as: "{{seed.UserRegular1}}"}
+  - {id: cyrillic, path: "/qags/search?keywords=%D1%82%D1%80%D0%B0%D0%BD%D1%81%D0%BF%D0%BE%D1%80%D1%82", as: "{{seed.UserRegular1}}"}
+  - {id: dash-inside-word, path: "/qags/search?keywords=trans%E2%80%94port", as: "{{seed.UserRegular1}}"}
+  - {id: hyphen-inside-word, path: "/qags/search?keywords=trans-port", as: "{{seed.UserRegular1}}"}
+  - {id: digits, path: "/qags/search?keywords=2024", as: "{{seed.UserRegular1}}"}
+  - {id: tab-separator, path: "/qags/search?keywords=transport%09sant%C3%A9", as: "{{seed.UserRegular1}}"}
+  - {id: newline-separator, path: "/qags/search?keywords=transport%0Asant%C3%A9", as: "{{seed.UserRegular1}}"}
+  - {id: long-75, path: "/qags/search?keywords=transport%20aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", as: "{{seed.UserRegular1}}"}
+  - {id: long-cut-at-75, path: "/qags/search?keywords=sant%C3%A9%20transport%20aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", as: "{{seed.UserRegular1}}"}
+  - {id: long-cut-keeps-first-words, path: "/qags/search?keywords=transport%20%C3%A9cologie%20xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", as: "{{seed.UserRegular1}}"}
+  - {id: cut-in-the-middle-of-a-surrogate-pair, path: "/qags/search?keywords=transport%20%C3%A9cologie%20xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx%F0%9F%9A%80%F0%9F%9A%80", as: "{{seed.UserRegular1}}"}
+  - {id: very-long, path: "/qags/search?keywords=transport%20aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", as: "{{seed.UserRegular1}}"}
+  - {id: repeated-param, path: "/qags/search?keywords=transport&keywords=sant%C3%A9", as: "{{seed.UserRegular1}}"}
+  - {id: repeated-param-too-short, path: "/qags/search?keywords=a&keywords=b", as: "{{seed.UserRegular1}}"}
+  - {id: xml, path: "/qags/search?keywords=transport&mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: xml-no-result, path: "/qags/search?keywords=zzzzzz&mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: xml-404, path: "/qags/search?keywords=zz&mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: media-type-foo, path: "/qags/search?keywords=transport&mediaType=foo", as: "{{seed.UserRegular1}}"}
+  - {id: media-type-foo-404, path: "/qags/search?keywords=zz&mediaType=foo", as: "{{seed.UserRegular1}}"}
+  - {id: head, method: HEAD, path: "/qags/search?keywords=transport", as: "{{seed.UserRegular1}}"}
+  - {id: head-404, method: HEAD, path: "/qags/search?keywords=zz", as: "{{seed.UserRegular1}}"}
+  - {id: post-not-allowed, method: POST, path: "/qags/search?keywords=transport", as: "{{seed.UserRegular1}}"}
+  - {id: unknown-keyword, path: "/qags/search?keywords=zzzzzzzz", as: "{{seed.UserRegular1}}"}
+  - {id: banned-user, path: "/qags/search?keywords=transport", as: "{{seed.UserBanned}}"}
+  - {id: moderator, path: "/qags/search?keywords=transport", as: "{{seed.UserModerator}}"}
+  - {id: idle-user, path: "/qags/search?keywords=transport", as: "{{seed.UserIdle}}"}
+  - {id: author-of-results, path: "/qags/search?keywords=%C3%A9cologie", as: "{{seed.UserRegular3}}"}
+  - {id: unknown-user, path: "/qags/search?keywords=transport", as: "00000000-0000-4000-9000-0000000000ff"}
+  - {id: malformed-escape, path: "/qags/search?keywords=%zz", as: "{{seed.UserRegular1}}"}
+  - {id: invalid-utf8, path: "/qags/search?keywords=transport%ff", as: "{{seed.UserRegular1}}"}
+  - {id: trailing-slash, path: "/qags/search/?keywords=transport", as: "{{seed.UserRegular1}}"}
+---
+name: S3-search-limit-twenty-and-unknown-thematique
+tags: [S3]
+dbdiff: none
+setup:
+  sql:
+    - "INSERT INTO qags (id, title, description, post_date, status, thematique_id, user_id, username) SELECT ('00000000-0000-4000-8000-' || lpad(to_hex(4096 + i), 12, '0'))::uuid, 'Zebre question ' || i, 'Description ' || i, timestamp '2026-09-01 12:00:00' + (i || ' minutes')::interval, CASE WHEN i <= 30 THEN 1 ELSE 0 END, CASE WHEN i % 7 = 0 THEN 'unknown' ELSE 'th0000000000000000000001' END, '00000000-0000-4000-9000-000000000001'::uuid, 'Bulk' FROM generate_series(1, 40) AS i"
+    - "INSERT INTO supports_qag (id, qag_id, support_date, user_id) SELECT gen_random_uuid(), ('00000000-0000-4000-8000-' || lpad(to_hex(4096 + i), 12, '0'))::uuid, timestamp '2026-09-02 12:00:00' + (j || ' minutes')::interval, ('00000000-0000-4000-9000-0000000000' || lpad(to_hex(31 + j), 2, '0'))::uuid FROM generate_series(1, 40) AS i, generate_series(1, 6) AS j WHERE j <= i % 7"
+steps:
+  - {id: more-than-twenty, path: "/qags/search?keywords=zebre", as: "{{seed.UserProfile3}}"}
+  - {id: more-than-twenty-two-words, path: "/qags/search?keywords=zebre%20question", as: "{{seed.UserRegular1}}"}
+  - {id: description-match, path: "/qags/search?keywords=Description", as: "{{seed.UserRegular1}}"}
+  - {id: only-accepted, path: "/qags/search?keywords=Zebre%2035", as: "{{seed.UserRegular1}}"}
+---
+name: S3-search-with-supports-and-author
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: supported-by-regular1, path: "/qags/search?keywords=sant%C3%A9", as: "{{seed.UserRegular1}}"}
+  - {id: supported-by-regular2, path: "/qags/search?keywords=sant%C3%A9", as: "{{seed.UserRegular2}}"}
+  - {id: author-regular1-ecologie, path: "/qags/search?keywords=ecologie", as: "{{seed.UserRegular1}}"}
+  - {id: author-special-chars, path: "/qags/search?keywords=guillemets", as: "{{seed.UserRegular1}}"}
+---
+name: S3-search-after-support
+tags: [S3]
+dbdiff: step
+steps:
+  - {id: before, path: "/qags/search?keywords=transport", as: "{{seed.UserIdle}}"}
+  - {id: support, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  # the supported flag is read at every request (the shared result of the search is not cached)
+  - {id: after, path: "/qags/search?keywords=transport", as: "{{seed.UserIdle}}"}
+  - {id: unsupport, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: after-unsupport, path: "/qags/search?keywords=transport", as: "{{seed.UserIdle}}"}
+---
+name: S3-count
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: count, path: /qags/count, as: "{{seed.UserRegular1}}"}
+  - {id: count-anonymous, path: /qags/count}
+  - {id: count-banned, path: /qags/count, as: "{{seed.UserBanned}}"}
+  - {id: count-moderator, path: /qags/count, as: "{{seed.UserModerator}}"}
+  - {id: count-xml, path: "/qags/count?mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: count-json, path: "/qags/count?mediaType=json", as: "{{seed.UserRegular1}}"}
+  - {id: count-foo, path: "/qags/count?mediaType=foo", as: "{{seed.UserRegular1}}"}
+  - {id: count-head, method: HEAD, path: /qags/count, as: "{{seed.UserRegular1}}"}
+  - {id: count-post, method: POST, path: /qags/count, as: "{{seed.UserRegular1}}"}
+  - {id: count-accept-xml, path: /qags/count, as: "{{seed.UserRegular1}}", headers: {Accept: "application/xml"}}
+  - {id: count-accept-text, path: /qags/count, as: "{{seed.UserRegular1}}", headers: {Accept: "text/plain"}}
+  - {id: count-trailing-slash, path: /qags/count/, as: "{{seed.UserRegular1}}"}
+  - {id: count-bad-jwt, path: /qags/count, bearer: "abc.def.ghi"}
+  - {id: count-etag, path: /qags/count, as: "{{seed.UserRegular1}}", headers: {If-None-Match: '"x"'}}
+---
+name: S3-count-zero-and-many
+tags: [S3]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET status = 2 WHERE status = 1"
+steps:
+  - {id: count-zero, path: /qags/count, as: "{{seed.UserRegular1}}"}
+  - {id: top-empty, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: top-empty-page-2, path: "/v2/qags?filterType=top&pageNumber=2", as: "{{seed.UserRegular1}}"}
+  - {id: latest-empty, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: supporting-empty, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trending-empty, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-count-invalid-status
+tags: [S3]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET status = 5 WHERE id = '00000000-0000-4000-8000-000000000002'"
+steps:
+  - {id: count-unaffected, path: /qags/count, as: "{{seed.UserRegular1}}"}
+  - {id: top-invalid-status-not-listed, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: supporting-invalid-status, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: search-invalid-status, path: "/qags/search?keywords=transport", as: "{{seed.UserRegular1}}"}
+  - {id: responses-invalid-status, path: "/qags/responses", as: "{{seed.UserRegular1}}"}

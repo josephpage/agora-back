@@ -47,9 +47,10 @@ func build(a *app.App) *Service {
 	q := qag.Get(a)
 	themes := thematique.Get(a)
 	headers := headerStore{a: a, source: strapiHeaders{a: a}}
+	pages := &microPages{a: a, info: q.Info}
 	uc := &PaginatedUseCase{
 		supported:  q.Info,
-		shared:     &microPages{a: a, info: q.Info},
+		shared:     pages,
 		themes:     themes,
 		headers:    headers,
 		trending:   &trendingCache{a: a, info: q.Info},
@@ -59,7 +60,9 @@ func build(a *app.App) *Service {
 		exponent:   a.Cfg.TrendingScoreExponent,
 		now:        a.Now,
 	}
-	return &Service{a: a, Paginated: uc, Search: q.GetQagByKeywords, Count: q.GetQagCount}
+	// GET /qags/count is getQagsCount(null): the same shared count as the lists
+	count := func(ctx context.Context) (int, error) { return pages.Count(ctx, nil) }
+	return &Service{a: a, Paginated: uc, Search: q.GetQagByKeywords, Count: count}
 }
 
 // supportAdapter is SupportQagUseCase.
