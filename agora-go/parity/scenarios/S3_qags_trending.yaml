@@ -1,0 +1,168 @@
+name: S3-trending-default
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: regular1, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: regular2, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular2}}"}
+  - {id: idle, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: regular3-second-call-cached, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular3}}"}
+  - {id: trending-xml, path: "/v2/qags?filterType=trending&pageNumber=1&mediaType=xml", as: "{{seed.UserRegular4}}"}
+  - {id: page-2-is-ignored, path: "/v2/qags?filterType=trending&pageNumber=2", as: "{{seed.UserIdle}}"}
+---
+name: S3-trending-cache-and-overlay
+tags: [S3]
+dbdiff: step
+steps:
+  - {id: before, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: support, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  # the candidates (and their counts) are kept 5 minutes by Kotlin; the supported flag is read at every request
+  - {id: after-support, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: other-user, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular5}}"}
+  - {id: unsupport, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: after-unsupport, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserIdle}}"}
+---
+name: S3-trending-many-old-and-cluster-qags
+tags: [S3]
+dbdiff: none
+setup:
+  sql:
+    # five more accepted QaGs: two of them old (80 h and 100 h: with the seed there are five QaGs older than 72 h, only three are kept)
+    # and four whose title matches the "santé" cluster (used in a free-theme week)
+    - "INSERT INTO qags (id, title, description, post_date, status, thematique_id, user_id, username) VALUES ('00000000-0000-4000-8000-000000001001', 'Ancienne question A', 'desc', '2026-09-20 10:00:00', 1, 'th0000000000000000000001', '00000000-0000-4000-9000-000000000001', 'Anna'), ('00000000-0000-4000-8000-000000001002', 'Ancienne question B', 'desc', '2026-09-20 11:00:00', 1, 'th0000000000000000000002', '00000000-0000-4000-9000-000000000001', 'Ben'), ('00000000-0000-4000-8000-000000001003', 'Question sur la SANTÉ mentale', 'desc', '2026-10-05 10:00:00', 1, 'th0000000000000000000002', '00000000-0000-4000-9000-000000000001', 'Cleo'), ('00000000-0000-4000-8000-000000001004', 'Hôpital et santé publique', 'desc', '2026-10-05 11:00:00', 1, 'th0000000000000000000002', '00000000-0000-4000-9000-000000000002', 'Dan'), ('00000000-0000-4000-8000-000000001005', 'Les soins de santé primaires', 'desc', '2026-10-05 12:00:00', 1, 'th0000000000000000000002', '00000000-0000-4000-9000-000000000003', 'Eli'), ('00000000-0000-4000-8000-000000001006', 'Le climat et la santé', 'desc', '2026-10-05 13:00:00', 1, 'th0000000000000000000001', '00000000-0000-4000-9000-000000000003', 'Fay')"
+    - "INSERT INTO qag_updates (id, moderated_date, qag_id, should_delete_flag, status, user_id) SELECT gen_random_uuid(), (now() at time zone 'utc') - (h || ' hours')::interval, id::uuid, 0, 1, '00000000-0000-4000-9000-00000000000b' FROM (VALUES ('00000000-0000-4000-8000-000000001001', 80), ('00000000-0000-4000-8000-000000001002', 100), ('00000000-0000-4000-8000-000000001003', 3), ('00000000-0000-4000-8000-000000001004', 4), ('00000000-0000-4000-8000-000000001005', 5), ('00000000-0000-4000-8000-000000001006', 6)) AS v(id, h)"
+    - "INSERT INTO supports_qag (id, qag_id, support_date, user_id) SELECT gen_random_uuid(), q::uuid, now() at time zone 'utc', ('00000000-0000-4000-9000-0000000000' || lpad(to_hex(31 + j), 2, '0'))::uuid FROM (VALUES ('00000000-0000-4000-8000-000000001001', 9), ('00000000-0000-4000-8000-000000001002', 8), ('00000000-0000-4000-8000-000000001003', 7), ('00000000-0000-4000-8000-000000001004', 6), ('00000000-0000-4000-8000-000000001005', 5), ('00000000-0000-4000-8000-000000001006', 4)) AS v(q, n), generate_series(1, 9) AS j WHERE j <= n"
+steps:
+  - {id: not-free-theme, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: author-of-some, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular3}}"}
+---
+name: S3-trending-free-theme-clusters
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: theme-hebdos, fixture: "variants/theme-hebdos.libre-current.json"}
+  sql:
+    - "INSERT INTO qags (id, title, description, post_date, status, thematique_id, user_id, username) VALUES ('00000000-0000-4000-8000-000000001003', 'Question sur la SANTÉ mentale', 'desc', '2026-10-05 10:00:00', 1, 'th0000000000000000000002', '00000000-0000-4000-9000-000000000001', 'Cleo'), ('00000000-0000-4000-8000-000000001004', 'Hôpital et santé publique', 'desc', '2026-10-05 11:00:00', 1, 'th0000000000000000000002', '00000000-0000-4000-9000-000000000002', 'Dan'), ('00000000-0000-4000-8000-000000001005', 'Les soins de santé primaires', 'desc', '2026-10-05 12:00:00', 1, 'th0000000000000000000002', '00000000-0000-4000-9000-000000000003', 'Eli'), ('00000000-0000-4000-8000-000000001006', 'Le climat et la santé', 'desc', '2026-10-05 13:00:00', 1, 'th0000000000000000000001', '00000000-0000-4000-9000-000000000003', 'Fay'), ('00000000-0000-4000-8000-000000001007', 'Un loyer HLM trop cher', 'desc', '2026-10-05 14:00:00', 1, 'th0000000000000000000001', '00000000-0000-4000-9000-000000000003', 'Gil'), ('00000000-0000-4000-8000-000000001008', 'Logement : le loyer des étudiants', 'desc', '2026-10-05 15:00:00', 1, 'th0000000000000000000001', '00000000-0000-4000-9000-000000000003', 'Hal'), ('00000000-0000-4000-8000-000000001009', 'Loyer, HLM et logement vacant', 'desc', '2026-10-05 16:00:00', 1, 'th0000000000000000000001', '00000000-0000-4000-9000-000000000003', 'Ira')"
+    - "INSERT INTO qag_updates (id, moderated_date, qag_id, should_delete_flag, status, user_id) SELECT gen_random_uuid(), (now() at time zone 'utc') - (h || ' hours')::interval, id::uuid, 0, 1, '00000000-0000-4000-9000-00000000000b' FROM (VALUES ('00000000-0000-4000-8000-000000001003', 3), ('00000000-0000-4000-8000-000000001004', 4), ('00000000-0000-4000-8000-000000001005', 5), ('00000000-0000-4000-8000-000000001006', 6), ('00000000-0000-4000-8000-000000001007', 7), ('00000000-0000-4000-8000-000000001008', 8), ('00000000-0000-4000-8000-000000001009', 9)) AS v(id, h)"
+    - "INSERT INTO supports_qag (id, qag_id, support_date, user_id) SELECT gen_random_uuid(), q::uuid, now() at time zone 'utc', ('00000000-0000-4000-9000-0000000000' || lpad(to_hex(31 + j), 2, '0'))::uuid FROM (VALUES ('00000000-0000-4000-8000-000000001003', 9), ('00000000-0000-4000-8000-000000001004', 8), ('00000000-0000-4000-8000-000000001005', 7), ('00000000-0000-4000-8000-000000001006', 6), ('00000000-0000-4000-8000-000000001007', 5), ('00000000-0000-4000-8000-000000001008', 4), ('00000000-0000-4000-8000-000000001009', 3)) AS v(q, n), generate_series(1, 9) AS j WHERE j <= n"
+steps:
+  - {id: trending-with-clusters, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trending-with-clusters-other-user, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular3}}"}
+---
+name: S3-trending-no-current-theme-means-free-week
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: theme-hebdos, data: []}
+  sql:
+    - "INSERT INTO qags (id, title, description, post_date, status, thematique_id, user_id, username) VALUES ('00000000-0000-4000-8000-000000001003', 'Question sur la santé mentale', 'desc', '2026-10-05 10:00:00', 1, 'th0000000000000000000002', '00000000-0000-4000-9000-000000000001', 'Cleo'), ('00000000-0000-4000-8000-000000001004', 'Hôpital et santé publique', 'desc', '2026-10-05 11:00:00', 1, 'th0000000000000000000002', '00000000-0000-4000-9000-000000000002', 'Dan'), ('00000000-0000-4000-8000-000000001005', 'Les soins de santé primaires', 'desc', '2026-10-05 12:00:00', 1, 'th0000000000000000000002', '00000000-0000-4000-9000-000000000003', 'Eli')"
+    - "INSERT INTO qag_updates (id, moderated_date, qag_id, should_delete_flag, status, user_id) SELECT gen_random_uuid(), (now() at time zone 'utc') - (h || ' hours')::interval, id::uuid, 0, 1, '00000000-0000-4000-9000-00000000000b' FROM (VALUES ('00000000-0000-4000-8000-000000001003', 1), ('00000000-0000-4000-8000-000000001004', 2), ('00000000-0000-4000-8000-000000001005', 3)) AS v(id, h)"
+steps:
+  - {id: trending, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-trending-cluster-faults
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: theme-hebdos, fixture: "variants/theme-hebdos.libre-current.json"}
+  strapiFaults:
+    - {model: cluster-semaine-libres, mode: "500"}
+steps:
+  - {id: clusters-500, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-trending-cluster-malformed
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: theme-hebdos, fixture: "variants/theme-hebdos.libre-current.json"}
+  strapiFaults:
+    - {model: cluster-semaine-libres, mode: malformed}
+steps:
+  - {id: clusters-malformed, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-trending-cluster-missing-field
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: theme-hebdos, fixture: "variants/theme-hebdos.libre-current.json"}
+  strapiFaults:
+    - {model: cluster-semaine-libres, mode: missingfield}
+steps:
+  - {id: clusters-missing-field, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-trending-cluster-null-data
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: theme-hebdos, fixture: "variants/theme-hebdos.libre-current.json"}
+  strapiFaults:
+    - {model: cluster-semaine-libres, mode: nulldata}
+steps:
+  - {id: clusters-null-data, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-trending-clusters-only-blank-keywords
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: theme-hebdos, fixture: "variants/theme-hebdos.libre-current.json"}
+    - model: cluster-semaine-libres
+      data:
+        - {id: 1, documentId: c1, titre: vide, keywords: " , ,  "}
+        - {id: 2, documentId: c2, titre: nul, keywords: null}
+steps:
+  - {id: clusters-blank, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-trending-cluster-edge-keywords
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: theme-hebdos, fixture: "variants/theme-hebdos.libre-current.json"}
+    - model: cluster-semaine-libres
+      data:
+        # same id twice (they share a counter), accents and case, a keyword that matches nothing, an NBSP and a tab around the words
+        - {id: 1, documentId: c1, titre: dup, keywords: "TRANSPORT, ferroviaire ,\tgare"}
+        - {id: 2, documentId: c2, titre: dup, keywords: "écologie ,ÉNERGIE"}
+        - {id: 3, documentId: c3, titre: other, keywords: "zzz"}
+steps:
+  - {id: clusters-edge, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-trending-no-candidate
+tags: [S3]
+dbdiff: none
+setup:
+  sql:
+    - "DELETE FROM qag_updates"
+steps:
+  - {id: empty-trending, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: empty-trending-xml, path: "/v2/qags?filterType=trending&pageNumber=1&mediaType=xml", as: "{{seed.UserRegular1}}"}
+---
+name: S3-trending-unknown-thematique-and-null-columns
+tags: [S3]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET thematique_id = 'unknown' WHERE id IN ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000003')"
+steps:
+  - {id: trending-unknown-thematique, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: top-unknown-thematique, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: latest-unknown-thematique, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-trending-null-title
+tags: [S3]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET title = NULL WHERE id = '00000000-0000-4000-8000-000000000002'"
+steps:
+  - {id: trending-null-column, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: top-null-column, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: latest-null-column, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: supporting-null-column, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: count-unaffected, path: "/qags/count", as: "{{seed.UserRegular1}}"}

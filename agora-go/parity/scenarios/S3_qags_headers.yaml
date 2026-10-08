@@ -1,0 +1,172 @@
+name: S3-headers-per-tab
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: top-1, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: top-1-again-cached, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular2}}"}
+  - {id: latest-1, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: supporting-1, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trending-1, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: top-th1-1-has-header, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId={{seed.Thematique1}}", as: "{{seed.UserRegular1}}"}
+  - {id: top-2-no-header, path: "/v2/qags?filterType=top&pageNumber=2", as: "{{seed.UserRegular1}}"}
+  - {id: top-beyond-no-header, path: "/v2/qags?filterType=top&pageNumber=3", as: "{{seed.UserRegular1}}"}
+  - {id: top-1-xml, path: "/v2/qags?filterType=top&pageNumber=1&mediaType=xml", as: "{{seed.UserRegular1}}"}
+---
+name: S3-headers-none
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: qa-g-headers-onglets, data: []}
+steps:
+  - {id: top-no-header, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: top-no-header-again, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trending-no-header, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: supporting-no-header, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-headers-strapi-500
+tags: [S3]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: qa-g-headers-onglets, mode: "500"}
+steps:
+  - {id: top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: latest, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trending, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-headers-strapi-malformed
+tags: [S3]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: qa-g-headers-onglets, mode: malformed}
+steps:
+  - {id: top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trending, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-headers-strapi-null-data
+tags: [S3]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: qa-g-headers-onglets, mode: nulldata}
+steps:
+  - {id: top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-headers-strapi-missing-field
+tags: [S3]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: qa-g-headers-onglets, mode: missingfield}
+steps:
+  - {id: top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: latest, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-headers-strapi-slow
+tags: [S3]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: qa-g-headers-onglets, mode: slow, delayMs: 700}
+steps:
+  - {id: top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: top-parallel, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular2}}", parallel: 4}
+---
+name: S3-headers-variants
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: qa-g-headers-onglets
+      data:
+        # two current headers of the same tab: the most recent publication wins (ties keep the Strapi order)
+        - {id: 1, documentId: qhA, titre: "Ancien", message: "m1", type: top, datetime_publication: "{{now-3d}}", createdAt: x, updatedAt: y, publishedAt: z}
+        - {id: 2, documentId: qhB, titre: "Récent \"quoted\" & <b>html</b> 😀", message: "ligne 1\nligne 2 — é", type: top, datetime_publication: "{{now-1d}}", createdAt: x, updatedAt: y, publishedAt: z}
+        - {id: 3, documentId: qhC, titre: "Futur", message: "m3", type: top, datetime_publication: "{{now+1d}}", createdAt: x, updatedAt: y, publishedAt: z}
+        - {id: 4, documentId: qhD, titre: "Latest", message: "", type: latest, datetime_publication: "{{now-1h}}", createdAt: x, updatedAt: y, publishedAt: z}
+        - {id: 5, documentId: qhE, titre: "Autre type", message: "m5", type: other, datetime_publication: "{{now-1h}}"}
+        - {id: 6, documentId: qhF, titre: "Supporting", message: "m6", type: supporting, datetime_publication: "{{now-1m}}"}
+steps:
+  - {id: top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: latest-empty-message, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: supporting, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trending-without-header, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: top-xml, path: "/v2/qags?filterType=top&pageNumber=1&mediaType=xml", as: "{{seed.UserRegular1}}"}
+---
+name: S3-headers-publication-formats
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: qa-g-headers-onglets
+      data:
+        - {id: 1, documentId: qhA, titre: "T", message: "m", type: top, datetime_publication: [2020, 1, 2, 3, 4]}
+        - {id: 2, documentId: qhB, titre: "T2", message: "m", type: latest, datetime_publication: "2020-01-02T03:04:05Z"}
+        - {id: 3, documentId: qhC, titre: "T3", message: "m", type: supporting, datetime_publication: "2020-01-02"}
+        - {id: 4, documentId: qhD, titre: "T4", message: "m", type: trending, datetime_publication: "2020-01-02T03:04:05.123456789"}
+steps:
+  - {id: top-array, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: latest-z, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: supporting-date-only, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trending-nanos, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-headers-invalid-date-drops-the-list
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: qa-g-headers-onglets
+      data:
+        - {id: 1, documentId: qhA, titre: "T", message: "m", type: top, datetime_publication: "not a date"}
+steps:
+  - {id: top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-headers-null-field
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - model: qa-g-headers-onglets
+      data:
+        - {id: 1, documentId: qhA, titre: null, message: "m", type: top, datetime_publication: "{{now-1d}}"}
+        - {id: 2, documentId: qhB, titre: "ok", message: "m", type: latest, datetime_publication: "{{now-1d}}"}
+steps:
+  - {id: top-null-title, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: latest-same-list, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-lists-thematiques-faults
+tags: [S3]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: thematiques, mode: "500"}
+steps:
+  - {id: top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: latest, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: supporting, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trending, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: responses, path: "/qags/responses", as: "{{seed.UserRegular1}}"}
+  - {id: responses-paginated, path: "/qags/responses/1", as: "{{seed.UserRegular1}}"}
+  - {id: search, path: "/qags/search?keywords=transport", as: "{{seed.UserRegular1}}"}
+---
+name: S3-lists-thematiques-empty
+tags: [S3]
+dbdiff: none
+setup:
+  strapiOverrides:
+    - {model: thematiques, data: []}
+steps:
+  - {id: top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trending, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-lists-theme-hebdo-faults
+tags: [S3]
+dbdiff: none
+setup:
+  strapiFaults:
+    - {model: theme-hebdos, mode: "500"}
+steps:
+  - {id: trending-theme-500, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: top-unaffected, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}

@@ -1,0 +1,43 @@
+name: S3-responses-more-than-five-and-low-priority
+tags: [S3]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET status = 7 WHERE id IN ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-000000000005')"
+    - "INSERT INTO low_priority_qags (qag_id) VALUES ('00000000-0000-4000-8000-000000000002'), ('00000000-0000-4000-8000-0000000000a2')"
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data:
+        - {id: 1, documentId: re1, auteur: Alice, auteurPortraitUrl: "https://p/a.jpg", auteurFonction: null, reponseDate: "{{date:now-1d}}", feedbackQuestion: q, questionId: "00000000-0000-4000-8000-0000000000a1", auteurPortrait: null, reponseType: [{id: 1, __component: reponse.reponse-video, auteurDescription: Ministre, urlVideo: "https://v/1.mp4", videoWidth: 10, videoHeight: 20, transcription: "Une <b>transcription</b>\n\tavec   des espaces insécables et un tab", informationAdditionnelleTitre: null, page_title: t1, informationAdditionnelleDescription: null, video: null}]}
+        - {id: 2, documentId: re2, auteur: Bob, auteurPortraitUrl: "https://p/b.jpg", auteurFonction: Fonction B, reponseDate: "{{date:now-3d}}", feedbackQuestion: q, questionId: "00000000-0000-4000-8000-0000000000a2", auteurPortrait: null, reponseType: [{id: 2, __component: reponse.reponsetextuelle, label: L, text: [{type: paragraph, children: [{type: text, text: "Réponse A"}]}, {type: paragraph, children: [{type: text, text: "Réponse B"}]}]}]}
+        - {id: 3, documentId: re3, auteur: Carl, auteurPortraitUrl: "https://p/c.jpg", auteurFonction: null, reponseDate: "{{date:now-5d}}", feedbackQuestion: q, questionId: "00000000-0000-4000-8000-0000000000a3", auteurPortrait: null, reponseType: [{id: 3, __component: reponse.reponsetextuelle, label: L, text: [{type: paragraph, children: [{type: text, text: "x"}]}]}]}
+        - {id: 4, documentId: re4, auteur: Dana, auteurPortraitUrl: "https://p/d.jpg", auteurFonction: null, reponseDate: "{{date:now-7d}}", feedbackQuestion: q, questionId: "00000000-0000-4000-8000-000000000001", auteurPortrait: null, reponseType: [{id: 4, __component: reponse.reponsetextuelle, label: L, text: [{type: paragraph, children: [{type: text, text: "y"}]}]}]}
+        - {id: 5, documentId: re5, auteur: Eve, auteurPortraitUrl: "https://p/e.jpg", auteurFonction: null, reponseDate: "{{date:now-9d}}", feedbackQuestion: q, questionId: "00000000-0000-4000-8000-000000000002", auteurPortrait: null, reponseType: [{id: 5, __component: reponse.reponsetextuelle, label: L, text: [{type: paragraph, children: [{type: text, text: "z"}]}]}]}
+        - {id: 6, documentId: re6, auteur: Fay, auteurPortraitUrl: "https://p/f.jpg", auteurFonction: null, reponseDate: "{{date:now-11d}}", feedbackQuestion: q, questionId: "00000000-0000-4000-8000-000000000003", auteurPortrait: null, reponseType: [{id: 6, __component: reponse.reponsetextuelle, label: L, text: [{type: paragraph, children: [{type: text, text: "w"}]}]}]}
+        - {id: 7, documentId: re7, auteur: Gus, auteurPortraitUrl: "https://p/g.jpg", auteurFonction: null, reponseDate: "{{date:now-13d}}", feedbackQuestion: q, questionId: "00000000-0000-4000-8000-0000000000e1", auteurPortrait: null, reponseType: [{id: 7, __component: reponse.reponsetextuelle, label: L, text: [{type: paragraph, children: [{type: text, text: "unknown qag"}]}]}]}
+steps:
+  - {id: list, path: /qags/responses, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: list-min-date-8d, path: "/qags/responses?minDate=2026-09-28", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: list-min-date-future, path: "/qags/responses?minDate=2099-01-01"}
+  - {id: paginated-1, path: /qags/responses/1, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: paginated-2, path: /qags/responses/2, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: paginated-3, path: /qags/responses/3, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: paginated-min-date, path: "/qags/responses/1?minDate=2026-09-28", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: paginated-min-date-p2, path: "/qags/responses/2?minDate=2026-09-28", compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: paginated-wrap-negative, path: /qags/responses/858993461, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: paginated-wrap-zero, path: /qags/responses/858993460, compare: {ignore: ["$.responses[*].responseDate"]}}
+---
+name: S3-responses-long-texts
+tags: [S3]
+dbdiff: none
+setup:
+  sql:
+    - "UPDATE qags SET status = 7 WHERE id IN ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000002')"
+  strapiOverrides:
+    - model: reponse-du-gouvernements
+      data:
+        - {id: 1, documentId: re1, auteur: Alice, auteurPortraitUrl: "https://p/a.jpg", auteurFonction: null, reponseDate: "{{date:now-1d}}", feedbackQuestion: q, questionId: "00000000-0000-4000-8000-0000000000a1", auteurPortrait: null, reponseType: [{id: 1, __component: reponse.reponse-video, auteurDescription: Ministre, urlVideo: "https://v/1.mp4", videoWidth: 10, videoHeight: 20, transcription: "<p>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>", informationAdditionnelleTitre: null, page_title: t1, informationAdditionnelleDescription: null, video: null}]}
+        - {id: 2, documentId: re2, auteur: Bob, auteurPortraitUrl: "https://p/b.jpg", auteurFonction: Fonction B, reponseDate: "{{date:now-3d}}", feedbackQuestion: q, questionId: "00000000-0000-4000-8000-000000000002", auteurPortrait: null, reponseType: [{id: 2, __component: reponse.reponsetextuelle, label: L, text: [{type: paragraph, children: [{type: text, text: "début 😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀 fin"}]}]}]}
+steps:
+  - {id: paginated-long, path: /qags/responses/1, compare: {ignore: ["$.responses[*].responseDate"]}}
+  - {id: list-long, path: /qags/responses, compare: {ignore: ["$.responses[*].responseDate"]}}

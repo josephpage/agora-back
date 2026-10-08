@@ -1,0 +1,105 @@
+name: S3-qags-offset-equals-count
+tags: [S3]
+dbdiff: none
+setup:
+  sql:
+    # exactly 20 accepted QaGs in th5 (the seed has one): page 2 starts at offset 20 = count, which is NOT beyond the end
+    - "INSERT INTO qags (id, title, description, post_date, status, thematique_id, user_id, username) SELECT ('00000000-0000-4000-8000-' || lpad(to_hex(4096 + i), 12, '0'))::uuid, 'Bulk question ' || i, 'Description ' || i, timestamp '2026-09-01 12:00:00' + (i || ' minutes')::interval, 1, 'th0000000000000000000005', '00000000-0000-4000-9000-000000000001'::uuid, 'Bulk' FROM generate_series(1, 19) AS i"
+steps:
+  - {id: top-th5-1, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId={{seed.Thematique5}}", as: "{{seed.UserRegular1}}"}
+  - {id: top-th5-2-offset-equals-count, path: "/v2/qags?filterType=top&pageNumber=2&thematiqueId={{seed.Thematique5}}", as: "{{seed.UserRegular1}}"}
+  - {id: top-th5-3-beyond, path: "/v2/qags?filterType=top&pageNumber=3&thematiqueId={{seed.Thematique5}}", as: "{{seed.UserRegular1}}"}
+  - {id: latest-th5-2-offset-equals-count, path: "/v2/qags?filterType=latest&pageNumber=2&thematiqueId={{seed.Thematique5}}", as: "{{seed.UserRegular1}}"}
+  - {id: latest-th5-2-xml, path: "/v2/qags?filterType=latest&pageNumber=2&thematiqueId={{seed.Thematique5}}&mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: top-unknown-thematique, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId=unknown", as: "{{seed.UserRegular1}}"}
+  - {id: top-unknown-thematique-p2, path: "/v2/qags?filterType=top&pageNumber=2&thematiqueId=unknown", as: "{{seed.UserRegular1}}"}
+  - {id: supporting-unknown-thematique, path: "/v2/qags?filterType=supporting&pageNumber=1&thematiqueId=unknown", as: "{{seed.UserRegular1}}"}
+---
+name: S3-qags-parameters
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: missing-page-number, path: "/v2/qags?filterType=top", as: "{{seed.UserRegular1}}"}
+  - {id: missing-filter-type, path: "/v2/qags?pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: missing-both, path: "/v2/qags", as: "{{seed.UserRegular1}}"}
+  - {id: missing-both-anonymous, path: "/v2/qags"}
+  - {id: anonymous-top, path: "/v2/qags?filterType=top&pageNumber=1"}
+  - {id: anonymous-trending, path: "/v2/qags?filterType=trending&pageNumber=1"}
+  - {id: anonymous-bad-page, path: "/v2/qags?filterType=top&pageNumber=abc"}
+  - {id: anonymous-bad-filter, path: "/v2/qags?filterType=zzz&pageNumber=1"}
+  - {id: page-not-a-number, path: "/v2/qags?filterType=top&pageNumber=abc", as: "{{seed.UserRegular1}}"}
+  - {id: page-empty, path: "/v2/qags?filterType=top&pageNumber=", as: "{{seed.UserRegular1}}"}
+  - {id: page-zero, path: "/v2/qags?filterType=top&pageNumber=0", as: "{{seed.UserRegular1}}"}
+  - {id: page-negative, path: "/v2/qags?filterType=latest&pageNumber=-1", as: "{{seed.UserRegular1}}"}
+  - {id: page-plus, path: "/v2/qags?filterType=top&pageNumber=%2B1", as: "{{seed.UserRegular1}}"}
+  - {id: page-leading-zero, path: "/v2/qags?filterType=top&pageNumber=001", as: "{{seed.UserRegular1}}"}
+  - {id: page-space, path: "/v2/qags?filterType=top&pageNumber=%201", as: "{{seed.UserRegular1}}"}
+  - {id: page-trailing-space, path: "/v2/qags?filterType=top&pageNumber=1%20", as: "{{seed.UserRegular1}}"}
+  - {id: page-decimal, path: "/v2/qags?filterType=top&pageNumber=1.0", as: "{{seed.UserRegular1}}"}
+  - {id: page-too-big, path: "/v2/qags?filterType=top&pageNumber=2147483648", as: "{{seed.UserRegular1}}"}
+  - {id: page-arabic-digit, path: "/v2/qags?filterType=top&pageNumber=%D9%A1", as: "{{seed.UserRegular1}}"}
+  - {id: page-fullwidth-digit, path: "/v2/qags?filterType=top&pageNumber=%EF%BC%91", as: "{{seed.UserRegular1}}"}
+  - {id: page-hex, path: "/v2/qags?filterType=top&pageNumber=0x1", as: "{{seed.UserRegular1}}"}
+  - {id: page-repeated, path: "/v2/qags?filterType=top&pageNumber=1&pageNumber=2", as: "{{seed.UserRegular1}}"}
+  - {id: page-repeated-numeric-join, path: "/v2/qags?filterType=top&pageNumber=1&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: filter-empty, path: "/v2/qags?filterType=&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: filter-blank, path: "/v2/qags?filterType=%20%20&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: filter-unknown, path: "/v2/qags?filterType=popular&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: filter-capitalized, path: "/v2/qags?filterType=Top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: filter-upper, path: "/v2/qags?filterType=LATEST&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: filter-with-space, path: "/v2/qags?filterType=top%20&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: filter-repeated, path: "/v2/qags?filterType=top&filterType=latest&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: filter-repeated-same, path: "/v2/qags?filterType=top&filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: bad-page-and-bad-filter, path: "/v2/qags?filterType=zzz&pageNumber=abc", as: "{{seed.UserRegular1}}"}
+  - {id: thematique-empty, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId=", as: "{{seed.UserRegular1}}"}
+  - {id: thematique-blank, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId=%20%09", as: "{{seed.UserRegular1}}"}
+  - {id: thematique-nbsp, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId=%C2%A0", as: "{{seed.UserRegular1}}"}
+  - {id: thematique-unknown, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId=zzz", as: "{{seed.UserRegular1}}"}
+  - {id: thematique-with-spaces, path: "/v2/qags?filterType=latest&pageNumber=1&thematiqueId=%20{{seed.Thematique1}}%20", as: "{{seed.UserRegular1}}"}
+  - {id: thematique-uppercase, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId=TH0000000000000000000001", as: "{{seed.UserRegular1}}"}
+  - {id: thematique-sql-chars, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId=%27%20OR%201%3D1%20--", as: "{{seed.UserRegular1}}"}
+  - {id: thematique-percent, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId=%25", as: "{{seed.UserRegular1}}"}
+  - {id: thematique-repeated, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId={{seed.Thematique1}}&thematiqueId={{seed.Thematique2}}", as: "{{seed.UserRegular1}}"}
+  - {id: thematique-ignored-by-trending, path: "/v2/qags?filterType=trending&pageNumber=99&thematiqueId=zzz", as: "{{seed.UserRegular1}}"}
+  - {id: trending-page-ignored, path: "/v2/qags?filterType=trending&pageNumber=abc", as: "{{seed.UserRegular1}}"}
+  - {id: trending-page-zero, path: "/v2/qags?filterType=trending&pageNumber=0", as: "{{seed.UserRegular1}}"}
+  - {id: unknown-query-param, path: "/v2/qags?filterType=top&pageNumber=1&other=1", as: "{{seed.UserRegular1}}"}
+  - {id: encoded-malformed-escape, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId=%zz", as: "{{seed.UserRegular1}}"}
+  - {id: encoded-invalid-utf8, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId=%ff%fe", as: "{{seed.UserRegular1}}"}
+  - {id: plus-as-space, path: "/v2/qags?filterType=top&pageNumber=1&thematiqueId=a+b", as: "{{seed.UserRegular1}}"}
+  - {id: filter-type-in-path-case, path: "/V2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: trailing-slash, path: "/v2/qags/?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+---
+name: S3-qags-users-and-formats
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: banned-top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserBanned}}"}
+  - {id: banned-supporting, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserBanned}}"}
+  - {id: banned-trending, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserBanned}}"}
+  - {id: moderator-latest, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserModerator}}"}
+  - {id: admin-top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserAdmin}}"}
+  - {id: publisher-top, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserPublisher}}"}
+  - {id: unknown-user-top, path: "/v2/qags?filterType=top&pageNumber=1", as: "00000000-0000-4000-9000-0000000000ff"}
+  - {id: unknown-user-supporting, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "00000000-0000-4000-9000-0000000000ff"}
+  - {id: non-uuid-user, path: "/v2/qags?filterType=top&pageNumber=1", as: "not-a-uuid"}
+  - {id: bad-jwt, path: "/v2/qags?filterType=top&pageNumber=1", bearer: "abc.def.ghi"}
+  - {id: author-sees-own-open-qag-in-supporting, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: author-of-accepted-qag, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: author-of-accepted-qag-trending, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}
+  - {id: top-xml, path: "/v2/qags?filterType=top&pageNumber=1&mediaType=xml", as: "{{seed.UserRegular1}}"}
+  - {id: trending-xml, path: "/v2/qags?filterType=trending&pageNumber=1&mediaType=xml", as: "{{seed.UserRegular2}}"}
+  - {id: supporting-xml, path: "/v2/qags?filterType=supporting&pageNumber=1&mediaType=XML", as: "{{seed.UserRegular2}}"}
+  - {id: json-explicit, path: "/v2/qags?filterType=top&pageNumber=1&mediaType=json", as: "{{seed.UserRegular2}}"}
+  - {id: media-type-foo, path: "/v2/qags?filterType=top&pageNumber=1&mediaType=foo", as: "{{seed.UserRegular2}}"}
+  - {id: media-type-foo-400, path: "/v2/qags?filterType=zzz&pageNumber=1&mediaType=foo", as: "{{seed.UserRegular2}}"}
+  - {id: media-type-xml-400, path: "/v2/qags?filterType=zzz&pageNumber=1&mediaType=xml", as: "{{seed.UserRegular2}}"}
+  - {id: accept-xml, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular2}}", headers: {Accept: "application/xml"}}
+  - {id: accept-unsupported, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular2}}", headers: {Accept: "text/csv"}}
+  - {id: head, method: HEAD, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular2}}"}
+  - {id: head-400, method: HEAD, path: "/v2/qags?filterType=zzz&pageNumber=1", as: "{{seed.UserRegular2}}"}
+  - {id: head-anonymous, method: HEAD, path: "/v2/qags?filterType=top&pageNumber=1"}
+  - {id: options, method: OPTIONS, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular2}}"}
+  - {id: post-not-allowed, method: POST, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular2}}"}
+  - {id: cors, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular2}}", headers: {Origin: "https://www.agora.gouv.fr"}}
+  - {id: if-none-match, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular2}}", headers: {If-None-Match: '"abc"'}}

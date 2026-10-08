@@ -1,0 +1,52 @@
+name: S3-overlay-support-then-lists
+tags: [S3]
+dbdiff: step
+steps:
+  - {id: top-before, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: latest-before, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: supporting-before, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: support, method: POST, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserIdle}}"}
+  # The shared pages (and their support counts) may lag by AGORA_MICROCACHE_TTL, but what the user supports is read at every request.
+  - {id: top-right-after, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserIdle}}", compare: {ignore: ["$.qags[*].support.count"]}}
+  - {id: latest-right-after, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserIdle}}", compare: {ignore: ["$.qags[*].support.count"]}}
+  # the tab of the supported QaGs is personal: never shared, exact
+  - {id: supporting-right-after, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: search-right-after, path: "/qags/search?keywords=transport", as: "{{seed.UserIdle}}"}
+  - {id: top-other-user-sees-no-flag, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular5}}", compare: {ignore: ["$.qags[*].support.count"]}}
+  - {id: unsupport, method: DELETE, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserIdle}}"}
+  - {id: top-after-unsupport, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserIdle}}", compare: {ignore: ["$.qags[*].support.count"]}}
+  - {id: supporting-after-unsupport, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserIdle}}"}
+---
+name: S3-overlay-counts-converge-after-the-ttl
+tags: [S3]
+dbdiff: step
+steps:
+  - {id: top-before, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: support, method: POST, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserIdle}}"}
+  - {id: top-after-ttl, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserIdle}}", sleepMs: 5300}
+  - {id: latest-after-ttl, path: "/v2/qags?filterType=latest&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: count-after-ttl, path: /qags/count, as: "{{seed.UserIdle}}"}
+---
+name: S3-overlay-own-qag-deletion-and-insertion
+tags: [S3]
+dbdiff: step
+steps:
+  - {id: supporting-before, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular4}}"}
+  - {id: delete-own-open-qag, method: DELETE, path: "/qags/{{seed.QagOpenPlain}}", as: "{{seed.UserRegular4}}"}
+  - {id: supporting-after-delete, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular4}}"}
+  - {id: support-other-open, method: POST, path: "/qags/{{seed.QagOpenFresh}}/support", as: "{{seed.UserRegular4}}"}
+  # an open QaG of another user can be supported but is not listed afterwards
+  - {id: supporting-after-support-open, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular4}}"}
+  - {id: insert, method: POST, path: /qags, as: "{{seed.UserRegular1}}", body: {title: "Ma question sur les transports", description: "Description de test", author: "Jean", thematiqueId: "th0000000000000000000004"}}
+  - {id: supporting-after-insert, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular1}}", compare: {ignore: ["$.qags[*].qagId", "$.qags[*].date"]}}
+  - {id: ask-status-unrelated, path: /qags/ask_status, as: "{{seed.UserRegular1}}"}
+---
+name: S3-lists-parallel-requests
+tags: [S3]
+dbdiff: none
+steps:
+  - {id: top-parallel, path: "/v2/qags?filterType=top&pageNumber=1", as: "{{seed.UserRegular1}}", parallel: 12}
+  - {id: trending-parallel, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular2}}", parallel: 12}
+  - {id: supporting-parallel, path: "/v2/qags?filterType=supporting&pageNumber=1", as: "{{seed.UserRegular2}}", parallel: 12}
+  - {id: responses-parallel, path: /qags/responses, as: "{{seed.UserRegular2}}", parallel: 12}
+  - {id: search-parallel, path: "/qags/search?keywords=transport", as: "{{seed.UserRegular2}}", parallel: 12}
