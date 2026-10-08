@@ -56,7 +56,7 @@ func parseMinDate(s string) (ms int64, ok bool) {
 		return 0, false
 	}
 	m := int(month) + 1
-	if !validHybridDate(int(year), m, int(day)) {
+	if !validHybridDate(int(year), m, int(day)) || !fitsInMillis(int(year), m, int(day)) {
 		return 0, false
 	}
 	return hybridMillis(int(year), m, int(day)), true
@@ -268,6 +268,13 @@ func hybridMillis(year, month, day int) int64 {
 	days := epochDay(year, month, day)
 	local := days * 86_400_000 // wraps like Java's long arithmetic
 	return local - zoneOffsetMillis(local)
+}
+
+// fitsInMillis reports whether the local midnight is representable: the calendar of a date beyond
+// Long.MAX_VALUE milliseconds (292278994-08-17) does not keep its fields, so the non lenient parse fails.
+func fitsInMillis(year, month, day int) bool {
+	days := epochDay(year, month, day)
+	return days <= math.MaxInt64/86_400_000
 }
 
 // epochDay is the number of days since 1970-01-01 in the Julian calendar before the 1582-10-15

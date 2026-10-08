@@ -256,6 +256,11 @@ final class S3Functions {
             public StrapiDTO<StrapiResponseQag> getResponsesQag() {
                 return all;
             }
+
+            @Override
+            public int getResponsesCount() {
+                return all.getMeta().getPagination().getTotal();
+            }
         };
     }
 
