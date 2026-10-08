@@ -228,12 +228,14 @@ func bindScalar(v reflect.Value, tree any, path string) error {
 		case bool:
 			v.SetBool(t)
 		case json.Number:
-			// StdDeserializer._parseBooleanFromInt: !"0".equals(p.getText()) for
-			// any integer literal (BigInteger included); a float is refused
-			if strings.ContainsAny(t.String(), ".eE") {
+			// an integer literal is true when its value is not zero (int, long
+			// or BigInteger: "-0" is false, a huge literal is true); a float is
+			// refused
+			txt := t.String()
+			if strings.ContainsAny(txt, ".eE") {
 				return fail("%s: cannot coerce float to Boolean", path)
 			}
-			v.SetBool(t.String() != "0")
+			v.SetBool(strings.Trim(strings.TrimPrefix(txt, "-"), "0") != "")
 		case string:
 			switch strings.TrimSpace(t) {
 			case "true", "True", "TRUE":
