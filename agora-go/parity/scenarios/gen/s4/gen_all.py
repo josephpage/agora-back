@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import common
 import details
 import feedback
+import invalid
 import known
 import variants
 
@@ -22,6 +23,7 @@ for fname, scs in [
     ("S4_questions.yaml", details.run_questions()),
     ("S4_feedback.yaml", feedback.run()),
     ("S4_variants.yaml", variants.run()),
+    ("S4_invalid.yaml", invalid.run()),
     ("S4_known_foundation_diffs.yaml", known.run()),
 ]:
     common.dump(scs, os.path.join(outdir, fname))

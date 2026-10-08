@@ -1,0 +1,220 @@
+[
+ {
+  "id": 1228,
+  "documentId": "vc0228",
+  "titre_consultation": "Variante 228",
+  "slug": "variante-228",
+  "datetime_de_debut": "{{now-3d}}",
+  "datetime_de_fin": "{{now+8d}}",
+  "url_image_de_couverture": "https://cdn.parity.example/covers/vc0228.jpg",
+  "url_image_page_de_contenu": "https://cdn.parity.example/covers/vc0228-c.jpg",
+  "nombre_de_questions": 5,
+  "estimation_nombre_de_questions": "5 questions",
+  "estimation_temps": "10 minutes",
+  "nombre_participants_cible": 1000,
+  "territoire": "France",
+  "titre_page_web": "Titre web 228",
+  "sous_titre_page_web": "Sous-titre 228",
+  "thematique": {
+   "id": 3,
+   "documentId": "th0000000000000000000003",
+   "label": "Éducation",
+   "pictogramme": "📚",
+   "createdAt": "2024-05-29T09:37:12.407Z",
+   "updatedAt": "2024-05-29T09:37:12.407Z",
+   "publishedAt": "2024-05-29T10:19:13.352Z",
+   "locale": null
+  },
+  "questions": [
+   {
+    "id": 1,
+    "titre": "x",
+    "numero": 1
+   }
+  ],
+  "consultation_avant_reponse": {
+   "id": 1,
+   "documentId": "upvc022801",
+   "slug": "lancement",
+   "template_partage": "Participez : {title} {url}",
+   "historique_titre": "Lancement",
+   "historique_call_to_action": "Voir les objectifs",
+   "nom_strapi": "avant",
+   "commanditaire": [
+    {
+     "type": "paragraph",
+     "children": [
+      {
+       "type": "text",
+       "text": "Le Gouvernement"
+      }
+     ]
+    }
+   ],
+   "objectif": [
+    {
+     "type": "paragraph",
+     "children": [
+      {
+       "type": "text",
+       "text": "Recueillir l'avis"
+      }
+     ]
+    }
+   ],
+   "axe_gouvernemental": [
+    {
+     "type": "paragraph",
+     "children": [
+      {
+       "type": "text",
+       "text": "Axe 1"
+      }
+     ]
+    }
+   ],
+   "presentation": [
+    {
+     "type": "paragraph",
+     "children": [
+      {
+       "type": "text",
+       "text": "Premier paragraphe."
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "children": [
+      {
+       "type": "text",
+       "text": "Deuxième paragraphe."
+      }
+     ]
+    }
+   ],
+   "sections": [
+    {
+     "id": 1,
+     "__component": "consultation-section.section-texte-riche",
+     "description": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "text": "Texte 1"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "__component": "consultation-section.section-citation",
+     "description": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "text": "Citation 2"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "createdAt": "2024-05-29T09:37:12.407Z",
+   "updatedAt": "2024-05-29T09:37:12.407Z"
+  },
+  "consultation_apres_reponse_ou_terminee": {
+   "id": 2,
+   "documentId": "upvc022802",
+   "slug": "fin",
+   "template_partage": "Résultats : {title} {url}",
+   "historique_titre": "Fin",
+   "historique_call_to_action": "Résultats",
+   "nom_strapi": "apres",
+   "feedback_message": "Satisfait(e) ?",
+   "sections": [
+    {
+     "id": 1,
+     "__component": "consultation-section.section-texte-riche",
+     "description": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "text": "Texte 1"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "__component": "consultation-section.section-citation",
+     "description": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "text": "Citation 2"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "createdAt": "2024-05-29T09:37:12.407Z",
+   "updatedAt": "2024-05-29T09:37:12.407Z"
+  },
+  "consultation_contenu_analyse_des_reponse": null,
+  "contenu_reponse_du_commanditaires": null,
+  "consultation_contenu_autres": [
+   {
+    "id": 11,
+    "documentId": "upvc022811",
+    "slug": "autre-1",
+    "template_partage": "Actu 1 : {title} {url}",
+    "historique_titre": "Actualité 1",
+    "historique_call_to_action": "Lire 1",
+    "nom_strapi": "autre-1",
+    "feedback_message": "Avis sur 1 ?",
+    "datetime_publication": "{{now-1d}}",
+    "flamme_label": "Flamme 1",
+    "recap_emoji": "🔥",
+    "recap_label": "Récap 1",
+    "sections": [
+     {
+      "id": 1,
+      "__component": "consultation-section.section-texte-riche",
+      "description": [
+       {
+        "type": "paragraph",
+        "children": [
+         {
+          "type": "text",
+          "text": "Texte 1"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-05-29T09:37:12.407Z"
+   }
+  ],
+  "consultation_contenu_a_venir": null,
+  "image_de_couverture": null,
+  "image_page_de_contenu": null,
+  "createdAt": "2024-05-29T09:37:12.407Z",
+  "updatedAt": "2024-05-29T09:37:12.407Z",
+  "publishedAt": "2024-05-29T10:19:13.352Z",
+  "locale": null
+ }
+]
