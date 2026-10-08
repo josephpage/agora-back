@@ -24,7 +24,7 @@ steps:
   - {id: paginated-3, path: /qags/responses/3, compare: {ignore: ["$.responses[*].responseDate"]}}
   - {id: paginated-min-date, path: "/qags/responses/1?minDate=2026-09-28", compare: {ignore: ["$.responses[*].responseDate"]}}
   - {id: paginated-min-date-p2, path: "/qags/responses/2?minDate=2026-09-28", compare: {ignore: ["$.responses[*].responseDate"]}}
-  - {id: paginated-wrap-negative, path: /qags/responses/858993461}
+  - {id: paginated-wrap-negative, path: /qags/responses/858993461, compare: {ignore: ["$.responses[*].responseDate"]}}
   - {id: paginated-wrap-zero, path: /qags/responses/858993460, compare: {ignore: ["$.responses[*].responseDate"]}}
 ---
 name: S3-responses-long-texts
