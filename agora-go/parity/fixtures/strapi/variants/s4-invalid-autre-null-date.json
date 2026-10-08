@@ -1,0 +1,333 @@
+[
+ {
+  "id": 1217,
+  "documentId": "vc0217",
+  "titre_consultation": "Variante 217",
+  "slug": "variante-217",
+  "datetime_de_debut": "{{now-3d}}",
+  "datetime_de_fin": "{{now+8d}}",
+  "url_image_de_couverture": "https://cdn.parity.example/covers/vc0217.jpg",
+  "url_image_page_de_contenu": "https://cdn.parity.example/covers/vc0217-c.jpg",
+  "nombre_de_questions": 5,
+  "estimation_nombre_de_questions": "5 questions",
+  "estimation_temps": "10 minutes",
+  "nombre_participants_cible": 1000,
+  "territoire": "France",
+  "titre_page_web": "Titre web 217",
+  "sous_titre_page_web": "Sous-titre 217",
+  "thematique": {
+   "id": 3,
+   "documentId": "th0000000000000000000003",
+   "label": "Éducation",
+   "pictogramme": "📚",
+   "createdAt": "2024-05-29T09:37:12.407Z",
+   "updatedAt": "2024-05-29T09:37:12.407Z",
+   "publishedAt": "2024-05-29T10:19:13.352Z",
+   "locale": null
+  },
+  "questions": [
+   {
+    "id": 2171,
+    "__component": "question-de-consultation.question-a-choix-unique",
+    "titre": "Question 1",
+    "numero": 1,
+    "popup_explication": null,
+    "question_suivante": null,
+    "choix": [
+     {
+      "id": 11,
+      "label": "Choix 1.1",
+      "ouvert": false
+     },
+     {
+      "id": 12,
+      "label": "Choix 1.2",
+      "ouvert": true
+     }
+    ]
+   },
+   {
+    "id": 2172,
+    "__component": "question-de-consultation.question-a-choix-multiples",
+    "titre": "Question 2",
+    "numero": 2,
+    "popup_explication": null,
+    "question_suivante": null,
+    "nombre_maximum_de_choix": 2,
+    "choix": [
+     {
+      "id": 21,
+      "label": "Choix 2.1",
+      "ouvert": false
+     },
+     {
+      "id": 22,
+      "label": "Choix 2.2",
+      "ouvert": false
+     },
+     {
+      "id": 23,
+      "label": "Choix 2.3",
+      "ouvert": false
+     }
+    ]
+   },
+   {
+    "id": 2173,
+    "__component": "question-de-consultation.question-ouverte",
+    "titre": "Question 3",
+    "numero": 3,
+    "popup_explication": null,
+    "question_suivante": null
+   },
+   {
+    "id": 2174,
+    "__component": "question-de-consultation.question-conditionnelle",
+    "titre": "Question 4",
+    "numero": 4,
+    "popup_explication": null,
+    "question_suivante": null,
+    "choix": [
+     {
+      "id": 41,
+      "label": "Choix 4.1",
+      "ouvert": false,
+      "numero_de_la_question_suivante": 5
+     },
+     {
+      "id": 42,
+      "label": "Choix 4.2",
+      "ouvert": false,
+      "numero_de_la_question_suivante": 6
+     }
+    ]
+   },
+   {
+    "id": 2175,
+    "__component": "question-de-consultation.description",
+    "titre": "Question 5",
+    "numero": 5,
+    "popup_explication": null,
+    "question_suivante": null,
+    "description": [
+     {
+      "type": "paragraph",
+      "children": [
+       {
+        "type": "text",
+        "text": "Chapitre"
+       }
+      ]
+     }
+    ],
+    "url_image": null,
+    "transcription_image": null,
+    "image": null
+   },
+   {
+    "id": 2176,
+    "__component": "question-de-consultation.question-a-choix-unique",
+    "titre": "Question 6",
+    "numero": 6,
+    "popup_explication": null,
+    "question_suivante": 999,
+    "choix": [
+     {
+      "id": 61,
+      "label": "Choix 6.1",
+      "ouvert": false
+     },
+     {
+      "id": 62,
+      "label": "Choix 6.2",
+      "ouvert": false
+     }
+    ]
+   }
+  ],
+  "consultation_avant_reponse": {
+   "id": 1,
+   "documentId": "upvc021701",
+   "slug": "lancement",
+   "template_partage": "Participez : {title} {url}",
+   "historique_titre": "Lancement",
+   "historique_call_to_action": "Voir les objectifs",
+   "nom_strapi": "avant",
+   "commanditaire": [
+    {
+     "type": "paragraph",
+     "children": [
+      {
+       "type": "text",
+       "text": "Le Gouvernement"
+      }
+     ]
+    }
+   ],
+   "objectif": [
+    {
+     "type": "paragraph",
+     "children": [
+      {
+       "type": "text",
+       "text": "Recueillir l'avis"
+      }
+     ]
+    }
+   ],
+   "axe_gouvernemental": [
+    {
+     "type": "paragraph",
+     "children": [
+      {
+       "type": "text",
+       "text": "Axe 1"
+      }
+     ]
+    }
+   ],
+   "presentation": [
+    {
+     "type": "paragraph",
+     "children": [
+      {
+       "type": "text",
+       "text": "Premier paragraphe."
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "children": [
+      {
+       "type": "text",
+       "text": "Deuxième paragraphe."
+      }
+     ]
+    }
+   ],
+   "sections": [
+    {
+     "id": 1,
+     "__component": "consultation-section.section-texte-riche",
+     "description": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "text": "Texte 1"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "__component": "consultation-section.section-citation",
+     "description": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "text": "Citation 2"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "createdAt": "2024-05-29T09:37:12.407Z",
+   "updatedAt": "2024-05-29T09:37:12.407Z"
+  },
+  "consultation_apres_reponse_ou_terminee": {
+   "id": 2,
+   "documentId": "upvc021702",
+   "slug": "fin",
+   "template_partage": "Résultats : {title} {url}",
+   "historique_titre": "Fin",
+   "historique_call_to_action": "Résultats",
+   "nom_strapi": "apres",
+   "feedback_message": "Satisfait(e) ?",
+   "sections": [
+    {
+     "id": 1,
+     "__component": "consultation-section.section-texte-riche",
+     "description": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "text": "Texte 1"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "__component": "consultation-section.section-citation",
+     "description": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "text": "Citation 2"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "createdAt": "2024-05-29T09:37:12.407Z",
+   "updatedAt": "2024-05-29T09:37:12.407Z"
+  },
+  "consultation_contenu_analyse_des_reponse": null,
+  "contenu_reponse_du_commanditaires": null,
+  "consultation_contenu_autres": [
+   {
+    "id": 11,
+    "documentId": "upvc021711",
+    "slug": "autre-1",
+    "template_partage": "Actu 1 : {title} {url}",
+    "historique_titre": "Actualité 1",
+    "historique_call_to_action": "Lire 1",
+    "nom_strapi": "autre-1",
+    "feedback_message": "Avis sur 1 ?",
+    "datetime_publication": null,
+    "flamme_label": "Flamme 1",
+    "recap_emoji": "🔥",
+    "recap_label": "Récap 1",
+    "sections": [
+     {
+      "id": 1,
+      "__component": "consultation-section.section-texte-riche",
+      "description": [
+       {
+        "type": "paragraph",
+        "children": [
+         {
+          "type": "text",
+          "text": "Texte 1"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "createdAt": "2024-05-29T09:37:12.407Z",
+    "updatedAt": "2024-05-29T09:37:12.407Z"
+   }
+  ],
+  "consultation_contenu_a_venir": null,
+  "image_de_couverture": null,
+  "image_page_de_contenu": null,
+  "createdAt": "2024-05-29T09:37:12.407Z",
+  "updatedAt": "2024-05-29T09:37:12.407Z",
+  "publishedAt": "2024-05-29T10:19:13.352Z",
+  "locale": null
+ }
+]

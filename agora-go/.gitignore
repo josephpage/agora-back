@@ -6,3 +6,4 @@
 parity/oracle/.build/
 parity/reports/
 *.test
+__pycache__/

@@ -93,7 +93,28 @@ Les 500 de `/profile` sont identiques des deux côtés : environ 20 % des utilis
 parity/loadtest -target http://localhost:<port> -profile ported -c 200 -d 30s -warmup 15s -users 1900 -jwt-secret "$JWT_SECRET"
 ```
 
-### 2.2 À venir
+### 2.2 Listes de QaG (tranche S3, 8 oct.)
+
+**Conditions :**
+- même machine, même PostgreSQL ;
+- seed `-scale 50` ;
+- les 11 index de `--migrate=up` appliqués **aux deux bases** ;
+- pool de 5 connexions de chaque côté, sans limite CPU ;
+- profil `app-open` de `parity/loadtest`, 50 utilisateurs virtuels, 30 s mesurées, caches froids au départ.
+
+| Route | Kotlin | Go |
+|---|---:|---:|
+| `GET /v2/qags?filterType=top` | 42 req/s, p50 278 ms | 1 212 req/s, p50 10,8 ms |
+| `GET /v2/qags?filterType=trending` | 42 req/s, p50 267 ms | 1 201 req/s, p50 11,3 ms |
+| `GET /v2/qags?filterType=supporting` (SQL personnel, non cachable) | 10 req/s, p50 252 ms | 302 req/s, p50 33,7 ms |
+| `GET /qags/responses` | 11 req/s, p50 240 ms | 304 req/s, p50 22,7 ms |
+| **Mélange complet (11 routes)** | **209 req/s, p99 933 ms** | **6 035 req/s, p99 40 ms (×29)** |
+
+**Points à retenir :**
+- Sans les index, le Go est 4 fois plus lent sur ce mélange (1 564 req/s). **Les index doivent donc être appliqués avant la bascule.**
+- Le détail par route est dans `parity/ledger/S3.md`.
+
+### 2.3 À venir
 
 Campagne complète quand les listes (S3, S5) et les consultations (S4, S6) seront portées. Profils prévus :
 - `app-open` ;

@@ -55,6 +55,10 @@ start_pg() {
       PGPASSWORD=agora_password psql -q -h localhost -U backend -d postgres -c "CREATE DATABASE $db OWNER backend"
     fi
     PGPASSWORD=agora_password psql -q -h localhost -U backend -d $db -f internal/store/schema/baseline.sql >/dev/null 2>&1
+    # The order of a SELECT DISTINCT without ORDER BY (it feeds Strapi URIs, see
+    # parity/ledger/S4.md) must not depend on JDBC vs pgx switching to a generic
+    # plan after 5 executions of a prepared statement: always plan with the values.
+    PGPASSWORD=agora_password psql -q -h localhost -U backend -d postgres -c "ALTER DATABASE $db SET plan_cache_mode = force_custom_plan" >/dev/null
   done
 }
 

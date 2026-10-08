@@ -89,3 +89,29 @@ func TestOracleXML(t *testing.T) {
 	check(t, "fr.gouv.agora.infrastructure.moderatus.ModeratusQagModerateResultPageXml", moderateResult{Result: "ERROR", Error: &e})
 	check(t, "fr.gouv.agora.infrastructure.moderatus.ModeratusQagModerateResultPageXml", moderateResult{Result: "OK", Error: nil})
 }
+
+type goal struct {
+	Picto string `json:"picto"`
+}
+
+type nullableLists struct {
+	Footer *goal    `json:"footer"`
+	Goals  []goal   `json:"goals,nullable"`
+	Items  []goal   `json:"items"`
+	Names  []string `json:"names,nullable"`
+}
+
+// Jackson XML omits a null Kotlin List? property (ConsultationDetailsV2Json.goals),
+// writes a null object as an empty element and a non-null empty list as <x/>.
+func TestNullableListOmitted(t *testing.T) {
+	got := string(xmljava.Marshal(nullableLists{}))
+	want := "<nullableLists><footer/><items/></nullableLists>"
+	if got != want {
+		t.Errorf("got  %s\nwant %s", got, want)
+	}
+	got = string(xmljava.Marshal(nullableLists{Goals: []goal{}, Names: []string{"a"}}))
+	want = "<nullableLists><footer/><goals/><items/><names><names>a</names></names></nullableLists>"
+	if got != want {
+		t.Errorf("got  %s\nwant %s", got, want)
+	}
+}
