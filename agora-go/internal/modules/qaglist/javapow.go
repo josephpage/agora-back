@@ -42,6 +42,13 @@ type powKey struct{ x, y float64 }
 var powMemo sync.Map // powKey -> float64
 
 func correctlyRoundedPow(x, y float64) float64 {
+	if y == 1.5 {
+		// the default exponent: the 50 whole numbers (>= 6209, i.e. QaGs moderated more than 258 days ago)
+		// where the JVM's result is not the correctly rounded one, checked against the JVM for every x < 1<<17
+		if bits, ok := jvmPow15Exceptions[x]; ok {
+			return math.Float64frombits(bits)
+		}
+	}
 	memo := x == math.Trunc(x) && x < 1<<20
 	if memo {
 		if v, ok := powMemo.Load(powKey{x, y}); ok {

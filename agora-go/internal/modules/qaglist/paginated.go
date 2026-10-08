@@ -355,6 +355,3 @@ func javaDoubleCompare(a, b float64) int {
 	}
 	return 1
 }
-
-// javaPow is Math.pow.
-func javaPow(x, y float64) float64 { return math.Pow(x, y) }
