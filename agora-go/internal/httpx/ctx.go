@@ -324,6 +324,7 @@ func (c *Ctx) ClientIP() string {
 	if err != nil {
 		host = c.R.RemoteAddr
 	}
+	host = javacompat.InetHostAddress(host) // Tomcat getRemoteAddr ("0:0:0:0:0:0:0:1" for ::1)
 	xff, _ := c.Header("X-Forwarded-For")
 	if ip := auth.ClientIP(xff, "", ""); ip != "" {
 		return ip

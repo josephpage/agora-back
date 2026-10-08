@@ -35,6 +35,21 @@ final class F5Functions {
         // Tomcat ByteChunk.toString / Charset.decode: UTF-8 with REPLACE (query parameters).
         F.put("javaUtf8Decode", a -> units(Charset.forName("UTF-8").decode(ByteBuffer.wrap(bytes(a))).toString()));
 
+        // Tomcat request.getRemoteAddr(): InetAddress.getHostAddress() of the peer socket address
+        // (raw 4 or 16 bytes, optional numeric IPv6 scope).
+        F.put("javaInetHostAddress", a -> {
+            byte[] b = bytes(a);
+            int scope = a.has("scope") ? Functions.i(a, "scope") : -1;
+            try {
+                java.net.InetAddress ia = scope >= 0 && b.length == 16
+                        ? java.net.Inet6Address.getByAddress(null, b, scope)
+                        : java.net.InetAddress.getByAddress(b);
+                return ia.getHostAddress();
+            } catch (java.net.UnknownHostException e) {
+                return Functions.map("error", e.getClass().getSimpleName());
+            }
+        });
+
         // Charset.forName(name).decode(bytes) (InputStreamReader semantics: REPLACE).
         F.put("javaCharsetDecode", a -> {
             Charset cs;
