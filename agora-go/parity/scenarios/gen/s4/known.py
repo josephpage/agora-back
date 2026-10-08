@@ -11,10 +11,8 @@ def run():
     steps = [step("details-answered-user-xml", "/v2/consultations/%s?mediaType=xml" % CONS[0], **{"as": U1})]
     steps += [step("details-xml-c%d" % i, "/v2/consultations/%s?mediaType=xml" % CONS[i - 1], **{"as": U1}) for i in (4, 5, 7)]
     steps += [step("update-xml-cu1", "/v2/consultations/%s/updates/cu0000000000000000000001?mediaType=xml" % CONS[0], **{"as": U1})]
-    out.append(scenario(
-        "S4-known-xml-null-list", steps, tags=("S4-known",),
-        skip="foundation xmljava: a null Kotlin List? property (goals) is OMITTED by Jackson XML, xmljava writes <goals/>. Expected diff: "
-             "ref lacks <goals/> between <footer/> and <history>. Every XML view with `goals: null` (everything but the unanswered view of an ongoing consultation)."))
+    # was a foundation diff (xmljava wrote <goals/> for a null Kotlin List?): fixed, now an S4 scenario
+    out.append(scenario("S4-xml-null-list", steps, tags=("S4",)))
     steps = [step("xml-body", fb_path(), method="POST", bodyRaw="<x><isPositive>true</isPositive></x>", contentType="application/xml", **{"as": IDLE})]
     out.append(scenario(
         "S4-known-xml-request-body", steps, tags=("S4-known",), dbdiff="step",

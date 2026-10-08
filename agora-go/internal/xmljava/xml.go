@@ -36,6 +36,8 @@ type xfield struct {
 	cdata     bool
 	unwrapped bool
 	omitNull  bool
+	// nullableList: a nil slice is a null Kotlin List? (omitted), not an empty list
+	nullableList bool
 }
 
 var cache sync.Map
@@ -62,6 +64,9 @@ func fieldsOf(t reflect.Type) []xfield {
 		if strings.Contains(jopts, "omitnull") || strings.Contains(jopts, "omitempty") {
 			f.omitNull = true
 		}
+		// a Kotlin List? (jsonjava option "nullable") that is null is omitted by
+		// Jackson XML, while a null object is written as an empty element
+		f.nullableList = sf.Type.Kind() == reflect.Slice && strings.Contains(jopts, "nullable")
 		if xt, ok := sf.Tag.Lookup("xml"); ok {
 			xname, xopts, _ := strings.Cut(xt, ",")
 			if xname != "" {
@@ -197,7 +202,7 @@ func appendElement(b []byte, name string, v reflect.Value, cdata bool) []byte {
 				continue
 			}
 			fv := v.Field(f.index)
-			if isNilValue(fv) && f.omitNull {
+			if isNilValue(fv) && (f.omitNull || f.nullableList) {
 				continue
 			}
 			fd := deref(fv)
