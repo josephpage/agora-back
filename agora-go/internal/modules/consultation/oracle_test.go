@@ -3,7 +3,11 @@ package consultation
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"log/slog"
 	"math/rand"
+	"os"
+	"runtime/debug"
 	"strings"
 	"testing"
 	"time"
@@ -212,9 +216,13 @@ type oracleConsultation struct {
 
 // goConsultation is everything the Go code derives from a consultation payload, like the Kotlin oracle function.
 func goConsultation(c *strapiConsultation, now time.Time) (res oracleConsultation, err any) {
-	defer func() { err = recover() }()
+	defer func() {
+		if err = recover(); err != nil && os.Getenv("S4_DEBUG") != "" {
+			fmt.Println(string(debug.Stack()))
+		}
+	}()
 	nowL := FromTime(now)
-	m := infoMapper{log: nil}
+	m := infoMapper{log: slog.New(slog.NewTextHandler(io.Discard, nil))}
 	info := m.toConsultationInfo(c)
 	history := historyOf(c, func() time.Time { return now })
 	um := updateMapper{}
@@ -276,24 +284,24 @@ func TestOracleConsultationMappers(t *testing.T) {
 		decErr := jsonjava.Unmarshal(b, &c)
 		if want.DecodeError || (wantErr == nil) == false && strings.Contains(fmt.Sprint(wantErr), "decode") {
 			if decErr == nil {
-				t.Fatalf("#%d: Kotlin cannot read the payload, Go can: %s", n, b)
+				t.Fatalf("#%d: Kotlin cannot read the payload, Go can: %s", n, short(b))
 			}
 			counts["decode error"]++
 			continue
 		}
 		if decErr != nil {
-			t.Fatalf("#%d: Go cannot read the payload: %v\n%s", n, decErr, b)
+			t.Fatalf("#%d: Go cannot read the payload: %v\n%s", n, decErr, short(b))
 		}
 		got, panicked := goConsultation(&c, baseTime)
 		if wantErr != nil {
 			if panicked == nil {
-				t.Fatalf("#%d: Kotlin fails (%v), Go does not:\n%s", n, wantErr, b)
+				t.Fatalf("#%d: Kotlin fails (%v), Go does not:\n%s", n, wantErr, short(b))
 			}
 			counts["kotlin exception"]++
 			continue
 		}
 		if panicked != nil {
-			t.Fatalf("#%d: Go panics (%v), Kotlin does not:\n%s", n, panicked, b)
+			t.Fatalf("#%d: Go panics (%v), Kotlin does not:\n%s", n, panicked, short(b))
 		}
 		counts["ok"]++
 		if len(got.Views) != len(want.Views) {
@@ -302,14 +310,14 @@ func TestOracleConsultationMappers(t *testing.T) {
 		for i := range want.Views {
 			g, w := got.Views[i], want.Views[i]
 			if g.Kind != w.Kind || g.Variant != w.Variant || g.JSON != w.JSON {
-				t.Fatalf("#%d view %s/%d:\n go: %s\nref: %s\npayload: %s", n, w.Kind, w.Variant, g.JSON, w.JSON, b)
+				t.Fatalf("#%d view %s/%d:\n go: %s\nref: %s\npayload: %s", n, w.Kind, w.Variant, g.JSON, w.JSON, short(b))
 			}
 			if g.XML != "" && g.XML != w.XML {
 				t.Fatalf("#%d view %s/%d XML:\n go: %s\nref: %s", n, w.Kind, w.Variant, g.XML, w.XML)
 			}
 		}
 		if got.QuestionsJSON != want.QuestionsJSON || got.QuestionsXML != want.QuestionsXML {
-			t.Fatalf("#%d questions:\n go: %s\nref: %s\npayload: %s", n, got.QuestionsJSON, want.QuestionsJSON, b)
+			t.Fatalf("#%d questions:\n go: %s\nref: %s\npayload: %s", n, got.QuestionsJSON, want.QuestionsJSON, short(b))
 		}
 		if got.PreviewJSON != want.PreviewJSON || got.PreviewXML != want.PreviewXML {
 			t.Fatalf("#%d preview:\n go: %s\nref: %s", n, got.PreviewJSON, want.PreviewJSON)
@@ -400,4 +408,11 @@ func TestOracleFeedbackStats(t *testing.T) {
 			}
 		}
 	}
+}
+
+func short(b []byte) string {
+	if len(b) > 600 {
+		return string(b[:600]) + "..."
+	}
+	return string(b)
 }

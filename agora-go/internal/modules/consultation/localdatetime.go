@@ -107,16 +107,6 @@ func (d *LocalDateTime) fromArray(a []any) error {
 	}
 	var v [7]int64
 	for i, e := range a {
-		if i == 0 {
-			// getIntValue() also accepts a floating point number (truncated)
-			if n, ok := e.(json.Number); ok {
-				if f, err := n.Float64(); err == nil && f > -2147483649 && f < 2147483648 {
-					v[0] = int64(f)
-					continue
-				}
-			}
-			return errBadDateTime
-		}
 		x, ok := jsonInt(e)
 		if !ok || x != int64(int32(x)) {
 			return errBadDateTime
