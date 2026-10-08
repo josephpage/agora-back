@@ -8,8 +8,8 @@ import (
 
 	"agora/internal/javacompat"
 	"agora/internal/modules/qag"
-	"agora/internal/modules/themehebdo"
 	"agora/internal/modules/thematique"
+	"agora/internal/modules/themehebdo"
 )
 
 // Constants of QagPaginatedV2UseCase.

@@ -21,8 +21,8 @@ import (
 	"agora/internal/app"
 	"agora/internal/cache"
 	"agora/internal/modules/qag"
-	"agora/internal/modules/themehebdo"
 	"agora/internal/modules/thematique"
+	"agora/internal/modules/themehebdo"
 )
 
 const (
