@@ -124,10 +124,7 @@ steps:
   path: /admin/stub/acme/calls?mediaType=xml
   as: '{{seed.UserAdmin}}'
   compare: {body: status}
-- id: stub-last-deploy-xml
-  path: /admin/stub/acme/last-deploy?mediaType=xml
-  as: '{{seed.UserAdmin}}'
-  compare: {body: status}
+- {id: stub-last-deploy-xml, path: '/admin/stub/acme/last-deploy?mediaType=xml', as: '{{seed.UserAdmin}}'}
 - {id: stub-reset-get-405, path: /admin/stub/acme/calls/reset, as: '{{seed.UserAdmin}}'}
 - {id: stub-calls-post-405, method: POST, path: /admin/stub/acme/calls, as: '{{seed.UserAdmin}}'}
 - {id: stub-unknown, path: /admin/stub/acme/unknown, as: '{{seed.UserAdmin}}'}

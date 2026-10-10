@@ -206,7 +206,7 @@ def admin_access():
         admin("acme-unknown", "/admin/acme/unknown"),
         admin("acme-root", "/admin/acme"),
         admin("stub-calls-xml", "/admin/stub/acme/calls?mediaType=xml", compare={"body": "status"}),
-        admin("stub-last-deploy-xml", "/admin/stub/acme/last-deploy?mediaType=xml", compare={"body": "status"}),
+        admin("stub-last-deploy-xml", "/admin/stub/acme/last-deploy?mediaType=xml"),
         admin("stub-reset-get-405", "/admin/stub/acme/calls/reset"),
         admin("stub-calls-post-405", "/admin/stub/acme/calls", method="POST"),
         admin("stub-unknown", "/admin/stub/acme/unknown"),

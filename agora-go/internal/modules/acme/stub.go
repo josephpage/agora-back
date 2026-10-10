@@ -212,7 +212,7 @@ type stubDeploy struct {
 type LastDeployJSON struct {
 	stubMap
 	LastDeployedCertPreview *string `json:"lastDeployedCertPreview"`
-	LastDeployedAt          []int   `json:"lastDeployedAt,nullable" xml:"lastDeployedAt,unwrapped"`
+	LastDeployedAt          *[]int  `json:"lastDeployedAt" xml:"lastDeployedAt,unwrapped"`
 }
 
 // --- helpers --------------------------------------------------------------------
@@ -606,5 +606,10 @@ func (s *Service) stubLastDeploy(c *httpx.Ctx) *httpx.Response {
 	st := s.stub
 	st.mu.Lock()
 	defer st.mu.Unlock()
-	return httpx.OK(LastDeployJSON{LastDeployedCertPreview: st.lastCertPreview, LastDeployedAt: append([]int(nil), st.lastDeployedAt...)})
+	out := LastDeployJSON{LastDeployedCertPreview: st.lastCertPreview}
+	if st.lastDeployedAt != nil {
+		at := append([]int(nil), st.lastDeployedAt...)
+		out.LastDeployedAt = &at
+	}
+	return httpx.OK(out)
 }
