@@ -58,6 +58,11 @@ func (r *pgRepos) stamp() time.Time { return store.Micros(r.now()) }
 
 func newUUID() string { return users.RandomUUID() }
 
+// roundMicros is what PostgreSQL does with a timestamp(6) parameter that has more than 6
+// fraction digits (pgjdbc sends the nanoseconds): it rounds half up to the microsecond. The
+// nanoseconds only come from the upload route, the process clock is already in microseconds.
+func roundMicros(t time.Time) time.Time { return store.Micros(t.Add(500 * time.Nanosecond)) }
+
 // --- accounts ---------------------------------------------------------------
 
 type accountRow struct {
@@ -173,7 +178,7 @@ func (r *pgRepos) SaveCertificate(ctx context.Context, c Certificate) error {
 	_, err = r.db.Exec(ctx,
 		`INSERT INTO acme_certificate (id, certificate, created_at, deployed_at, domain, expires_at, private_key, status)
 		 VALUES ($1::uuid, $2, $3, NULL, $4, $5, $6, $7)`,
-		newUUID(), c.CertificatePEM, r.stamp(), c.Domain, store.Micros(c.ExpiresAt), enc, string(c.Status))
+		newUUID(), c.CertificatePEM, r.stamp(), c.Domain, roundMicros(c.ExpiresAt), enc, string(c.Status))
 	return err
 }
 
