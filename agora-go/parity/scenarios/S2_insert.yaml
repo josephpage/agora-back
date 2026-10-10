@@ -215,13 +215,6 @@ steps:
   - {id: ask-status-after-406, path: /qags/ask_status, as: "{{seed.UserPublisher}}"}
   - {id: get-not-routed, method: GET, path: /qags, as: "{{seed.UserIdle}}"}
 ---
-name: S2-insert-concurrent-same-user
-tags: [S2]
-dbdiff: step
-steps:
-  - {id: parallel-inserts, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {title: "parallel", thematiqueId: "t", description: "d", author: "a"}, parallel: 6}
-  - {id: ask-status, path: /qags/ask_status, as: "{{seed.UserIdle}}"}
----
 name: S2-insert-thematique-too-long-for-the-column
 tags: [S2]
 dbdiff: step

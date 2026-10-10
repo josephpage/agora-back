@@ -26,3 +26,11 @@ steps:
   - {id: support-another-qag, method: POST, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserProfile9}}"}
   # consequence of the previous diff (the support does not exist on the Kotlin side); the lock is per task type
   - {id: other-task-type-is-not-locked, method: DELETE, path: "/qags/{{seed.QagAcceptedTop}}/support", as: "{{seed.UserProfile9}}"}
+---
+name: S2-known-B-agora-queue-race-concurrent-inserts
+tags: [S2-known]
+dbdiff: step
+skip: "class B divergence B-AGORAQUEUE (DIVERGENCES.md): Kotlin checks canAddTask and adds the task in two steps, so simultaneous requests of one user can both run; on a slow machine 3 of 6 parallel POST /qags of the same user succeed (CI: ref [200 200 200 400 400 400], go [200 400x5]); locally the window is usually missed. The Go queue is atomic: exactly one succeeds."
+steps:
+  - {id: parallel-inserts, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {title: "parallel", thematiqueId: "t", description: "d", author: "a"}, parallel: 6}
+  - {id: ask-status, path: /qags/ask_status, as: "{{seed.UserIdle}}"}
