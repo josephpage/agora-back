@@ -87,12 +87,18 @@ func toASCIILabel(label string) (string, error) {
 	}
 	dest := label
 	if !ascii {
-		prepped := []rune(javacompat.KotlinLowercase(norm.NFKC.String(label)))
-		enc, err := punycodeEncode(prepped)
-		if err != nil {
-			return "", err
+		preppedStr := javacompat.KotlinLowercase(norm.NFKC.String(label))
+		dest = preppedStr
+		for i := 0; i < len(preppedStr); i++ {
+			if preppedStr[i] >= 0x80 { // still not ASCII after nameprep: Punycode
+				enc, err := punycodeEncode([]rune(preppedStr))
+				if err != nil {
+					return "", err
+				}
+				dest = "xn--" + enc
+				break
+			}
 		}
-		dest = "xn--" + enc
 	}
 	if len(dest) == 0 {
 		return "", errors.New("IllegalArgumentException: Empty label is not a legal name")
