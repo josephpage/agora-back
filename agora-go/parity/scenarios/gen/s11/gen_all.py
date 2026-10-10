@@ -428,6 +428,108 @@ def stub_protocol():
     ]
     return [sc("S11-stub-protocol", steps, dbdiff="end")]
 
+# --------------------------------------------------------------------------------------------------
+# Other environment profiles. Each profile needs a restart of both applications:
+#   S11-off      : no ACME variable at all (the default parity env)
+#   S11-gates-a  : parity/env/acme-gates-a-*.env  (ACME server interaction off, Cloudflare on)
+#   S11-gates-b  : parity/env/acme-gates-b-*.env  (ACME server interaction on, Cloudflare off)
+#   S11-health   : parity/env/acme-health-*.env   (ACME_SERVER_URL=.../stub/acme///, Cloudflare base URL unknown)
+def off():
+    R = "/admin/acme/renew-certificate"
+    setup = ["INSERT INTO acme_challenge (token, key_authorization, created_at) VALUES ('tok-abc', 'tok-abc.THUMB', '2026-01-01 00:00:00')"]
+    T = ("S11-off",)
+    steps = [
+        step("challenge-known", "/.well-known/acme-challenge/tok-abc"),
+        step("challenge-unknown", "/.well-known/acme-challenge/nope"),
+        admin("renew", R, method="POST"),
+        admin("renew-xml", R + "?mediaType=xml", method="POST"),
+        step("renew-anon", R, method="POST"),
+        step("renew-user", R, method="POST", **{"as": USER}),
+        admin("zone-info", "/admin/acme/cloudflare/zone-info"),
+        admin("zone-info-xml", "/admin/acme/cloudflare/zone-info?mediaType=xml"),
+        step("zone-info-user", "/admin/acme/cloudflare/zone-info", **{"as": USER}),
+        admin("directory", "/admin/acme/server/directory"),
+        admin("directory-xml", "/admin/acme/server/directory?mediaType=xml"),
+        admin("directory-accept-text", "/admin/acme/server/directory", headers={"Accept": "text/plain"}),
+        admin("upload-no-encryption-key", "/admin/acme/upload-certificate", method="POST",
+              body={"certificatePem": "C", "privateKeyPem": "K", "expiresAt": "2030-01-01T00:00:00"}),
+        admin("upload-bad-date", "/admin/acme/upload-certificate", method="POST",
+              body={"certificatePem": "C", "privateKeyPem": "K", "expiresAt": "x"}),
+        admin("upload-empty", "/admin/acme/upload-certificate", method="POST"),
+        step("upload-anon", "/admin/acme/upload-certificate", method="POST", body={}),
+        # the stub controllers do not exist
+        step("stub-directory", "/stub/acme/directory"),
+        step("stub-new-account", "/stub/acme/new-account", method="POST", contentType=JOSE, body=STUB_BODY),
+        step("stub-new-nonce-head", "/stub/acme/new-nonce", method="HEAD"),
+        step("stub-generate-keypair", "/stub/acme/generate-keypair", method="POST"),
+        step("stub-cloudflare-zone", "/stub/cloudflare/zones/z1"),
+        step("stub-cloudflare-deploy", "/stub/cloudflare/zones/z1/custom_certificates", method="POST", body={}),
+        step("stub-root", "/stub"),
+        admin("stub-calls", "/admin/stub/acme/calls"),
+        admin("stub-last-deploy", "/admin/stub/acme/last-deploy"),
+        admin("stub-reset", "/admin/stub/acme/calls/reset", method="DELETE"),
+        step("stub-calls-anon", "/admin/stub/acme/calls"),
+        step("stub-calls-user", "/admin/stub/acme/calls", **{"as": USER}),
+    ]
+    return [sc("S11-off-routes", steps, setup, tags=T)]
+
+
+def gates_a():
+    R = "/admin/acme/renew-certificate"
+    T = ("S11-gates-a",)
+    reset = admin("reset-stub", "/admin/stub/acme/calls/reset", method="DELETE")
+    calls = admin("calls", "/admin/stub/acme/calls", compare=CALLS_IGNORE)
+    last = admin("last-deploy", "/admin/stub/acme/last-deploy", compare=LAST_DEPLOY_IGNORE)
+    out = []
+    for name, sql in [
+        ("no-certificate", None),
+        ("expiring-deployed", [cert_sql("DEPLOYED", future(10), past(80), deployed=past(80))]),
+        ("expiring-to-deploy", [cert_sql("TO_DEPLOY", future(10), past(80))]),
+        ("expired-with-pending-order", [cert_sql("DEPLOYED", past(2), past(80), deployed=past(80)), order_sql("CHALLENGE_PENDING", HOUR("1"))]),
+        ("to-deploy-valid", [cert_sql("TO_DEPLOY", future(60), past(2)), order_sql("ORDER_FINALIZING", HOUR("1"))]),
+        ("deployed-valid", [cert_sql("DEPLOYED", future(60), past(2), deployed=past(2))]),
+    ]:
+        out.append(sc("S11-gates-a-" + name, [reset, admin("renew", R, method="POST"), calls, last, admin("renew-2", R, method="POST"), calls], sql, tags=T))
+    out.append(sc("S11-gates-a-health", [
+        admin("zone-info", "/admin/acme/cloudflare/zone-info"),
+        admin("directory", "/admin/acme/server/directory"),
+        admin("directory-xml", "/admin/acme/server/directory?mediaType=xml"),
+        admin("upload", "/admin/acme/upload-certificate", method="POST", body={"certificatePem": "CERT-GATES", "privateKeyPem": "K", "expiresAt": "2031-01-01T00:00:00"}),
+        admin("renew-deploys-upload", R, method="POST"),
+        admin("last-deploy", "/admin/stub/acme/last-deploy", compare=LAST_DEPLOY_IGNORE),
+    ], dbdiff="none", tags=T))
+    return out
+
+
+def gates_b():
+    R = "/admin/acme/renew-certificate"
+    T = ("S11-gates-b",)
+    reset = admin("reset-stub", "/admin/stub/acme/calls/reset", method="DELETE")
+    calls = admin("calls", "/admin/stub/acme/calls", compare=CALLS_IGNORE)
+    calls_none = admin("calls", "/admin/stub/acme/calls", compare={"body": "status"})
+    last = admin("last-deploy", "/admin/stub/acme/last-deploy", compare=LAST_DEPLOY_IGNORE)
+    return [
+        sc("S11-gates-b-to-deploy-valid", [reset, admin("renew", R, method="POST"), calls, last],
+           [cert_sql("TO_DEPLOY", future(60), past(2)), order_sql("ORDER_FINALIZING", HOUR("1"))], tags=T),
+        sc("S11-gates-b-provisioning-without-deployment", [reset, admin("renew", R, method="POST"), calls_none, last,
+                                                          admin("renew-2", R, method="POST"), calls_none, last],
+           None, dbdiff="none", tags=T),
+        sc("S11-gates-b-health", [admin("zone-info", "/admin/acme/cloudflare/zone-info"), admin("zone-info-xml", "/admin/acme/cloudflare/zone-info?mediaType=xml"),
+                                  admin("directory", "/admin/acme/server/directory")], tags=T),
+    ]
+
+
+def health():
+    T = ("S11-health",)
+    return [sc("S11-health-checks", [
+        admin("directory", "/admin/acme/server/directory", compare={"ignore": ["$.serverUrl", "$.newAccountUrl", "$.newOrderUrl"]}),
+        admin("directory-xml", "/admin/acme/server/directory?mediaType=xml", compare={"body": "status"}),
+        admin("zone-info-unknown-base-url", "/admin/acme/cloudflare/zone-info"),
+        step("directory-user", "/admin/acme/server/directory", **{"as": USER}),
+        admin("calls", "/admin/stub/acme/calls", compare=CALLS_IGNORE),
+        admin("renew-no-certificate", "/admin/acme/renew-certificate", method="POST", compare={"body": "status"}),
+    ], dbdiff="none", tags=T)]
+
 
 if __name__ == "__main__":
     outdir = sys.argv[1]
@@ -437,6 +539,10 @@ if __name__ == "__main__":
         ("S11_upload.yaml", upload()),
         ("S11_renew.yaml", renew()),
         ("S11_stub.yaml", stub_protocol()),
+        ("S11_off.yaml", off()),
+        ("S11_gates_a.yaml", gates_a()),
+        ("S11_gates_b.yaml", gates_b()),
+        ("S11_health.yaml", health()),
     ]:
         dump(scs, os.path.join(outdir, fname))
         print(fname, len(scs), "scenarios,", sum(len(s["steps"]) for s in scs), "steps")
