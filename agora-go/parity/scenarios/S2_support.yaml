@@ -97,14 +97,17 @@ steps:
   - {id: support-trailing-slash, method: POST, path: "/qags/{{seed.QagAcceptedSante}}/support/", as: "{{seed.UserIdle}}"}
   - {id: unsupport-with-body, method: DELETE, path: "/qags/{{seed.QagAcceptedSante}}/support", as: "{{seed.UserIdle}}", body: "x"}
 ---
-name: S2-support-concurrent-same-user
+name: S2-support-repeated-same-user
 tags: [S2]
 dbdiff: step
+# the parallel variant is S2-known-B-agora-queue-race-concurrent-supports (Kotlin race)
 steps:
-  - {id: parallel-supports, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}", parallel: 6}
-  - {id: details-after-parallel-supports, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
-  - {id: parallel-unsupports, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}", parallel: 6}
-  - {id: details-after-parallel-unsupports, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+  - {id: support-1, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: support-2, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: details-after-supports, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+  - {id: unsupport-1, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: unsupport-2, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}"}
+  - {id: details-after-unsupports, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
 ---
 name: S2-support-different-users-in-parallel
 tags: [S2]

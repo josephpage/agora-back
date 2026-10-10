@@ -34,3 +34,13 @@ skip: "class B divergence B-AGORAQUEUE (DIVERGENCES.md): Kotlin checks canAddTas
 steps:
   - {id: parallel-inserts, method: POST, path: /qags, as: "{{seed.UserIdle}}", body: {title: "parallel", thematiqueId: "t", description: "d", author: "a"}, parallel: 6}
   - {id: ask-status, path: /qags/ask_status, as: "{{seed.UserIdle}}"}
+---
+name: S2-known-B-agora-queue-race-concurrent-supports
+tags: [S2-known]
+dbdiff: step
+skip: "class B divergence B-AGORAQUEUE (DIVERGENCES.md): Kotlin checks canAddTask and adds the task in two steps, so simultaneous supports of one user on one QaG can all run and insert duplicate supports_qag rows (CI: ref [200 200 200 400 400 400] with 3 rows, go [200 400x5] with 1 row). The Go queue is atomic."
+steps:
+  - {id: parallel-supports, method: POST, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}", parallel: 6}
+  - {id: details-after-parallel-supports, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
+  - {id: parallel-unsupports, method: DELETE, path: "/qags/{{seed.QagAcceptedTransport}}/support", as: "{{seed.UserIdle}}", parallel: 6}
+  - {id: details-after-parallel-unsupports, path: "/qags/{{seed.QagAcceptedTransport}}", as: "{{seed.UserIdle}}"}
