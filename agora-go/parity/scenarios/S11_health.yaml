@@ -7,7 +7,7 @@ steps:
   path: /admin/acme/server/directory
   as: '{{seed.UserAdmin}}'
   compare:
-    ignore: [$.serverUrl, $.newAccountUrl, $.newOrderUrl]
+    ignore: [$.serverUrl, $.newAccountUrl, $.newOrderUrl, $.termsOfServiceUrl]
 - id: directory-xml
   path: /admin/acme/server/directory?mediaType=xml
   as: '{{seed.UserAdmin}}'

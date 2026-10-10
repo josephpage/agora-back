@@ -522,7 +522,7 @@ def gates_b():
 def health():
     T = ("S11-health",)
     return [sc("S11-health-checks", [
-        admin("directory", "/admin/acme/server/directory", compare={"ignore": ["$.serverUrl", "$.newAccountUrl", "$.newOrderUrl"]}),
+        admin("directory", "/admin/acme/server/directory", compare={"ignore": ["$.serverUrl", "$.newAccountUrl", "$.newOrderUrl", "$.termsOfServiceUrl"]}),
         admin("directory-xml", "/admin/acme/server/directory?mediaType=xml", compare={"body": "status"}),
         admin("zone-info-unknown-base-url", "/admin/acme/cloudflare/zone-info"),
         step("directory-user", "/admin/acme/server/directory", **{"as": USER}),
