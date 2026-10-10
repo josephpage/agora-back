@@ -43,6 +43,10 @@ Toute différence observable entre le backend Kotlin (référence figée au comm
 | S4-B3 | `latestConsultationDetailsV2` (1 h, Redis, partagé entre instances), statistiques de feedback patchées dans le cache à chaque avis | L1 par processus, 1 h (5 s en coexistence) ; l'avis patche le cache local et les autres instances rechargent |
 | S4-B4 | `hasGivenFeedbackConsultationUpdateV2` (1 h, Redis) lu avant la base | Non caché : lu en base par la même requête que « a répondu » (toujours exact) |
 | S4-B5 | Statistiques d'une question de feedback calculées à chaque appel | Partagées au plus 5 s, évincées sur toutes les instances à chaque avis ; le propre avis de l'utilisateur est visible immédiatement |
+| S5-B1 | `GET /concertations` : Strapi appelé à chaque requête | Liste partagée au plus 5 s (jamais une liste vide) ; la réponse est déjà `max-age=300` |
+| S5-B2 | `GET /consultations/finished/{n}` sans `territory` : liste Strapi relue à chaque requête | Liste partagée au plus 5 s (non vide seulement) |
+| S5-B3 | `consultationsAnsweredPaginated<userId>` (1 h, Redis) vidé par un scan `KEYS` **avant** l'insertion de la réponse : une lecture entre les deux remet une page périmée | Une entrée par utilisateur, invalidée sur toutes les instances **après** le commit de la réponse ; aucun scan `KEYS`. L'utilisateur voit toujours sa propre réponse |
+| S5-B4 | `consultationsFinishedPaginated` (1 h, Redis), vidé chaque jour | Même clé et même TTL en L1, vidée par la tâche quotidienne Go sur toutes les instances ; 5 s en coexistence |
 | *(complété par les tranches suivantes : compteur de participants figé, `userFeedbackQags`, cache en ajout seul, verrous Moderatus, entrées `RedisCacheManager` par utilisateur)* | | |
 
 ## Classe C (à valider)
