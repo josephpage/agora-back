@@ -19,6 +19,7 @@ import (
 	"crypto/rand"
 	"strconv"
 	"strings"
+	"sync"
 
 	"agora/internal/app"
 	"agora/internal/javacompat"
@@ -42,7 +43,21 @@ const (
 
 // Repository is UserAnsweredConsultationRepositoryImpl +
 // UserAnsweredConsultationDatabaseRepository (SQL copied verbatim).
-type Repository struct{ a *app.App }
+type Repository struct {
+	a *app.App
+
+	mu         sync.RWMutex
+	onInserted []func(ctx context.Context, userID string)
+}
+
+// OnInserted registers a function called after InsertUserAnsweredConsultation has
+// committed a row (S5 evicts the answered consultations pages of that user there,
+// so the consultation responses slice has nothing to call).
+func (r *Repository) OnInserted(f func(ctx context.Context, userID string)) {
+	r.mu.Lock()
+	r.onInserted = append(r.onInserted, f)
+	r.mu.Unlock()
+}
 
 // Get returns the App-wide repository.
 func Get(a *app.App) *Repository {
@@ -185,6 +200,12 @@ func (r *Repository) InsertUserAnsweredConsultation(ctx context.Context, in User
 		randomUUID(), in.ConsultationID, store.Millis(r.a.Now()), uid.String())
 	if err != nil {
 		return Failure, err
+	}
+	r.mu.RLock()
+	hooks := r.onInserted
+	r.mu.RUnlock()
+	for _, f := range hooks {
+		f(ctx, in.UserID)
 	}
 	return Success, nil
 }
