@@ -179,7 +179,8 @@ def admin_access():
     setup = [cert_sql("DEPLOYED", future(60), past(2), deployed=past(1))]
     roles = [("anon", {}), ("user", {"as": USER}), ("banned", {"as": BANNED}), ("moderator", {"as": MODERATOR}),
              ("publisher", {"as": PUBLISHER}), ("admin", {"as": ADMIN})]
-    steps = []
+    # only the admin can reset the stub: start from a clean history (a previous run may have left calls)
+    steps = [admin("reset-first", "/admin/stub/acme/calls/reset", method="DELETE")]
     for who, kw in roles:
         steps += [
             step("renew-" + who, "/admin/acme/renew-certificate", method="POST", **kw),
@@ -295,7 +296,7 @@ def renew():
         admin("renew-again", R, method="POST"), calls("calls-after-second"),
     ], [cert_sql("TO_DEPLOY", future(60), past(2)), order_sql("ORDER_FINALIZING", past(1))]))
 
-    out.append(sc("S11-renew-to-deploy-31-days", [admin("renew", R, method="POST"), last("last-deploy")],
+    out.append(sc("S11-renew-to-deploy-31-days", [reset, admin("renew", R, method="POST"), last("last-deploy")],
                   [cert_sql("TO_DEPLOY", future(31), past(2), pem=CERT_B)]))
 
     out.append(sc("S11-renew-latest-certificate-wins", [reset, admin("renew", R, method="POST"), last("last-deploy"), admin("renew-2", R, method="POST"), calls("calls")],
