@@ -26,7 +26,7 @@ Toute différence observable entre le backend Kotlin (référence figée au comm
 | Id | Kotlin | Go |
 |---|---|---|
 | B-USERCACHE | Principal JWT relu depuis Redis `userCache` (1 h), jamais invalidé lors d'un ban ou d'un changement de niveau | Cache L1 de 60 s, invalidé à chaque écriture utilisateur (login, suppression, upgrade/downgrade, ban) ; « not found » caché 5 s |
-| B-AGORAQUEUE | Une exception pendant une action laisse l'utilisateur verrouillé (400) jusqu'au redémarrage de l'instance | Verrou libéré par `defer` |
+| B-AGORAQUEUE | Une exception pendant une action laisse l'utilisateur verrouillé (400) jusqu'au redémarrage de l'instance. De plus, la file vérifie puis ajoute en deux temps : des requêtes simultanées d'un même utilisateur peuvent toutes passer (3 créations de QaG sur 6 envoyées en parallèle, sur une machine lente) | Verrou libéré par `defer` ; vérification et ajout atomiques : une seule action à la fois par utilisateur, comme la règle le prévoit |
 | S0-2 | `THEME_HEBDO_CACHE_ENABLED=false` : Strapi appelé à chaque `/theme_hebdo` | Liste partagée pendant `AGORA_MICROCACHE_TTL` (5 s par défaut, jamais si vide ou en erreur) ; la réponse est déjà `max-age=10` |
 | S1-B1 | Le login réécrit tout l'utilisateur lu dans le cache (jusqu'à 1 h) : un ban posé par la tâche nocturne ou un changement de niveau était annulé au login suivant | Le login n'écrit que `fcm_token` et `last_connection_date`, puis évince le principal |
 | S1-B2 | Changement de niveau et ban nocturne sans éviction : autorisations et ban périmés jusqu'à 1 h | Éviction du cache utilisateur Go à ces deux événements |
