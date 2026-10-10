@@ -253,7 +253,7 @@ func (u *AnsweredUseCase) GetConsultationAnsweredPaginatedList(ctx context.Conte
 
 func (u *AnsweredUseCase) buildList(ctx context.Context, userID string, offset, count int) (*AnsweredList, error) {
 	var infos []consultation.ConsultationWithUpdateInfo
-	if count > 0 { // no answer: nothing to read, as the Kotlin repository finds no consultation id
+	if count != 0 { // no answer: nothing to read, as the Kotlin repository finds no consultation id
 		var err error
 		if infos, err = u.repo.GetConsultationAnsweredList(ctx, userID, offset); err != nil {
 			return nil, err
