@@ -101,8 +101,9 @@ func main() {
 	}
 	sum := &runner.Summary{}
 	ctx := context.Background()
+	profile := os.Getenv("PARITY_PROFILE")
 	for _, sc := range scenarios {
-		if !sc.HasTag(tagList) || (re != nil && !re.MatchString(sc.Name)) {
+		if !sc.HasTag(tagList) || (re != nil && !re.MatchString(sc.Name)) || sc.Profile != profile {
 			continue
 		}
 		res := r.Run(ctx, sc)

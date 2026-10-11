@@ -2,6 +2,7 @@
 name: S11-gates-b-to-deploy-valid
 tags: [S11-gates-b]
 dbdiff: step
+profile: acme-gates-b
 setup:
   sql:
   - |-
@@ -28,6 +29,7 @@ steps:
 name: S11-gates-b-provisioning-without-deployment
 tags: [S11-gates-b]
 dbdiff: none
+profile: acme-gates-b
 steps:
 - {id: reset-stub, method: DELETE, path: /admin/stub/acme/calls/reset, as: '{{seed.UserAdmin}}'}
 - {id: renew, method: POST, path: /admin/acme/renew-certificate, as: '{{seed.UserAdmin}}'}
@@ -54,6 +56,7 @@ steps:
 name: S11-gates-b-health
 tags: [S11-gates-b]
 dbdiff: step
+profile: acme-gates-b
 steps:
 - {id: zone-info, path: /admin/acme/cloudflare/zone-info, as: '{{seed.UserAdmin}}'}
 - {id: zone-info-xml, path: '/admin/acme/cloudflare/zone-info?mediaType=xml', as: '{{seed.UserAdmin}}'}

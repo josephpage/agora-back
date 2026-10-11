@@ -61,8 +61,14 @@ def step(id, path, **kw):
     return out
 
 
+# environment profile of each tag (parity/env/<profile>-{ref,go}.env, PARITY_PROFILE)
+PROFILES = {"S11": "acme", "S11-gates-a": "acme-gates-a", "S11-gates-b": "acme-gates-b", "S11-health": "acme-health"}
+
+
 def sc(name, steps, setup_sql=None, dbdiff="step", tags=("S11",), skip=None):
     d = {"name": name, "tags": list(tags), "dbdiff": dbdiff}
+    if tags[0] in PROFILES:
+        d["profile"] = PROFILES[tags[0]]
     if skip:
         d["skip"] = skip
     if setup_sql:

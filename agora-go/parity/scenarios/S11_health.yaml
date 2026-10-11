@@ -2,6 +2,7 @@
 name: S11-health-checks
 tags: [S11-health]
 dbdiff: none
+profile: acme-health
 steps:
 - id: directory
   path: /admin/acme/server/directory

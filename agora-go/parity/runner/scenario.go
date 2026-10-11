@@ -25,7 +25,12 @@ type Scenario struct {
 	DBDiff string `yaml:"dbdiff"`
 	// Skip documents why a scenario is disabled.
 	Skip string `yaml:"skip"`
-	file string
+	// Profile names the environment profile both backends must be started
+	// with (parity/env/<profile>-{ref,go}.env, e.g. "acme"). A scenario runs
+	// only when PARITY_PROFILE equals its profile; scenarios without profile
+	// run in the default environment (PARITY_PROFILE unset).
+	Profile string `yaml:"profile"`
+	file    string
 }
 
 // Setup prepares both environments before the scenario.

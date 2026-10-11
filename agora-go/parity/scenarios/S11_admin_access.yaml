@@ -2,6 +2,7 @@
 name: S11-admin-access
 tags: [S11]
 dbdiff: step
+profile: acme
 setup:
   sql:
   - |-

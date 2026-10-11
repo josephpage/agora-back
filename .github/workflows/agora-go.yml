@@ -78,6 +78,19 @@ jobs:
         env:
           PARITY_JAVA: ${{ env.JAVA_HOME }}/bin/java
         run: mkdir -p parity/reports && ./parity/run.sh test -report parity/reports/parity.json
+      - name: Differential scenarios of the environment profiles (ACME)
+        working-directory: agora-go
+        env:
+          PARITY_JAVA: ${{ env.JAVA_HOME }}/bin/java
+        run: |
+          set -e
+          for p in acme:S11 acme-gates-a:S11-gates-a acme-gates-b:S11-gates-b acme-health:S11-health; do
+            profile=${p%%:*}; tag=${p##*:}
+            echo "== profile $profile"
+            PARITY_PROFILE=$profile ./parity/run.sh restart-ref
+            PARITY_PROFILE=$profile ./parity/run.sh restart-go
+            PARITY_PROFILE=$profile ./parity/run.sh test -tags "$tag" -report "parity/reports/parity-$profile.json"
+          done
       - if: always()
         uses: actions/upload-artifact@v4
         with:

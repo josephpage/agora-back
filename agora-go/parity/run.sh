@@ -96,6 +96,12 @@ REDIS_URL=redis://default:gopass@localhost:$GO_REDIS
 CMS_API_URL=http://localhost:$GO_STRAPI/api/
 AGORA_BOOTSTRAP_SCHEMA=true
 EOT
+  # an environment profile (PARITY_PROFILE, e.g. acme) brings its env files:
+  # parity/env/<profile>-ref.env and parity/env/<profile>-go.env
+  if [ -n "${PARITY_PROFILE:-}" ]; then
+    : "${PARITY_EXTRA_ENV_REF:=parity/env/$PARITY_PROFILE-ref.env}"
+    : "${PARITY_EXTRA_ENV_GO:=parity/env/$PARITY_PROFILE-go.env}"
+  fi
   # optional extra variables for both sides (e.g. ACME stub mode)
   if [ -n "${PARITY_EXTRA_ENV:-}" ] && [ -f "$PARITY_EXTRA_ENV" ]; then
     cat "$PARITY_EXTRA_ENV" >> "$RUN/ref.env"

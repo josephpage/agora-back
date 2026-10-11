@@ -2,6 +2,7 @@
 name: S11-upload-certificate
 tags: [S11]
 dbdiff: none
+profile: acme
 steps:
 - id: valid
   method: POST

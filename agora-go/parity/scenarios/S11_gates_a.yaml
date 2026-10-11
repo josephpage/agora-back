@@ -2,6 +2,7 @@
 name: S11-gates-a-no-certificate
 tags: [S11-gates-a]
 dbdiff: step
+profile: acme-gates-a
 steps:
 - {id: reset-stub, method: DELETE, path: /admin/stub/acme/calls/reset, as: '{{seed.UserAdmin}}'}
 - {id: renew, method: POST, path: /admin/acme/renew-certificate, as: '{{seed.UserAdmin}}'}
@@ -25,6 +26,7 @@ steps:
 name: S11-gates-a-expiring-deployed
 tags: [S11-gates-a]
 dbdiff: step
+profile: acme-gates-a
 setup:
   sql:
   - |-
@@ -55,6 +57,7 @@ steps:
 name: S11-gates-a-expiring-to-deploy
 tags: [S11-gates-a]
 dbdiff: step
+profile: acme-gates-a
 setup:
   sql:
   - |-
@@ -85,6 +88,7 @@ steps:
 name: S11-gates-a-expired-with-pending-order
 tags: [S11-gates-a]
 dbdiff: step
+profile: acme-gates-a
 setup:
   sql:
   - |-
@@ -117,6 +121,7 @@ steps:
 name: S11-gates-a-to-deploy-valid
 tags: [S11-gates-a]
 dbdiff: step
+profile: acme-gates-a
 setup:
   sql:
   - |-
@@ -149,6 +154,7 @@ steps:
 name: S11-gates-a-deployed-valid
 tags: [S11-gates-a]
 dbdiff: step
+profile: acme-gates-a
 setup:
   sql:
   - |-
@@ -179,6 +185,7 @@ steps:
 name: S11-gates-a-health
 tags: [S11-gates-a]
 dbdiff: none
+profile: acme-gates-a
 steps:
 - {id: zone-info, path: /admin/acme/cloudflare/zone-info, as: '{{seed.UserAdmin}}'}
 - {id: directory, path: /admin/acme/server/directory, as: '{{seed.UserAdmin}}'}

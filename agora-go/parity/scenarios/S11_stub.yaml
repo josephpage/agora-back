@@ -2,6 +2,7 @@
 name: S11-stub-protocol
 tags: [S11]
 dbdiff: end
+profile: acme
 steps:
 - {id: reset-first, method: DELETE, path: /admin/stub/acme/calls/reset, as: '{{seed.UserAdmin}}'}
 - id: directory
