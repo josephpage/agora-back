@@ -3,5 +3,12 @@ package consultationresponse
 import "agora/internal/app"
 
 // Routes registers this module's HTTP routes on a.Server.
-// TODO(slice): port the Kotlin controllers (see parity/LEDGER.md).
-func Routes(a *app.App) {}
+func Routes(a *app.App) {
+	s := Get(a)
+	// ReponseConsultationController
+	a.Server.POST("/consultations/{consultationId}/responses", s.postResponseConsultation)
+	// ConsultationResultsV2Controller
+	a.Server.GET("/v2/consultations/{consultationId}/responses", s.getConsultationResults)
+	// GetConsultationResponsesWithDemographicInfoController
+	a.Server.GET("/admin/consultations/{consultationId}/responses", s.getConsultationResponsesWithDemographicInfo)
+}

@@ -459,6 +459,7 @@ final class Functions {
         S3Functions.register(F);
         S5Functions.register(F);
         S11Functions.register(F);
+        S6Functions.register(F);
     }
 
     static Object jsonRoundTrip(JsonNode a) throws Exception {
