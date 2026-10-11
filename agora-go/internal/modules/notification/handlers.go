@@ -17,15 +17,15 @@ type handlers struct {
 
 // The @RequestParam default values of the controllers, character for character.
 const (
-	defaultUserTitle          = "Une nouvelle consultation est disponible"
-	defaultUserDescription    = "Venez découvrir la nouvelle consultation sur l'éducation"
-	defaultDepartmentDescr    = "Venez découvrir la nouvelle consultation sur l'Ain"
-	defaultAllUsersType       = "Type de la notification pour rediriger l'utilisateur vers la bonne page ALL_REPONSES_QAGS, HOME_QAGS, DETAILS_QAG, HOME_CONSULTATIONS, DETAILS_CONSULTATION, REPONSE_SUPPORT"
-	defaultDepartmentType     = "HOME_QAGS"
-	defaultRouteArgument      = "f55a68a7-8ec3-46c8-ba6b-1484fbd77ec6"
-	defaultUpdateTitle        = "L'analyse de la consultation sur l'éducation est disponible"
-	defaultUpdateDescription  = "Venez découvrir ce que les gens ont pensé de la consultation sur l'éducation"
-	defaultDeadlineTitle      = "Attention, la consultation sur le l'éducation se termine le 29 septembre"
+	defaultUserTitle           = "Une nouvelle consultation est disponible"
+	defaultUserDescription     = "Venez découvrir la nouvelle consultation sur l'éducation"
+	defaultDepartmentDescr     = "Venez découvrir la nouvelle consultation sur l'Ain"
+	defaultAllUsersType        = "Type de la notification pour rediriger l'utilisateur vers la bonne page ALL_REPONSES_QAGS, HOME_QAGS, DETAILS_QAG, HOME_CONSULTATIONS, DETAILS_CONSULTATION, REPONSE_SUPPORT"
+	defaultDepartmentType      = "HOME_QAGS"
+	defaultRouteArgument       = "f55a68a7-8ec3-46c8-ba6b-1484fbd77ec6"
+	defaultUpdateTitle         = "L'analyse de la consultation sur l'éducation est disponible"
+	defaultUpdateDescription   = "Venez découvrir ce que les gens ont pensé de la consultation sur l'éducation"
+	defaultDeadlineTitle       = "Attention, la consultation sur le l'éducation se termine le 29 septembre"
 	defaultDeadlineDescription = "Répondez à la consultation sur l'éducation avant qu'elle ne se termine"
 )
 
