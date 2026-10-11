@@ -117,6 +117,13 @@ def results(id, cid, user=None, **kw):
     return step(id, "/v2/consultations/%s/responses" % cid, **s)
 
 
+def results_xml(id, cid, user=None, **kw):
+    s = dict(kw)
+    if user:
+        s["as"] = user
+    return step(id, "/v2/consultations/%s/responses?mediaType=xml" % cid, **s)
+
+
 def tsv(id, cid, user=ADMIN, **kw):
     s = dict(kw)
     if user:

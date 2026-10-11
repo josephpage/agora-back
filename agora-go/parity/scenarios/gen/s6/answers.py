@@ -1,6 +1,6 @@
 """POST /consultations/{consultationId}/responses: valid answers, rejections, texts, bodies, users."""
 from helpers import *  # noqa: F401,F403
-from helpers import U, step, scenario, setup, post, post_raw, results, tsv, r_, body, qid, cid_, xff, TAG, SKIP, NA  # noqa: F401
+from helpers import U, step, scenario, setup, post, post_raw, results, results_xml, tsv, r_, body, qid, cid_, xff, TAG, SKIP, NA  # noqa: F401
 from helpers import C1, C2, C3, C4, C5, C6, C7, IDLE, ADMIN, MODERATOR, PUBLISHER, BANNED, R, NOFCM1, NOFCM2, P, INVALID_PROFILE, FRESH_C1, ANY, all_unique_answer
 
 SC = lambda name, steps, **kw: scenario(name, steps, TAG, dbdiff="step", setup=kw.pop("setup_", setup()), **kw)
@@ -16,7 +16,7 @@ def happy():
         step("preview-before", "/consultations", **{"as": IDLE}),
         post("answer", C2, all_unique_answer(2), IDLE),
         results("results-after", C2),
-        results("results-after-xml", C2, **{"path": None}) if False else step("results-after-xml", "/v2/consultations/%s/responses?mediaType=xml" % C2),
+        results_xml("results-after-xml", C2),
         step("details-after", "/v2/consultations/%s" % C2, **{"as": IDLE}),
         step("answered-after", "/consultations/answered/1", **{"as": IDLE}),
         step("preview-after", "/consultations", **{"as": IDLE}),
@@ -93,8 +93,7 @@ def happy():
         steps.append(post("answer-%d" % i, C2, [r_(qid(2, 1), [cid_(2, 1, 1 + i % 3)]), r_(qid(2, 2), [cid_(2, 2, 1 + i % 3)])], u))
         steps.append(results("r%d" % (i + 1), C2))
         steps.append(results("r%d-bis" % (i + 1), C2))
-        steps.append(results("r%d-xml" % (i + 1), C2, **{"path": "/v2/consultations/%s/responses?mediaType=xml" % C2}) if False else
-                     step("r%d-xml" % (i + 1), "/v2/consultations/%s/responses?mediaType=xml" % C2))
+        steps.append(results_xml("r%d-xml" % (i + 1), C2))
     out.append(SC("S6-answer-results-eviction", steps))
     return out
 
@@ -122,16 +121,15 @@ def texts():
     i = 0
     for name, text in t:
         u = users[i % len(users)]
-        steps.append(post("text-%s" % name, C2, [r_(qid(2, 3), [], text)] if False else [r_(qid(2, 3), [], text)], u)
-                     if i < len(users) else None)
+        if i < len(users):
+            steps.append(post("text-%s" % name, C2, [r_(qid(2, 3), [], text)], u))
         i += 1
-    steps = [s for s in steps if s]
-    out.append(SC("S6-answer-texts-open", steps[:len(users)]))
+    out.append(SC("S6-answer-texts-open", steps))
     rest = t[len(users):]
     steps = []
     for i, (name, text) in enumerate(rest):
-        steps.append(post("text-%s" % name, C1, [r_(qid(1, 3), [], text)], FRESH_C1[i % len(FRESH_C1)]) if i < len(FRESH_C1) else None)
-    steps = [s for s in steps if s]
+        if i < len(FRESH_C1):
+            steps.append(post("text-%s" % name, C1, [r_(qid(1, 3), [], text)], FRESH_C1[i]))
     if steps:
         out.append(SC("S6-answer-texts-open-c1", steps))
 
@@ -199,7 +197,6 @@ def rejections():
     # consultations that cannot be answered
     steps = [
         post("c4-finished", C4, [], IDLE), post("c5-finished", C5, [], IDLE), post("c7-finished", C7, [r_(qid(7, 1), [cid_(7, 1, 1)])], IDLE),
-        post("c3-ended", C3, [], IDLE) if False else None,
         post("unknown-empty", "co9999999999999999999999", [], IDLE), post("unknown-with-response", "co9999999999999999999999", [r_("1", ["2"])], R[4]),
         post("unknown-again", "co9999999999999999999999", [], IDLE),
         post("by-slug-empty", "consultation-2", [], PUBLISHER), post("by-slug-responses", "consultation-2", [r_(qid(2, 1), [cid_(2, 1, 1)])], MODERATOR),
@@ -210,5 +207,5 @@ def rejections():
         step("answered-after-unknown", "/consultations/answered/1", **{"as": IDLE}),
         step("preview-after-unknown", "/consultations", **{"as": IDLE}),
     ]
-    out.append(SC("S6-answer-consultations", [s for s in steps if s]))
+    out.append(SC("S6-answer-consultations", steps))
     return out
