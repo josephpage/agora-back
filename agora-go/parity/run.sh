@@ -148,9 +148,19 @@ start_go() {
   wait_http http://localhost:$GO_PORT/thematiques go
 }
 
-stop_go() { pkill -f "^$RUN/agora\$" 2>/dev/null || true; fuser -k $GO_PORT/tcp 2>/dev/null || true; sleep 1; }
+# wait until nothing listens on the port any more: start_ref / start_go return
+# early when the port answers, so an old process still shutting down would be
+# taken for the new one (and its environment profile would be the old one)
+wait_port_free() { # port
+  for _ in $(seq 1 60); do
+    fuser $1/tcp >/dev/null 2>&1 || return 0
+    sleep 0.5
+  done
+  fuser -k -KILL $1/tcp 2>/dev/null || true; sleep 1
+}
+stop_go() { pkill -f "^$RUN/agora\$" 2>/dev/null || true; fuser -k $GO_PORT/tcp >/dev/null 2>&1 || true; wait_port_free $GO_PORT; }
 # a restarted reference JVM has no stuck AgoraQueue slot (see parity/runner/kotlinlocks.go)
-stop_ref() { fuser -k $REF_PORT/tcp 2>/dev/null || true; rm -f "$RUN/kotlin-queue-locks"; sleep 3; }
+stop_ref() { fuser -k $REF_PORT/tcp >/dev/null 2>&1 || true; rm -f "$RUN/kotlin-queue-locks"; wait_port_free $REF_PORT; }
 
 case "${1:-up}" in
   up) start_pg; start_redis; start_strapi; start_ref; start_go; echo "parity environment up" ;;
