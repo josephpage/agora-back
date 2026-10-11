@@ -9,7 +9,9 @@ import (
 	"agora/internal/modules/consultation"
 )
 
-type fakeToAggregate struct{ list []consultation.ConsultationPreview }
+type fakeToAggregate struct {
+	list []consultation.ConsultationPreview
+}
 
 func (f fakeToAggregate) GetConsultationsToAggregate(context.Context) []consultation.ConsultationPreview {
 	return f.list

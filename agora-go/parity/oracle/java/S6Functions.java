@@ -408,6 +408,13 @@ final class S6Functions {
             return Functions.map("tsv", Functions.text16(new ConsultationResultWithDemographicInfoTsvMapper().buildTsvBody(r)));
         });
 
+        // NumberFormat.getInstance(locale) with maximumFractionDigits = 4, like the TSV mapper
+        F.put("s6NumberFormat", a -> {
+            java.text.NumberFormat nf = java.text.NumberFormat.getInstance(java.util.Locale.forLanguageTag(Functions.s(a, "locale")));
+            nf.setMaximumFractionDigits(4);
+            return Functions.text16(nf.format(Functions.dbl(a)));
+        });
+
         // ReponseConsultationMapper.toDomain (the 8 lists of a consultation / the 8 lists of the choices of a question)
         F.put("s6DemographicMapper", a -> {
             ReponseConsultationMapper mapper = new ReponseConsultationMapper();

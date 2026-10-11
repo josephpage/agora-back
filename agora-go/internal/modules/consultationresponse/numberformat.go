@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/big"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -75,10 +76,10 @@ func numberFormatFor(language string) javaNumberFormat {
 	return numberSymbols["en"]
 }
 
-// format is DecimalFormat.format(double). The digits are the exact value of the double rounded
-// HALF_EVEN to 4 fraction digits (what the JDK obtains from the shortest decimal digits and the
-// "rounded up" / "exact" flags of FloatingDecimal), the integer digits are grouped by 3, a negative
-// number (-0.0 and the negative numbers that round to 0 included) is prefixed by the minus sign.
+// format is DecimalFormat.format(double), with the JDK 17 algorithm of DigitList.set: the digits are those of Double.toString
+// (the shortest decimal that reads back as the double), rounded to 4 fraction digits HALF_EVEN with the two flags FloatingDecimal gives
+// ("the digits were rounded up", "the digits are the exact value"), the integer digits are grouped by 3, a negative number (-0.0 and the
+// negative numbers that round to 0 included) is prefixed by the minus sign.
 func (nf javaNumberFormat) format(d float64) string {
 	if math.IsNaN(d) {
 		return "NaN"
@@ -89,37 +90,113 @@ func (nf javaNumberFormat) format(d float64) string {
 		sign = nf.minus
 	}
 	if math.IsInf(d, 0) {
-		return sign + "∞"
+		return sign + "\u221e"
 	}
-	r := new(big.Rat).SetFloat64(math.Abs(d))
-	r.Mul(r, big.NewRat(10000, 1))
-	// r = n + f, 0 <= f < 1
-	n := new(big.Int).Quo(r.Num(), r.Denom())
-	f := new(big.Rat).Sub(r, new(big.Rat).SetInt(n))
-	switch f.Cmp(big.NewRat(1, 2)) {
-	case 1:
-		n.Add(n, big.NewInt(1))
-	case 0:
-		if n.Bit(0) == 1 { // HALF_EVEN
-			n.Add(n, big.NewInt(1))
+	if d == 0 {
+		return sign + "0"
+	}
+	ax := math.Abs(d)
+	// shortest digits and the position of the decimal point: value = 0.<digits> * 10^decimalAt
+	e := strconv.FormatFloat(ax, 'e', -1, 64)
+	mant, exp, _ := strings.Cut(e, "e")
+	digits := []byte(strings.Replace(mant, ".", "", 1))
+	exp10, _ := strconv.Atoi(exp)
+	decimalAt := exp10 + 1
+
+	const maximumDigits = 4
+	switch {
+	case -decimalAt > maximumDigits:
+		return sign + "0" // too small
+	case -decimalAt == maximumDigits:
+		// the value is in [1e-5, 1e-4): E-form, so Double.toString has at least two digits ("5.0E-5") and the digit string keeps a trailing
+		// zero here, which makes "5" an exact tie (rounded down) whatever the flags say
+		first := digits[0]
+		if first > '5' || (first == '5' && len(digits) > 1) {
+			return sign + "0" + nf.decimal + "0001"
+		}
+		return sign + "0"
+	}
+	// flags of FloatingDecimal: is the shortest decimal above the exact value (rounded up) or equal to it?
+	exactRat := new(big.Rat).SetFloat64(ax)
+	shortRat, _ := new(big.Rat).SetString(e)
+	cmp := shortRat.Cmp(exactRat)
+	alreadyRounded, valueExact := cmp > 0, cmp == 0
+
+	keep := maximumDigits + decimalAt
+	if keep >= 0 && keep < len(digits) {
+		if shouldRoundUpHalfEven(digits, keep, alreadyRounded, valueExact) {
+			k := keep
+			for {
+				k--
+				if k < 0 {
+					digits[0] = '1'
+					decimalAt++
+					k = 0
+					break
+				}
+				digits[k]++
+				if digits[k] <= '9' {
+					break
+				}
+			}
+			keep = k + 1
+		}
+		digits = digits[:keep]
+		for len(digits) > 1 && digits[len(digits)-1] == '0' {
+			digits = digits[:len(digits)-1]
 		}
 	}
-	q, rem := new(big.Int).QuoRem(n, big.NewInt(10000), new(big.Int))
-	integer := q.String()
+	// integer part and fraction
+	var integer, fraction string
+	switch {
+	case decimalAt <= 0:
+		integer = "0"
+		fraction = strings.Repeat("0", -decimalAt) + string(digits)
+	case decimalAt >= len(digits):
+		integer = string(digits) + strings.Repeat("0", decimalAt-len(digits))
+	default:
+		integer, fraction = string(digits[:decimalAt]), string(digits[decimalAt:])
+	}
+	fraction = strings.TrimRight(fraction, "0")
 	var sb strings.Builder
 	sb.WriteString(sign)
-	// grouping of the integer digits
 	for i, c := range integer {
 		if i > 0 && (len(integer)-i)%3 == 0 {
 			sb.WriteString(nf.group)
 		}
 		sb.WriteRune(c)
 	}
-	if rem.Sign() != 0 {
-		frac := rem.String()
-		frac = strings.Repeat("0", 4-len(frac)) + frac
+	if fraction != "" {
 		sb.WriteString(nf.decimal)
-		sb.WriteString(strings.TrimRight(frac, "0"))
+		sb.WriteString(fraction)
 	}
 	return sb.String()
+}
+
+// shouldRoundUpHalfEven is DigitList.shouldRoundUp for RoundingMode.HALF_EVEN.
+func shouldRoundUpHalfEven(digits []byte, maximumDigits int, alreadyRounded, valueExactAsDecimal bool) bool {
+	count := len(digits)
+	if maximumDigits >= count {
+		return false
+	}
+	switch {
+	case digits[maximumDigits] == '5':
+		if maximumDigits == count-1 {
+			if alreadyRounded {
+				return false
+			}
+			if !valueExactAsDecimal {
+				return true
+			}
+			return maximumDigits > 0 && digits[maximumDigits-1]%2 != 0
+		}
+		for _, c := range digits[maximumDigits+1:] {
+			if c != '0' {
+				return true
+			}
+		}
+	case digits[maximumDigits] > '5':
+		return true
+	}
+	return false
 }
