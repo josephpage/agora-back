@@ -3,7 +3,7 @@
 name: "S6-variant-6001"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6001/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6001/responses?mediaType=xml"}
@@ -19,7 +19,7 @@ steps:
 name: "S6-variant-6002"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6002/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6002/responses?mediaType=xml"}
@@ -37,7 +37,7 @@ steps:
 name: "S6-variant-6003"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6003/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6003/responses?mediaType=xml"}
@@ -55,7 +55,7 @@ steps:
 name: "S6-variant-6004"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6004/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6004/responses?mediaType=xml"}
@@ -75,7 +75,7 @@ steps:
 name: "S6-variant-6005"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6005/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6005/responses?mediaType=xml"}
@@ -101,7 +101,7 @@ steps:
 name: "S6-variant-6006"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6006/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6006/responses?mediaType=xml"}
@@ -119,7 +119,7 @@ steps:
 name: "S6-variant-6007"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6007/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6007/responses?mediaType=xml"}
@@ -135,7 +135,7 @@ steps:
 name: "S6-variant-6008"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6008/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6008/responses?mediaType=xml"}
@@ -151,7 +151,7 @@ steps:
 name: "S6-variant-6009"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6009/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6009/responses?mediaType=xml"}
@@ -167,7 +167,7 @@ steps:
 name: "S6-variant-6010"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6010/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6010/responses?mediaType=xml"}
@@ -181,7 +181,7 @@ steps:
 name: "S6-variant-6011"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6011/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6011/responses?mediaType=xml"}
@@ -195,7 +195,7 @@ steps:
 name: "S6-variant-6012"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiOverrides": [{"model": "consultations", "fixture": "variants/s6-questions.json"}]}
 steps:
   - {"id": "results-before", "path": "/v2/consultations/vc6012/responses"}
   - {"id": "results-xml-before", "path": "/v2/consultations/vc6012/responses?mediaType=xml"}
@@ -213,7 +213,7 @@ steps:
 name: "S6-strapi-fault-500"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiFaults": [{"model": "consultations", "mode": "500"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiFaults": [{"model": "consultations", "mode": "500"}]}
 steps:
   - {"id": "results", "path": "/v2/consultations/vcfault500/responses"}
   - {"id": "results-again", "path": "/v2/consultations/vcfault500/responses"}
@@ -226,7 +226,7 @@ steps:
 name: "S6-strapi-fault-malformed"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiFaults": [{"model": "consultations", "mode": "malformed"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiFaults": [{"model": "consultations", "mode": "malformed"}]}
 steps:
   - {"id": "results", "path": "/v2/consultations/vcfaultmalformed/responses"}
   - {"id": "results-again", "path": "/v2/consultations/vcfaultmalformed/responses"}
@@ -239,7 +239,7 @@ steps:
 name: "S6-strapi-fault-nulldata"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiFaults": [{"model": "consultations", "mode": "nulldata"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiFaults": [{"model": "consultations", "mode": "nulldata"}]}
 steps:
   - {"id": "results", "path": "/v2/consultations/vcfaultnulldata/responses"}
   - {"id": "results-again", "path": "/v2/consultations/vcfaultnulldata/responses"}
@@ -252,7 +252,7 @@ steps:
 name: "S6-strapi-fault-missingfield"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiFaults": [{"model": "consultations", "mode": "missingfield"}]}
+setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"], "strapiFaults": [{"model": "consultations", "mode": "missingfield"}]}
 steps:
   - {"id": "results", "path": "/v2/consultations/vcfaultmissingfield/responses"}
   - {"id": "results-again", "path": "/v2/consultations/vcfaultmissingfield/responses"}
