@@ -66,8 +66,8 @@ func toRows(consultationID string, r ReponseConsultationInserting, newID func() 
 }
 
 // maxRowsPerStatement keeps a multi-row INSERT under the 65535 parameters of the protocol
-// (7 per row).
-const maxRowsPerStatement = 9000
+// (8 per row).
+const maxRowsPerStatement = 8000
 
 // ResponseRepository is InsertReponseConsultationRepositoryImpl.
 //

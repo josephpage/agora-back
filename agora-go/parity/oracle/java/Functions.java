@@ -458,6 +458,7 @@ final class Functions {
         // ---- slice S3 (QaG lists and responses) ------------------------------------------------------
         S3Functions.register(F);
         S5Functions.register(F);
+        S6Functions.register(F);
     }
 
     static Object jsonRoundTrip(JsonNode a) throws Exception {
