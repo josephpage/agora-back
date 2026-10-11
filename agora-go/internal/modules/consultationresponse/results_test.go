@@ -48,7 +48,8 @@ func (f *fakeResultsSources) GetConsultationResponsesCount(context.Context, stri
 
 func newResults(a *app.App, info *consultation.ConsultationInfo, qs []consultation.Question, src *fakeResultsSources) (*ConsultationResultsUseCase, *fakeInfo, *fakeQuestions) {
 	fi, fq := &fakeInfo{info: info}, &fakeQuestions{list: qs}
-	return &ConsultationResultsUseCase{a: a, info: fi, questions: fq, answered: src, aggregated: src, responses: src}, fi, fq
+	// the production TTL is AGORA_MICROCACHE_TTL (5 s); the test app has a zero config
+	return &ConsultationResultsUseCase{a: a, info: fi, questions: fq, answered: src, aggregated: src, responses: src, ttl: 5 * time.Second}, fi, fq
 }
 
 var someInfo = &consultation.ConsultationInfo{ID: "consultationId", Title: "Titre", CoverURL: "https://cover"}

@@ -17,15 +17,11 @@ import (
 // consultation without any question with choices (Jackson cannot rebuild the abstract
 // QuestionWithChoices): the results were recomputed and written again at every request, and
 // the only entry that was ever served was the "" marker of an unknown consultation (kept for
-// one hour). Go shares one computation per version of the consultation: the entry is dropped
-// by every answer on every instance (and by DeleteUsers / the aggregation through
-// EvictConsultationResults), and lives at most resultsTTL (class B, S6-B1 and S6-B2).
-const (
-	resultsCacheName = "consultationResults"
-	// resultsTTL bounds the staleness of what only changes outside of the answers: the
-	// questions of Strapi (Kotlin reads them from an in-process map that lives 5 minutes).
-	resultsTTL = 5 * time.Minute
-)
+// one hour). The results are therefore data Kotlin does not cache: Go shares one computation
+// for at most AGORA_MICROCACHE_TTL (5 s, decision #2 of DIVERGENCES.md), and the entry is also
+// dropped by every answer on every instance (and by DeleteUsers / the aggregation through
+// EvictConsultationResults) (class B, S6-B1 and S6-B2).
+const resultsCacheName = "consultationResults"
 
 // ParticipantCounter is UserAnsweredConsultationRepository.getParticipantCount.
 type ParticipantCounter interface {
@@ -50,15 +46,15 @@ type ConsultationResultsUseCase struct {
 	answered   ParticipantCounter
 	aggregated AggregatedSource
 	responses  ResponseCounter
-	// ttl overrides resultsTTL (tests)
+	// ttl overrides AGORA_MICROCACHE_TTL (tests)
 	ttl time.Duration
 }
 
 // GetConsultationResults is getConsultationResults(consultationId): nil for an unknown (or unpublished)
 // consultation (HTTP 400). The entry is shared by every request until an answer, another
-// instance's answer, or resultsTTL.
+// instance's answer, or AGORA_MICROCACHE_TTL.
 func (u *ConsultationResultsUseCase) GetConsultationResults(ctx context.Context, consultationID string) (*ConsultationResults, error) {
-	ttl := resultsTTL
+	ttl := u.a.Cfg.MicroCacheTTL
 	if u.ttl != 0 {
 		ttl = u.ttl
 	}

@@ -47,14 +47,12 @@ def cid_(c, q, k):
 SKIP = "00000000-0000-0000-0000-000000000000"
 NA = "11111111-1111-1111-1111-111111111111"
 
-# The participation id of the rows of one answer is random on each side: it is derived from the user and the consultation by
-# a trigger, so that the DB diff compares it (the runner binds ONE generated UUID per row pair, not a UUID shared by several
-# rows: see the foundation findings of parity/ledger/S6.md). The trigger stays in the databases of the slot after the scenarios, so
-# it only changes the rows written in the last 10 minutes (never the seeded ones) and non-zero participation ids.
+# The rows of one answer share a random participation id: the runner binds an id shared by
+# several rows (parity/runner/dbdiff.go rowsBindable). An earlier version of these scenarios
+# rewrote it with a trigger: drop it from databases that may still have it.
 TRIGGER_SQL = [
-    "CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql",
     "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation",
-    "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()",
+    "DROP FUNCTION IF EXISTS s6_participation()",
 ]
 
 
