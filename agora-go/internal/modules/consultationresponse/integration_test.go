@@ -5,12 +5,17 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 
 	"agora/internal/app"
+	"agora/internal/modules/consultation"
+	"agora/internal/modules/consultation/answered"
+	"agora/internal/sanitize"
 	"agora/internal/store"
 	"agora/parity/seed"
 )
@@ -176,6 +181,49 @@ func TestIntegrationDeleteUserResponses(t *testing.T) {
 	if err := q.DeleteUserConsultationResponses(ctx, nil); err == nil {
 		t.Fatal("expected an error for an empty list")
 	}
+}
+
+// Many users answer at the same time (a consultation that closes): every answer is written, one multi-row INSERT and one
+// user_answered_consultation row each, whatever the interleaving.
+func TestIntegrationConcurrentAnswers(t *testing.T) {
+	a := itApp(t)
+	ctx := context.Background()
+	ans := answered.Get(a)
+	qs := &fakeQuestions{list: []consultation.Question{uniqueQ("201", "2011", "2012"), multiQ("202", 2, "2021", "2022"), openQ("203")}}
+	var evicted atomic.Int32
+	uc := &InsertReponseConsultationUseCase{
+		now: a.Now, sanitize: sanitize.Sanitize, repository: &ResponseRepository{a: a}, answered: ans, questions: qs, info: &fakeInfo{}, openQuestionMaxTextLength: 400,
+		evict: func(context.Context, string, string) { evicted.Add(1) },
+	}
+	const users = 60
+	var wg sync.WaitGroup
+	errs := make(chan error, users)
+	for i := 0; i < users; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			user := fmt.Sprintf("00000000-0000-4000-9200-%012d", i)
+			res, err := uc.InsertReponseConsultation(ctx, "co0000000000000000000002", user, []ReponseConsultationInserting{resp("201", "", "2011"), resp("203", "texte")})
+			if err != nil || res != InsertSuccess {
+				errs <- fmt.Errorf("user %d: %v %v", i, res, err)
+			}
+		}(i)
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		t.Fatal(err)
+	}
+	mustEqual(t, "answered rows", count(t, a, "SELECT count(*) FROM user_answered_consultation WHERE consultation_id = 'co0000000000000000000002'"), users)
+	// 201, 202 (not applicable), 203
+	mustEqual(t, "rows", count(t, a, "SELECT count(*) FROM reponses_consultation WHERE consultation_id = 'co0000000000000000000002'"), users*3)
+	mustEqual(t, "participations", count(t, a, "SELECT count(DISTINCT participation_id) FROM reponses_consultation WHERE consultation_id = 'co0000000000000000000002'"), users)
+	mustEqual(t, "evictions", int(evicted.Load()), users)
+	n, err := ans.GetParticipantCount(ctx, "co0000000000000000000002")
+	if err != nil {
+		t.Fatal(err)
+	}
+	mustEqual(t, "participants", n, users)
 }
 
 // the eight demographic queries of a consultation in one batch

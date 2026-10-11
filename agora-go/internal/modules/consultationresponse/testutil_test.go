@@ -95,11 +95,14 @@ func resp(q string, text string, choiceIDs ...string) ReponseConsultationInserti
 // ---------------------------------------------------------------------------
 
 type fakeInfo struct {
+	mu    sync.Mutex
 	info  *consultation.ConsultationInfo
 	calls int
 }
 
 func (f *fakeInfo) GetConsultation(context.Context, string) *consultation.ConsultationInfo {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.calls++
 	return f.info
 }
