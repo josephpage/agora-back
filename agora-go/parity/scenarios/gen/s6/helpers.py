@@ -83,8 +83,8 @@ def body(responses, consultation_id="x"):
     return {"consultationId": consultation_id, "responses": responses}
 
 
-def post(id, cid, responses, user=None, headers=None, **kw):
-    """POST /consultations/{cid}/responses"""
+def post(id, cid, responses, user=None, headers=None, after="", **kw):
+    """POST /consultations/{cid}/responses (after: text appended to the path, e.g. a query string)"""
     s = {"method": "POST", "body": body(responses, cid)}
     if user:
         s["as"] = user
@@ -93,7 +93,7 @@ def post(id, cid, responses, user=None, headers=None, **kw):
         h.update(headers)
     s["headers"] = h
     s.update(kw)
-    return step(id, "/consultations/%s/responses" % cid, **s)
+    return step(id, "/consultations/%s/responses%s" % (cid, after), **s)
 
 
 def post_raw(id, cid, raw, user=None, content_type="application/json", headers=None, **kw):
