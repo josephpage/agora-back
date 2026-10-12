@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
 	"agora/internal/auth"
@@ -37,6 +38,9 @@ func loadEnvFile(path string) map[string]string {
 	return m
 }
 
+// slotLock holds the flock of $PARITY_LOCK_FILE for the whole run.
+var slotLock *os.File
+
 func main() {
 	dir := flag.String("scenarios", "parity/scenarios", "scenario directory")
 	tags := flag.String("tags", "", "comma separated tags")
@@ -47,6 +51,18 @@ func main() {
 	maxDiffs := flag.Int("max-diffs", 15, "diffs printed per scenario")
 	flag.Parse()
 
+	if lf := os.Getenv("PARITY_LOCK_FILE"); lf != "" {
+		// one run per slot (see run.sh): the lock is released when the process exits
+		f, err := os.OpenFile(lf, os.O_CREATE|os.O_RDWR, 0o644)
+		if err == nil {
+			err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+		}
+		slotLock = f // kept reachable: the finalizer of an unreachable *os.File closes it (and drops the lock)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "another parity run holds %s: %v\n", lf, err)
+			os.Exit(3)
+		}
+	}
 	common := loadEnvFile(env("PARITY_COMMON_ENV", "parity/env/common.env"))
 	now := time.Now().UTC().Truncate(time.Second)
 	if v := os.Getenv("PARITY_NOW"); v != "" {

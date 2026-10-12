@@ -3,7 +3,7 @@
 #   parity/run.sh up          start PG, 2 Redis, 2 fake Strapi, Kotlin ref (:8081), Go (:8082)
 #   parity/run.sh restart-go  rebuild and restart the Go backend
 #   parity/run.sh restart-ref restart the Kotlin reference
-#   parity/run.sh test [args] run the differential scenarios (go run ./parity/cmd/parity args)
+#   parity/run.sh test [args] run the differential scenarios (./parity/cmd/parity args; one run per slot)
 #   parity/run.sh down        stop everything
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -166,7 +166,12 @@ case "${1:-up}" in
   up) start_pg; start_redis; start_strapi; start_ref; start_go; echo "parity environment up" ;;
   restart-go) stop_go; start_go; echo "go restarted" ;;
   restart-ref) stop_ref; start_ref; echo "ref restarted" ;;
-  test) shift; PARITY_KOTLIN_LOCKS="$RUN/kotlin-queue-locks" exec go run ./parity/cmd/parity "$@" ;;
+  test) shift
+    # One run per slot: two runs on the same backends corrupt each other's database diffs.
+    # The runner is built then exec'd (no `go run` parent), so stopping this script stops it.
+    # (the runner takes $PARITY_LOCK_FILE itself, close-on-exec, so admin commands do not keep it).
+    go build -o "$RUN/parity-runner" ./parity/cmd/parity
+    PARITY_LOCK_FILE="$RUN/test.lock" PARITY_KOTLIN_LOCKS="$RUN/kotlin-queue-locks" exec "$RUN/parity-runner" "$@" ;;
   down) stop_go; stop_ref; fuser -k $REF_STRAPI/tcp $GO_STRAPI/tcp 2>/dev/null || true; redis-cli -p $REF_REDIS -a refpass shutdown nosave 2>/dev/null || true; redis-cli -p $GO_REDIS -a gopass shutdown nosave 2>/dev/null || true ;;
   *) echo "usage: $0 up|restart-go|restart-ref|test|down" >&2; exit 2 ;;
 esac
