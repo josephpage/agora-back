@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"agora/internal/app"
+	"agora/internal/cache"
 	"agora/internal/javacompat"
 	"agora/internal/store"
 )
@@ -22,12 +23,17 @@ const maxPageListSize = 5
 // array parameter); every batch of a notification runs in the same transaction.
 const insertBatchSize = 50_000
 
-// Repository is NotificationRepositoryImpl (+ NotificationDatabaseRepository, NotificationMapper).
-//
-// The Kotlin repository cached each user's whole list in Redis ("notificationCache", 5 minutes) and
-// never evicted it, so a notification only showed up after the entry expired (class B, see
-// parity/divergences/S8.md). Go reads the indexed table (notifications(user_id)) at each request,
-// one page at a time.
+// The Kotlin cache of the list of a user (NotificationCacheRepository): "notificationCache" in the
+// shortTermCacheManager (5 minutes), key "notificationCacheList.<userId>". Nothing evicts it: a
+// notification sent to a user shows up in the list once the entry has expired.
+const (
+	notificationCacheName = "notificationCache"
+	notificationCacheKey  = "notificationCacheList."
+	notificationCacheTTL  = 5 * time.Minute
+)
+
+// Repository is NotificationRepositoryImpl (+ NotificationDatabaseRepository, NotificationMapper,
+// NotificationCacheRepository).
 type Repository struct {
 	a *app.App
 }
@@ -98,46 +104,43 @@ type Page struct {
 // errJavaException stands for an exception Kotlin does not catch (HTTP 500).
 var errJavaException = errors.New("uncaught exception")
 
+// row is a NotificationDTO as Hibernate hydrates it: the nullable columns stay nil. Kotlin fails only
+// when the mapper builds the domain Notification (non-null constructor parameters), after the rows
+// have been cached.
+type row struct {
+	title       *string
+	description *string
+	typ         *TypeNotification
+	date        *time.Time
+}
+
 // GetNotificationPaginated is NotificationPaginatedUseCase.getNotificationPaginated: nil (HTTP 400)
 // when the page is not positive or beyond the end, an error (HTTP 500) where Kotlin throws.
-//
-// Kotlin loaded the user's whole list (findAllByUserId, no ORDER BY), sorted it by descending date
-// (stable) and cut a sublist. Go asks the database for the page only, ordered by date DESC then by
-// physical position (the order of the unordered Kotlin query, which the stable sort keeps for equal
-// dates), with the size of the list and a check that every row of the user is well formed. A user
-// with a malformed row (NULL column, unreadable type) falls back to the exact Kotlin computation on
-// the whole list.
 func (r *Repository) GetNotificationPaginated(ctx context.Context, userID string, pageNumber int) (*Page, error) {
 	if pageNumber <= 0 {
 		return nil, nil
+	}
+	rows, err := r.userRows(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	list, err := toNotifications(rows)
+	if err != nil {
+		return nil, err
 	}
 	// Int arithmetic of the Kotlin code (32 bits, wrapping)
 	p := int32(pageNumber)
 	minIndex := (p - 1) * maxPageListSize
 	maxCandidate := p * maxPageListSize
-
-	uid, ok := javacompat.ToUUIDOrNull(userID)
-	if !ok {
-		// getUserNotificationList: an id that is not a UUID gives an empty list
-		return cutPage(nil, 0, minIndex, maxCandidate)
-	}
-	if minIndex < 0 {
-		// subList(fromIndex < 0, ...): IndexOutOfBoundsException, whatever the list is
-		return nil, fmt.Errorf("%w: IndexOutOfBoundsException fromIndex=%d", errJavaException, minIndex)
-	}
-	rows, total, clean, err := r.pageRows(ctx, uid, int64(minIndex))
-	if err != nil {
-		return nil, err
-	}
-	if !clean {
-		return r.pageFromWholeList(ctx, uid, minIndex, maxCandidate)
-	}
-	return cutPage(rows, total, minIndex, maxCandidate)
+	// sortedByDescending is stable: equal dates keep the order of the cached rows
+	sort.SliceStable(list, func(i, j int) bool { return list[i].Date.After(list[j].Date) })
+	return cutPage(list, minIndex, maxCandidate)
 }
 
-// cutPage applies the end of getNotificationPaginated to the rows [minIndex, minIndex+5) of a list of
-// `total` notifications ordered by descending date.
-func cutPage(rows []Notification, total int, minIndex, maxCandidate int32) (*Page, error) {
+// cutPage applies the end of getNotificationPaginated to the sorted list: `subList(minIndex, maxIndex)`
+// with the Kotlin exceptions.
+func cutPage(list []Notification, minIndex, maxCandidate int32) (*Page, error) {
+	total := len(list)
 	if int(minIndex) > total {
 		return nil, nil
 	}
@@ -152,101 +155,65 @@ func cutPage(rows []Notification, total int, minIndex, maxCandidate int32) (*Pag
 	if minIndex > maxIndex {
 		return nil, fmt.Errorf("%w: IllegalArgumentException fromIndex(%d) > toIndex(%d)", errJavaException, minIndex, maxIndex)
 	}
-	n := int(maxIndex - minIndex)
-	if n > len(rows) {
-		n = len(rows)
-	}
-	out := make([]Notification, n)
-	copy(out, rows[:n])
+	out := make([]Notification, maxIndex-minIndex)
+	copy(out, list[minIndex:maxIndex])
 	return &Page{Notifications: out, HasMoreNotifications: hasMore}, nil
 }
 
-const cleanExpr = `title IS NOT NULL AND description IS NOT NULL AND date IS NOT NULL AND coalesce(type ~ '^[0-5]$', false)`
-
-// pageRows reads the page starting at offset and the figures about the whole list of the user.
-func (r *Repository) pageRows(ctx context.Context, uid string, offset int64) (rows []Notification, total int, clean bool, err error) {
-	q, err := r.a.DB.Pool.Query(ctx, `SELECT title, description, type, date,
-       count(*) OVER () AS total,
-       bool_and(`+cleanExpr+`) OVER () AS clean
-FROM notifications
-WHERE user_id = $1
-ORDER BY date DESC, ctid
-LIMIT `+strconv.Itoa(maxPageListSize)+` OFFSET $2`, uid, offset)
-	if err != nil {
-		return nil, 0, false, err
-	}
-	defer q.Close()
-	clean = true
-	for q.Next() {
-		var title, description, typ *string
-		var date *time.Time
-		var tot int64
-		var cl *bool
-		if err := q.Scan(&title, &description, &typ, &date, &tot, &cl); err != nil {
-			return nil, 0, false, err
+// toNotifications is NotificationMapper.toDomain over every row (a NULL column is an exception for the
+// whole request, even when the requested page does not contain the row).
+func toNotifications(rows []row) ([]Notification, error) {
+	out := make([]Notification, 0, len(rows))
+	for _, r := range rows {
+		if r.title == nil || r.description == nil || r.typ == nil || r.date == nil {
+			return nil, fmt.Errorf("%w: NullPointerException (notification column)", errJavaException)
 		}
-		total = int(tot)
-		if cl == nil || !*cl {
-			clean = false
-			continue
-		}
-		t, _ := parseStoredType(*typ)
-		rows = append(rows, Notification{Title: *title, Description: *description, Type: t, Date: store.Local(*date)})
+		out = append(out, Notification{Title: *r.title, Description: *r.description, Type: *r.typ, Date: store.Local(*r.date)})
 	}
-	if err := q.Err(); err != nil {
-		return nil, 0, false, err
-	}
-	q.Close()
-	if len(rows) == 0 && clean {
-		// an empty page (the end of the list, or no notification at all): the size is still needed
-		var tot int64
-		var cl *bool
-		err := r.a.DB.Pool.QueryRow(ctx, `SELECT count(*), coalesce(bool_and(`+cleanExpr+`), true) FROM notifications WHERE user_id = $1`, uid).Scan(&tot, &cl)
-		if err != nil {
-			return nil, 0, false, err
-		}
-		return nil, int(tot), cl == nil || *cl, nil
-	}
-	return rows, total, clean, nil
+	return out, nil
 }
 
-// pageFromWholeList is the exact Kotlin computation for a user with a malformed row: the whole
-// list is read (getUserNotificationList), every row is mapped (a NULL column or an unreadable type
-// is an exception for the whole request), then sorted and cut.
-func (r *Repository) pageFromWholeList(ctx context.Context, uid string, minIndex, maxCandidate int32) (*Page, error) {
+// userRows is getUserNotificationList: an id that is not a UUID gives an empty list (not cached); else the
+// cached rows of the user, or the rows of the database, which are cached even when they cannot be mapped.
+func (r *Repository) userRows(ctx context.Context, userID string) ([]row, error) {
+	uid, ok := javacompat.ToUUIDOrNull(userID)
+	if !ok {
+		r.a.Log.Error(fmt.Sprintf("getUserNotificationList - impossible de convertir l'id '%s' en UUID", userID))
+		return nil, nil
+	}
+	return cache.GetOrLoad(r.a.Cache, notificationCacheName, notificationCacheKey+userID,
+		r.a.Cache.CoexistenceTTL(notificationCacheTTL), func() ([]row, error) {
+			return r.loadRows(ctx, uid)
+		})
+}
+
+// loadRows is findAllByUserId (no ORDER BY: the physical order, which the stable sort keeps for equal
+// dates). A type that Hibernate cannot read fails the load, which is then not cached.
+func (r *Repository) loadRows(ctx context.Context, uid string) ([]row, error) {
 	q, err := r.a.DB.Pool.Query(ctx, `SELECT title, description, type, date FROM notifications WHERE user_id = $1 ORDER BY ctid`, uid)
 	if err != nil {
 		return nil, err
 	}
 	defer q.Close()
-	var list []Notification
+	var rows []row
 	for q.Next() {
 		var title, description, typ *string
 		var date *time.Time
 		if err := q.Scan(&title, &description, &typ, &date); err != nil {
 			return nil, err
 		}
-		if typ == nil {
-			return nil, fmt.Errorf("%w: NullPointerException (notification type)", errJavaException)
+		var t *TypeNotification
+		if typ != nil {
+			v, ok := parseStoredType(*typ)
+			if !ok {
+				return nil, fmt.Errorf("%w: unreadable notification type %q", errJavaException, *typ)
+			}
+			t = &v
 		}
-		t, ok := parseStoredType(*typ)
-		if !ok {
-			return nil, fmt.Errorf("%w: unreadable notification type %q", errJavaException, *typ)
-		}
-		if title == nil || description == nil || date == nil {
-			return nil, fmt.Errorf("%w: NullPointerException (notification column)", errJavaException)
-		}
-		list = append(list, Notification{Title: *title, Description: *description, Type: t, Date: store.Local(*date)})
+		rows = append(rows, row{title: title, description: description, typ: t, date: date})
 	}
 	if err := q.Err(); err != nil {
 		return nil, err
 	}
-	sort.SliceStable(list, func(i, j int) bool { return list[i].Date.After(list[j].Date) })
-	if int(minIndex) > len(list) {
-		return nil, nil
-	}
-	if minIndex < 0 {
-		return nil, fmt.Errorf("%w: IndexOutOfBoundsException fromIndex=%d", errJavaException, minIndex)
-	}
-	return cutPage(list[min(int(minIndex), len(list)):], len(list), minIndex, maxCandidate)
+	return rows, nil
 }
