@@ -60,7 +60,10 @@ bodies). Your handler only reproduces the controller method:
   - `@RequestHeader("X", required=false) x: String?` → `c.OptionalHeader("X")`
   - `@RequestParam("p") p: String` → `c.RequiredParam("p")`; `String?` → `c.OptionalParam("p")` (repeated
     values joined with `,` like Spring); `request.getParameter` → `c.Param`; all values → `c.ParamValues`
-  - `@RequestParam(defaultValue=d)` → `c.ParamDefault("p", d)` (absent or empty → d)
+  - `@RequestParam(defaultValue=d)` → `c.ParamDefault("p", d)` (absent or empty → d). Caveat (found by
+    S8): with a `defaultValue`, Spring does not report a value that *converts* to null (e.g. a repeated
+    parameter whose first value is empty, `type=&type=X`, bound to a list or an enum): the null reaches
+    the Kotlin method and its non-null check fails → 500, not 400. Reproduce it per route.
   - `List<String>?` params → `c.ParamList("p")` (one value: split on `,` + `String.trim()`; several: kept as is)
   - `@PathVariable` → `c.PathVar("name")`; Int conversions → `httpx.SpringIntPathVar(v)`,
     Boolean → `httpx.SpringBoolParam(v)`; enums: exact `valueOf` after trim, else 400.

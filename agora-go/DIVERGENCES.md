@@ -55,6 +55,7 @@ Toute différence observable entre le backend Kotlin (référence figée au comm
 | S6-B4 | Limite de 20 réponses par heure et par IP (`consultationResponseRateLimit::<hash>`) : lecture, comparaison puis écriture en trois temps, des requêtes simultanées peuvent dépasser la limite | Script Lua atomique : exactement 20 passent, la 21e reçoit un 429. Même clé, même valeur et même TTL : compteur partageable avec Kotlin |
 | S6-B5 | Agrégation des résultats d'une consultation terminée en trois transactions : un échec au milieu la laisse à moitié agrégée, définitivement | Une seule transaction ; un échec est retenté le lendemain |
 | S6-B6 | Caches (pages « répondues », « a répondu », résultats) vidés **avant** l'insertion des réponses : une lecture entre les deux remet l'ancien état pour 1 h | Vidés après le commit |
+| S8-B1 | Liste paginée des notifications (`notificationCache`, 5 min, Redis, jamais évincé à l'écriture) | Même cache et même TTL, en L1 ; plafonné à 5 s en coexistence seulement |
 | *(complété par les tranches suivantes : compteur de participants figé, `userFeedbackQags`, cache en ajout seul, verrous Moderatus, entrées `RedisCacheManager` par utilisateur)* | | |
 
 ## Classe C (à valider)
@@ -79,3 +80,11 @@ Toute différence observable entre le backend Kotlin (référence figée au comm
 ## Par tranche
 
 Chaque tranche documente ses écarts éventuels dans `parity/divergences/<tranche>.md` ; ils sont reportés ici à l'intégration.
+
+## Limites connues de la vérification
+
+| Sujet | Limite | Couverture à la place |
+|---|---|---|
+| Messages FCM (push) | Le SDK Firebase Admin du Kotlin a son URL codée en dur (`https://fcm.googleapis.com`) et le harnais ne lui fournit pas d'identifiants : le contenu des envois n'est pas comparé par les scénarios | Tests unitaires Go sur la construction des lots (300 jetons, lot `i` à now + `i` min, un seul worker, comme le `ThreadPoolTaskScheduler` du Kotlin) et sur le contenu `data` ; lignes `notifications` comparées par le diff BDD |
+| Envoi à tous les utilisateurs | `notifyAllUsers` envoie un lot de 300 jetons par minute (règle Kotlin, reproduite) : environ 56 h pour un million d'utilisateurs, sur les deux backends | Comportement identique, à connaître pour l'exploitation (voir `parity/ledger/S8.md`) |
+
