@@ -218,7 +218,7 @@ func (r *Runner) runStep(ctx context.Context, b *Binder, st Step) StepResult {
 		go func() { defer wg.Done(); o1, e1 = r.Ref.runCommand(ctx, st.Admin) }()
 		go func() { defer wg.Done(); o2, e2 = r.Go.runCommand(ctx, st.Admin) }()
 		wg.Wait()
-		if (e1 == nil) != (e2 == nil) {
+		if !st.Admin.IgnoreExit && (e1 == nil) != (e2 == nil) {
 			sr.Diffs = append(sr.Diffs, Diff{Where: "command", Ref: fmt.Sprint(e1, tail(o1)), Go: fmt.Sprint(e2, tail(o2))})
 		}
 		sr.Method, sr.Path = "CMD", st.Admin.Command

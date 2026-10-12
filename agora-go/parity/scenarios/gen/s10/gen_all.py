@@ -344,32 +344,33 @@ def cache_clear():
 
 # ---------------------------------------------------------------------------
 # S10_cron: the custom commands on both sides (runner `admin:` steps), and the weekly
-# task through the admin route. Skipped until the decisions / S7 they depend on.
+# task through the admin route. The exit status is not compared (S10-C1: the Kotlin
+# application exits 1 after a successful task), the database effects are.
 # ---------------------------------------------------------------------------
 
 def cron():
     daily = [
-        {"id": "daily-run-1", "admin": {"command": "dailyTasks"}},
+        {"id": "daily-run-1", "admin": {"command": "dailyTasks", "ignoreExit": True}},
         step("after-daily-consultations", "/consultations", **{"as": R[2]}),
         step("after-daily-thematiques", "/thematiques"),
-        {"id": "daily-run-2", "admin": {"command": "dailyTasks"}},
+        {"id": "daily-run-2", "admin": {"command": "dailyTasks", "ignoreExit": True}},
         step("after-second-daily-finished", "/consultations/finished/1?territory=Paris"),
     ]
     out = [
-        scenario("S10-cron-daily-seeded", daily, tags=TAG, dbdiff="step", skip=EXIT_CODE),
-        scenario("S10-cron-weekly-forced-pending-s7", [
-            {"id": "weekly-forced", "admin": {"command": "weeklyTasks", "args": {"force_question_selection": "true"}}},
-        ], tags=TAG, dbdiff="step", skip=PENDING_S7 + "; " + EXIT_CODE),
-        scenario("S10-cron-weekly-plain-pending-s7", [
-            {"id": "weekly-plain", "admin": {"command": "weeklyTasks"}},
-        ], tags=TAG, dbdiff="step", skip=PENDING_S7 + "; " + EXIT_CODE),
-        scenario("S10-admin-weekly-run-pending-s7", [
+        scenario("S10-cron-daily-seeded", daily, tags=TAG, dbdiff="step"),
+        scenario("S10-cron-weekly-forced", [
+            {"id": "weekly-forced", "admin": {"command": "weeklyTasks", "args": {"force_question_selection": "true"}, "ignoreExit": True}},
+        ], tags=TAG, dbdiff="step"),
+        scenario("S10-cron-weekly-plain", [
+            {"id": "weekly-plain", "admin": {"command": "weeklyTasks", "ignoreExit": True}},
+        ], tags=TAG, dbdiff="step"),
+        scenario("S10-admin-weekly-run", [
             step("weekly-admin-run", "/admin/weekly-tasks", method="POST", **{"as": ADMIN}),
             step("weekly-admin-forced-run", "/admin/weekly-tasks?force_question_selection=true", method="POST", **{"as": ADMIN}),
             step("weekly-admin-forced-false", "/admin/weekly-tasks?force_question_selection=false", method="POST", **{"as": ADMIN}),
             step("weekly-admin-no-value", "/admin/weekly-tasks?force_question_selection", method="POST", **{"as": ADMIN}),
             step("weekly-admin-on", "/admin/weekly-tasks?force_question_selection=on", method="POST", **{"as": ADMIN}),
-        ], tags=TAG, dbdiff="step", skip=PENDING_S7),
+        ], tags=TAG, dbdiff="step"),
     ]
     return out
 
@@ -415,7 +416,7 @@ def main(out_dir):
         ("S10_upgrade_downgrade.yaml", upgrade_downgrade(), "Effects on the rights of users that were not authenticated before the change."),
         ("S10_delete_users.yaml", delete_users(), "Effects of the user deletion on every table, and what the deleted users see."),
         ("S10_cache_clear.yaml", cache_clear(), "The admin FLUSHDB and what it changes for a viewer."),
-        ("S10_cron.yaml", cron(), "Custom commands on both sides (admin steps); skipped until the decisions / S7."),
+        ("S10_cron.yaml", cron(), "Custom commands on both sides (admin steps); exit status not compared (S10-C1)."),
         ("S10_known_divergences.yaml", known_divergences(), "Known divergences (class B candidate, skipped)."),
     ]
     for name, scenarios, comment in files:

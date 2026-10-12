@@ -71,6 +71,10 @@ type Step struct {
 type AdminAction struct {
 	Command string            `yaml:"command"` // dailyTasks | weeklyTasks
 	Args    map[string]string `yaml:"args"`
+	// IgnoreExit does not compare the exit status of the two processes (the
+	// Kotlin application exits 1 after a successful task, see S10-C1 in
+	// DIVERGENCES.md); the database effects are still compared.
+	IgnoreExit bool `yaml:"ignoreExit"`
 }
 
 // Compare tunes the comparison of a step.
