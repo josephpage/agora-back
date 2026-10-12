@@ -25,6 +25,8 @@ Références :
   scalingo --app <app-go> run 'bin/agora --migrate=up'
   ```
 - [ ] **Charge de la base vérifiée** : `max_connections` du plan Postgres ≥ `(conteneurs Kotlin × pool) + (conteneurs Go × DATABASE_MAX_POOL_SIZE) + crons + outils (Metabase…)`, avec une marge de 20 %.
+  - **Pool de l'app Go.** Avec 5 connexions par conteneur, l'ouverture de l'app attend la base dès environ 600 req/s. Avec 20, on passe à 760 req/s (`PERF.md` §2.3). Fixer `DATABASE_MAX_POOL_SIZE` **dans l'app Go seulement**, entre 10 et 20, selon ce budget.
+  - **Ce qu'il faut surveiller ensuite.** Une fois le Go en place, la limite devient le CPU du plan Postgres, et non plus les conteneurs. En particulier la page « soutenues », dont le SQL est identique à celui du Kotlin et parcourt toute la table `qags`.
 
 ## 1. Création de l'app Go (aucun trafic)
 

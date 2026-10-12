@@ -1,0 +1,78 @@
+{
+  "concurrency": 20,
+  "durationS": 60,
+  "endpoints": [
+    {
+      "name": "details",
+      "count": 913,
+      "rps": 15.216666666666667,
+      "p50ms": 492.866,
+      "p90ms": 792.594,
+      "p99ms": 1171.612,
+      "maxms": 1466.526,
+      "errors": 0,
+      "statuses": {
+        "200": 913
+      }
+    },
+    {
+      "name": "questions",
+      "count": 800,
+      "rps": 13.333333333333334,
+      "p50ms": 8.257,
+      "p90ms": 71.621,
+      "p99ms": 93.987,
+      "maxms": 147.182,
+      "errors": 0,
+      "statuses": {
+        "200": 800
+      }
+    },
+    {
+      "name": "results",
+      "count": 615,
+      "rps": 10.25,
+      "p50ms": 400.435,
+      "p90ms": 624.286,
+      "p99ms": 795.621,
+      "maxms": 1112.218,
+      "errors": 0,
+      "statuses": {
+        "200": 615
+      }
+    },
+    {
+      "name": "answer",
+      "count": 255,
+      "rps": 4.25,
+      "p50ms": 719.666,
+      "p90ms": 994.985,
+      "p99ms": 1287.654,
+      "maxms": 1525.864,
+      "errors": 0,
+      "statuses": {
+        "200": 255
+      }
+    },
+    {
+      "name": "list",
+      "count": 430,
+      "rps": 7.166666666666667,
+      "p50ms": 600.79,
+      "p90ms": 920.892,
+      "p99ms": 1129.55,
+      "maxms": 2039.357,
+      "errors": 0,
+      "statuses": {
+        "200": 430
+      }
+    }
+  ],
+  "errors": 0,
+  "non2xx": 0,
+  "p50ms": 400.792,
+  "p90ms": 791.749,
+  "p99ms": 1122.604,
+  "profile": "consultation",
+  "rps": 50.21666666666667
+}

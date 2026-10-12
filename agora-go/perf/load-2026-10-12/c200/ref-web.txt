@@ -1,0 +1,9 @@
+endpoint              count       rps    p50ms    p90ms    p99ms    maxms   errs  statuses
+home                   2302      38.4     90.4    122.4    202.6    390.1      0  map[200:2302]
+public-qag             1850      30.8   3009.1   6189.4  10503.2  13989.4      0  map[200:1850]
+fiches                 1315      21.9     78.0    105.0    195.7    370.3      0  map[200:1315]
+responses              1846      30.8   3176.9   6275.0   9887.6  17705.0      0  map[200:1846]
+charter                 949      15.8     96.8    186.8    273.1    326.9      0  map[200:949]
+referentiels            936      15.6     10.3     87.3    111.9    288.1      0  map[200:936]
+TOTAL 9198 req, 153.3 req/s, p50 102.2ms p90 5382.7ms p99 8802.8ms, transport errors 0, 4xx/5xx 0
+peak memory 497 MB, CPU throttled 268 s

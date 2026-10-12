@@ -1,0 +1,148 @@
+{
+  "concurrency": 200,
+  "durationS": 60,
+  "endpoints": [
+    {
+      "name": "qags-top",
+      "count": 4,
+      "rps": 0.06666666666666667,
+      "p50ms": 23905.991,
+      "p90ms": 23906.707,
+      "p99ms": 23906.707,
+      "maxms": 26209.125,
+      "errors": 101,
+      "statuses": {
+        "200": 4
+      }
+    },
+    {
+      "name": "qags-trending",
+      "count": 0,
+      "rps": 0,
+      "p50ms": 0,
+      "p90ms": 0,
+      "p99ms": 0,
+      "maxms": 0,
+      "errors": 120,
+      "statuses": {}
+    },
+    {
+      "name": "qags-latest-them",
+      "count": 0,
+      "rps": 0,
+      "p50ms": 0,
+      "p90ms": 0,
+      "p99ms": 0,
+      "maxms": 0,
+      "errors": 27,
+      "statuses": {}
+    },
+    {
+      "name": "qags-supporting",
+      "count": 1,
+      "rps": 0.016666666666666666,
+      "p50ms": 25203.193,
+      "p90ms": 25203.193,
+      "p99ms": 25203.193,
+      "maxms": 25203.193,
+      "errors": 32,
+      "statuses": {
+        "200": 1
+      }
+    },
+    {
+      "name": "consultations",
+      "count": 5,
+      "rps": 0.08333333333333333,
+      "p50ms": 28001.81,
+      "p90ms": 28216.111,
+      "p99ms": 28216.111,
+      "maxms": 28216.293,
+      "errors": 64,
+      "statuses": {
+        "200": 5
+      }
+    },
+    {
+      "name": "thematiques",
+      "count": 13,
+      "rps": 0.21666666666666667,
+      "p50ms": 7782.244,
+      "p90ms": 7994.896,
+      "p99ms": 7997.301,
+      "maxms": 8008.015,
+      "errors": 2,
+      "statuses": {
+        "200": 13
+      }
+    },
+    {
+      "name": "theme-hebdo",
+      "count": 14,
+      "rps": 0.23333333333333334,
+      "p50ms": 7316.894,
+      "p90ms": 7893.478,
+      "p99ms": 7895.645,
+      "maxms": 7909.999,
+      "errors": 0,
+      "statuses": {
+        "200": 14
+      }
+    },
+    {
+      "name": "last-news",
+      "count": 11,
+      "rps": 0.18333333333333332,
+      "p50ms": 5570.22,
+      "p90ms": 7904.205,
+      "p99ms": 7904.205,
+      "maxms": 7912.812,
+      "errors": 1,
+      "statuses": {
+        "200": 11
+      }
+    },
+    {
+      "name": "qag-responses",
+      "count": 6,
+      "rps": 0.1,
+      "p50ms": 22318.271,
+      "p90ms": 27408.282,
+      "p99ms": 27408.282,
+      "maxms": 29105.13,
+      "errors": 14,
+      "statuses": {
+        "200": 6
+      }
+    },
+    {
+      "name": "notifications",
+      "count": 0,
+      "rps": 0,
+      "p50ms": 0,
+      "p90ms": 0,
+      "p99ms": 0,
+      "maxms": 0,
+      "errors": 21,
+      "statuses": {}
+    },
+    {
+      "name": "profile",
+      "count": 0,
+      "rps": 0,
+      "p50ms": 0,
+      "p90ms": 0,
+      "p99ms": 0,
+      "maxms": 0,
+      "errors": 14,
+      "statuses": {}
+    }
+  ],
+  "errors": 396,
+  "non2xx": 0,
+  "p50ms": 7887.021,
+  "p90ms": 26209.125,
+  "p99ms": 28216.293,
+  "profile": "app-open",
+  "rps": 0.9
+}

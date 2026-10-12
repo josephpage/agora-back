@@ -1,0 +1,6 @@
+endpoint              count       rps    p50ms    p90ms    p99ms    maxms   errs  statuses
+support               37240     620.7    127.9    172.7    229.0    322.7      0  map[200:15886 400:21354]
+unsupport             27970     466.2     93.3    165.1    218.8    388.3      0  map[200:15969 400:12001]
+details               28471     474.5    154.1    187.7    244.1    310.7      0  map[200:28471]
+TOTAL 93681 req, 1561.3 req/s, p50 136.7ms p90 177.2ms p99 233.0ms, transport errors 0, 4xx/5xx 33355
+peak memory 92 MB, CPU throttled 0 s

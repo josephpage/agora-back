@@ -1,0 +1,8 @@
+endpoint              count       rps    p50ms    p90ms    p99ms    maxms   errs  statuses
+details                1024      17.1   5401.5   8614.0  11975.4  19017.2      0  map[200:1024]
+questions               900      15.0      6.9     56.9     85.9    375.2      0  map[200:900]
+results                 681      11.3   2971.1   5765.9   8964.8  11931.2      0  map[200:681]
+answer                  341       5.7   5814.0   9209.0  13778.2  15097.8      0  map[200:341]
+list                    555       9.2   5501.6   8660.7  13385.6  18493.8      0  map[200:555]
+TOTAL 3501 req, 58.4 req/s, p50 2990.4ms p90 8112.3ms p99 11777.4ms, transport errors 0, 4xx/5xx 0
+peak memory 624 MB, CPU throttled 183 s

@@ -1,0 +1,156 @@
+{
+  "concurrency": 20,
+  "durationS": 60,
+  "endpoints": [
+    {
+      "name": "qags-top",
+      "count": 73,
+      "rps": 1.2166666666666666,
+      "p50ms": 1714.366,
+      "p90ms": 4221.529,
+      "p99ms": 7989.783,
+      "maxms": 9220.136,
+      "errors": 0,
+      "statuses": {
+        "200": 73
+      }
+    },
+    {
+      "name": "qags-trending",
+      "count": 56,
+      "rps": 0.9333333333333333,
+      "p50ms": 9333.578,
+      "p90ms": 17504.584,
+      "p99ms": 20422.746,
+      "maxms": 20490.534,
+      "errors": 6,
+      "statuses": {
+        "200": 56
+      }
+    },
+    {
+      "name": "qags-latest-them",
+      "count": 32,
+      "rps": 0.5333333333333333,
+      "p50ms": 1296.078,
+      "p90ms": 4508.727,
+      "p99ms": 6735.252,
+      "maxms": 6917.865,
+      "errors": 0,
+      "statuses": {
+        "200": 32
+      }
+    },
+    {
+      "name": "qags-supporting",
+      "count": 15,
+      "rps": 0.25,
+      "p50ms": 1303.234,
+      "p90ms": 2408.844,
+      "p99ms": 7217.282,
+      "maxms": 9605.689,
+      "errors": 0,
+      "statuses": {
+        "200": 15
+      }
+    },
+    {
+      "name": "consultations",
+      "count": 41,
+      "rps": 0.6833333333333333,
+      "p50ms": 2469.086,
+      "p90ms": 4888.137,
+      "p99ms": 6076.609,
+      "maxms": 6349.896,
+      "errors": 0,
+      "statuses": {
+        "200": 41
+      }
+    },
+    {
+      "name": "thematiques",
+      "count": 30,
+      "rps": 0.5,
+      "p50ms": 88.592,
+      "p90ms": 621.941,
+      "p99ms": 787.935,
+      "maxms": 1000.57,
+      "errors": 0,
+      "statuses": {
+        "200": 30
+      }
+    },
+    {
+      "name": "theme-hebdo",
+      "count": 12,
+      "rps": 0.2,
+      "p50ms": 185.831,
+      "p90ms": 403.334,
+      "p99ms": 509.136,
+      "maxms": 806.388,
+      "errors": 0,
+      "statuses": {
+        "200": 12
+      }
+    },
+    {
+      "name": "last-news",
+      "count": 12,
+      "rps": 0.2,
+      "p50ms": 110.833,
+      "p90ms": 410.768,
+      "p99ms": 610.483,
+      "maxms": 708.147,
+      "errors": 0,
+      "statuses": {
+        "200": 12
+      }
+    },
+    {
+      "name": "qag-responses",
+      "count": 17,
+      "rps": 0.2833333333333333,
+      "p50ms": 741.413,
+      "p90ms": 1500.302,
+      "p99ms": 2206.252,
+      "maxms": 3186.778,
+      "errors": 0,
+      "statuses": {
+        "200": 17
+      }
+    },
+    {
+      "name": "notifications",
+      "count": 17,
+      "rps": 0.2833333333333333,
+      "p50ms": 1047.24,
+      "p90ms": 3914.238,
+      "p99ms": 4409.425,
+      "maxms": 5281.599,
+      "errors": 0,
+      "statuses": {
+        "200": 17
+      }
+    },
+    {
+      "name": "profile",
+      "count": 8,
+      "rps": 0.13333333333333333,
+      "p50ms": 595.853,
+      "p90ms": 1387.45,
+      "p99ms": 1387.45,
+      "maxms": 4506.454,
+      "errors": 0,
+      "statuses": {
+        "200": 8
+      }
+    }
+  ],
+  "errors": 6,
+  "non2xx": 0,
+  "p50ms": 1611.797,
+  "p90ms": 8889.4,
+  "p99ms": 17707.185,
+  "profile": "app-open",
+  "rps": 5.216666666666667
+}

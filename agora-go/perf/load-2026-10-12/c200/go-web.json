@@ -1,0 +1,91 @@
+{
+  "concurrency": 200,
+  "durationS": 60,
+  "endpoints": [
+    {
+      "name": "home",
+      "count": 120261,
+      "rps": 2004.35,
+      "p50ms": 1.616,
+      "p90ms": 7.331,
+      "p99ms": 38.257,
+      "maxms": 71.428,
+      "errors": 0,
+      "statuses": {
+        "200": 120261
+      }
+    },
+    {
+      "name": "public-qag",
+      "count": 95782,
+      "rps": 1596.3666666666666,
+      "p50ms": 3.742,
+      "p90ms": 16.219,
+      "p99ms": 50.367,
+      "maxms": 114.317,
+      "errors": 0,
+      "statuses": {
+        "200": 95782
+      }
+    },
+    {
+      "name": "fiches",
+      "count": 72483,
+      "rps": 1208.05,
+      "p50ms": 1.678,
+      "p90ms": 7.456,
+      "p99ms": 38.36,
+      "maxms": 100.185,
+      "errors": 0,
+      "statuses": {
+        "200": 72483
+      }
+    },
+    {
+      "name": "responses",
+      "count": 96231,
+      "rps": 1603.85,
+      "p50ms": 103.472,
+      "p90ms": 139.142,
+      "p99ms": 171.255,
+      "maxms": 319.193,
+      "errors": 0,
+      "statuses": {
+        "200": 96231
+      }
+    },
+    {
+      "name": "charter",
+      "count": 48010,
+      "rps": 800.1666666666666,
+      "p50ms": 1.632,
+      "p90ms": 7.39,
+      "p99ms": 37.776,
+      "maxms": 71.149,
+      "errors": 0,
+      "statuses": {
+        "200": 48010
+      }
+    },
+    {
+      "name": "referentiels",
+      "count": 47829,
+      "rps": 797.15,
+      "p50ms": 1.618,
+      "p90ms": 7.268,
+      "p99ms": 37.931,
+      "maxms": 66.93,
+      "errors": 0,
+      "statuses": {
+        "200": 47829
+      }
+    }
+  ],
+  "errors": 0,
+  "non2xx": 0,
+  "p50ms": 3.006,
+  "p90ms": 103.515,
+  "p99ms": 151.397,
+  "profile": "web",
+  "rps": 8009.933333333333
+}

@@ -1,0 +1,14 @@
+endpoint              count       rps    p50ms    p90ms    p99ms    maxms   errs  statuses
+qags-top               9141     152.3    239.6    963.3   1708.0   2210.8      0  map[200:9141]
+qags-trending          9204     153.4    194.3    339.7    498.9    710.3      0  map[200:9204]
+qags-latest-them       3544      59.1    199.6    444.8    965.4   1444.5      0  map[200:3544]
+qags-supporting        2233      37.2    856.2   1116.9   1358.9   1546.9      0  map[200:2233]
+consultations          6883     114.7    384.6    556.2    734.8    955.1      0  map[200:6883]
+thematiques            3623      60.4      1.1     15.8     45.1    147.4      0  map[200:3623]
+theme-hebdo            2746      45.8      1.2     16.4     42.8     96.5      0  map[200:2746]
+last-news              2839      47.3      1.1     15.7     41.6    133.4      0  map[200:2839]
+qag-responses          2362      39.4    364.0    511.0    644.0    812.8      0  map[200:2362]
+notifications          1767      29.4    144.7    300.4    468.5    629.5      0  map[200:1767]
+profile                1371      22.9    187.3    333.9    492.2    610.7      0  map[200:1371]
+TOTAL 45713 req, 761.9 req/s, p50 202.8ms p90 547.3ms p99 1370.4ms, transport errors 0, 4xx/5xx 0
+peak memory 101 MB, CPU throttled 0 s

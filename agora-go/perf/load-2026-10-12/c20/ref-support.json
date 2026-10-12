@@ -1,0 +1,54 @@
+{
+  "concurrency": 20,
+  "durationS": 60,
+  "endpoints": [
+    {
+      "name": "support",
+      "count": 2238,
+      "rps": 37.3,
+      "p50ms": 203.362,
+      "p90ms": 381.865,
+      "p99ms": 633.263,
+      "maxms": 1009.646,
+      "errors": 0,
+      "statuses": {
+        "200": 1313,
+        "400": 925
+      }
+    },
+    {
+      "name": "unsupport",
+      "count": 1704,
+      "rps": 28.4,
+      "p50ms": 178.713,
+      "p90ms": 295.734,
+      "p99ms": 504.398,
+      "maxms": 997.221,
+      "errors": 0,
+      "statuses": {
+        "200": 708,
+        "400": 996
+      }
+    },
+    {
+      "name": "details",
+      "count": 1679,
+      "rps": 27.983333333333334,
+      "p50ms": 201.216,
+      "p90ms": 319.706,
+      "p99ms": 524.837,
+      "maxms": 1002.136,
+      "errors": 0,
+      "statuses": {
+        "200": 1679
+      }
+    }
+  ],
+  "errors": 0,
+  "non2xx": 1921,
+  "p50ms": 196.565,
+  "p90ms": 317.945,
+  "p99ms": 586.592,
+  "profile": "support",
+  "rps": 93.68333333333334
+}
