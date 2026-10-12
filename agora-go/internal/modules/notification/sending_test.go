@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"slices"
 	"sync"
 	"testing"
 	"time"
 
 	"agora/internal/app"
+	"agora/internal/config"
 	"agora/internal/fcm"
 )
 
@@ -42,12 +44,12 @@ func TestTokenChunksFilterAndDistinct(t *testing.T) {
 	}
 }
 
-// chunks of 300 tokens, the last one holds the rest
-func TestTokenChunksOfThreeHundred(t *testing.T) {
+// chunks of 500 tokens (the FCM maximum, C-S8-FANOUT), the last one holds the rest
+func TestTokenChunksOfFiveHundred(t *testing.T) {
 	for _, tc := range []struct {
 		n    int
 		want []int
-	}{{0, nil}, {1, []int{1}}, {300, []int{300}}, {301, []int{300, 1}}, {601, []int{300, 300, 1}}} {
+	}{{0, nil}, {1, []int{1}}, {500, []int{500}}, {501, []int{500, 1}}, {1001, []int{500, 500, 1}}} {
 		c := newTokenChunks()
 		for _, tok := range tokensOf(tc.n) {
 			c.add(tok)
@@ -72,8 +74,8 @@ func newTestSender(t *testing.T, now time.Time, send func(context.Context, fcm.M
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 	a := &app.App{Log: log, Clock: func() time.Time { return now }, Background: ctx}
-	s := &Sender{a: a, send: send}
-	// the scheduler reads a clock one hour ahead: every batch (due at now + i minutes) is already due
+	s := &Sender{a: a, send: send, interval: batchInterval(16700)}
+	// the scheduler reads a clock one hour ahead: every batch (due at now + i × 1.8 s) is already due
 	s.sched = newScheduler(ctx, func() time.Time { return now.Add(time.Hour) }, func(r any) {
 		t.Errorf("unexpected panic: %v", r)
 	})
@@ -94,7 +96,7 @@ func TestSendChunksBatchesAndData(t *testing.T) {
 		done <- struct{}{}
 		return fcm.BatchResponse{SuccessCount: len(m.Tokens)}, nil
 	})
-	toks := append([]string{"", "x", "x"}, tokensOf(601)...)
+	toks := append([]string{"", "x", "x"}, tokensOf(1001)...)
 	page := "f55a68a7"
 	if res := s.SendGenericMultiNotification("Titre", "Corps", toks, DetailsQag, &page); res != Success {
 		t.Fatal("want Success")
@@ -115,11 +117,11 @@ func TestSendChunksBatchesAndData(t *testing.T) {
 			t.Fatalf("batch %d data: %v", i, m.Data)
 		}
 	}
-	// "x" (once) and 601 tokens: 602 distinct tokens
-	if len(got[0].Tokens) != 300 || len(got[1].Tokens) != 300 || len(got[2].Tokens) != 2 {
+	// "x" (once) and 1001 tokens: 1002 distinct tokens
+	if len(got[0].Tokens) != 500 || len(got[1].Tokens) != 500 || len(got[2].Tokens) != 2 {
 		t.Fatalf("sizes: %d %d %d", len(got[0].Tokens), len(got[1].Tokens), len(got[2].Tokens))
 	}
-	if got[0].Tokens[0] != "x" || got[2].Tokens[0] != "tok-0599" {
+	if got[0].Tokens[0] != "x" || got[2].Tokens[0] != "tok-0999" {
 		t.Fatalf("order of the tokens: %q %q", got[0].Tokens[0], got[2].Tokens[0])
 	}
 }
@@ -198,14 +200,56 @@ func TestSchedulerSurvivesPanic(t *testing.T) {
 	waitFor(t, ran)
 }
 
-// sendMultiNotifications: plusMinutes adds the minutes to the wall clock of the process zone.
-func TestPlusMinutes(t *testing.T) {
-	base := time.Date(2026, 10, 1, 23, 59, 0, 0, time.Local)
-	if got := plusMinutes(base, 2); !got.Equal(time.Date(2026, 10, 2, 0, 1, 0, 0, time.Local)) {
-		t.Fatalf("got %v", got)
+// The default rate sends a million tokens in about an hour: 2000 batches of 500, 1.796 s apart.
+func TestBatchInterval(t *testing.T) {
+	if got := batchInterval(16700); got != 1796407185*time.Nanosecond {
+		t.Fatalf("interval %v", got)
 	}
-	if got := plusMinutes(base, 0); !got.Equal(base) {
-		t.Fatalf("got %v", got)
+	if total := 2000 * batchInterval(16700); total < 59*time.Minute || total > 61*time.Minute {
+		t.Fatalf("a million tokens take %v", total)
+	}
+	if got := batchInterval(500); got != time.Minute {
+		t.Fatalf("500 a minute: %v", got)
+	}
+}
+
+// Batch i is due at now + i × interval (instants: a DST change does not move them).
+func TestScheduleBatchesDueTimes(t *testing.T) {
+	now := time.Date(2026, 10, 25, 2, 59, 59, 0, time.UTC)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	a := &app.App{Log: log, Clock: func() time.Time { return now }, Background: ctx}
+	s := &Sender{a: a, interval: 1800 * time.Millisecond, send: func(context.Context, fcm.Message) (fcm.BatchResponse, error) {
+		t.Error("nothing is due yet")
+		return fcm.BatchResponse{}, nil
+	}}
+	// the scheduler's clock is one hour behind: nothing runs, the queue can be inspected
+	s.sched = newScheduler(ctx, func() time.Time { return now.Add(-time.Hour) }, nil)
+	s.SendGenericMultiNotification("t", "d", tokensOf(1201), HomeQags, nil)
+	s.sched.mu.Lock()
+	defer s.sched.mu.Unlock()
+	var due []time.Duration
+	for _, task := range s.sched.queue {
+		due = append(due, task.at.Sub(now))
+	}
+	slices.Sort(due)
+	if fmt.Sprint(due) != "[0s 1.8s 3.6s]" {
+		t.Fatalf("due after %v", due)
+	}
+}
+
+// newSender reads the rate of the configuration, else the default.
+func TestNewSenderRate(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	if s := newSender(&app.App{Log: log, Clock: time.Now, Background: ctx}); s.interval != batchInterval(config.DefaultNotificationFanoutPerMinute) {
+		t.Fatalf("default interval %v", s.interval)
+	}
+	cfg := &config.Config{NotificationFanoutPerMinute: 30000}
+	if s := newSender(&app.App{Cfg: cfg, Log: log, Clock: time.Now, Background: ctx}); s.interval != time.Second {
+		t.Fatalf("interval %v", s.interval)
 	}
 }
 

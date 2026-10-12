@@ -6,18 +6,21 @@ import (
 	"time"
 
 	"agora/internal/app"
+	"agora/internal/config"
 	"agora/internal/fcm"
 	"agora/internal/javacompat"
 )
 
-// maxSimultaneousNotifications is NotificationSendingRepositoryImpl.MAX_SIMULTANEOUS_NOTIFICATIONS.
-const maxSimultaneousNotifications = 300
+// fanoutBatchSize is the number of tokens of one FCM multicast: the FCM maximum per
+// SendEachForMulticast (C-S8-FANOUT; Kotlin's MAX_SIMULTANEOUS_NOTIFICATIONS was 300).
+const fanoutBatchSize = 500
 
 // notificationTypeKey is NOTIFICATION_TYPE_KEY, the FCM data key of the notification type.
 const notificationTypeKey = "type"
 
 // tokenChunks collects the FCM tokens like createMultiMessage:
-// `fcmTokenList.filter { it.isNotBlank() }.distinct().chunked(300)`. It is fed one token at a time so
+// `fcmTokenList.filter { it.isNotBlank() }.distinct().chunked(n)`, in chunks of fanoutBatchSize
+// (C-S8-FANOUT). It is fed one token at a time so
 // that a storm over millions of users never builds the intermediate lists; the first occurrence of a
 // token wins and the order is the order of the users.
 type tokenChunks struct {
@@ -36,8 +39,8 @@ func (t *tokenChunks) add(token string) {
 	}
 	t.seen[token] = struct{}{}
 	n := len(t.chunks)
-	if n == 0 || len(t.chunks[n-1]) == maxSimultaneousNotifications {
-		t.chunks = append(t.chunks, make([]string, 0, maxSimultaneousNotifications))
+	if n == 0 || len(t.chunks[n-1]) == fanoutBatchSize {
+		t.chunks = append(t.chunks, make([]string, 0, fanoutBatchSize))
 		n++
 	}
 	t.chunks[n-1] = append(t.chunks[n-1], token)
@@ -46,18 +49,26 @@ func (t *tokenChunks) add(token string) {
 // release drops the dedupe table (the chunks keep the tokens).
 func (t *tokenChunks) release() { t.seen = nil }
 
-// Sender is NotificationSendingRepositoryImpl: it cuts the tokens in batches of 300 and schedules
-// batch i at now + i minutes on a single-threaded scheduler (see scheduler). The HTTP request does
-// not wait for the sends.
+// Sender is NotificationSendingRepositoryImpl: it cuts the tokens in batches and schedules batch i at
+// now + i × interval on a single-threaded scheduler (see scheduler). The HTTP request does not wait
+// for the sends. Kotlin sends 300 tokens a minute (about 56 h for a million users); the Go side
+// sends AGORA_NOTIFICATION_FANOUT_PER_MINUTE tokens a minute, by default a million in about an hour
+// (C-S8-FANOUT, validated on 12 Oct.).
 type Sender struct {
 	a     *app.App
 	sched *scheduler
+	// interval separates the due times of two consecutive batches.
+	interval time.Duration
 	// send performs the FCM call of one batch (FirebaseMessaging.sendEachForMulticast); replaced in tests.
 	send func(ctx context.Context, m fcm.Message) (fcm.BatchResponse, error)
 }
 
 func newSender(a *app.App) *Sender {
-	s := &Sender{a: a}
+	perMinute := config.DefaultNotificationFanoutPerMinute
+	if a.Cfg != nil && a.Cfg.NotificationFanoutPerMinute > 0 {
+		perMinute = a.Cfg.NotificationFanoutPerMinute
+	}
+	s := &Sender{a: a, interval: batchInterval(perMinute)}
 	s.send = func(ctx context.Context, m fcm.Message) (fcm.BatchResponse, error) {
 		return a.FCM.SendEachForMulticast(ctx, m)
 	}
@@ -101,21 +112,20 @@ func (s *Sender) sendChunks(title, description string, chunks *tokenChunks, typ 
 	return Success
 }
 
-// scheduleBatches is sendMultiNotifications: batch i is due at LocalDateTime.now(clock).plusMinutes(i).
+// batchInterval is the time between two batches of fanoutBatchSize tokens at perMinute tokens a minute.
+func batchInterval(perMinute int) time.Duration {
+	return time.Minute * fanoutBatchSize / time.Duration(perMinute)
+}
+
+// scheduleBatches is sendMultiNotifications: batch i is due at now + i × interval (Kotlin:
+// LocalDateTime.now(clock).plusMinutes(i), C-S8-FANOUT).
 func (s *Sender) scheduleBatches(messages []fcm.Message) {
 	now := s.a.Now()
 	for i, m := range messages {
 		index, count := i, len(messages)
 		msg := m
-		s.sched.schedule(plusMinutes(now, index), func() { s.runBatch(msg, index, count) })
+		s.sched.schedule(now.Add(time.Duration(index)*s.interval), func() { s.runBatch(msg, index, count) })
 	}
-}
-
-// plusMinutes is `LocalDateTime.plusMinutes(n).atZone(ZoneId.systemDefault()).toInstant()`: the
-// minutes are added to the wall clock, then the local time is resolved in the process zone.
-func plusMinutes(t time.Time, n int) time.Time {
-	l := t.In(time.Local)
-	return javacompat.JavaAtZone(l.Year(), l.Month(), l.Day(), l.Hour(), l.Minute()+n, l.Second(), l.Nanosecond(), time.Local)
 }
 
 // runBatch is SendNotificationTask.run.

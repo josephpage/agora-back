@@ -3,7 +3,7 @@
 Ce runbook décrit le passage du backend Kotlin (app Scalingo actuelle) au backend Go (`agora-go/`). Les deux apps partagent **la même base Postgres et le même Redis** pendant toute la transition. Le Kotlin reste déployable et prêt à reprendre 100 % du trafic à tout moment.
 
 Références :
-- [`DIVERGENCES.md`](DIVERGENCES.md) : les écarts de classe C doivent être validés avant l'étape 3 ;
+- [`DIVERGENCES.md`](DIVERGENCES.md) : les écarts de classe C ont été validés par le produit le 12 oct. ;
 - [`PERF.md`](PERF.md) ;
 - l'ADR `architecture-decisions/2026-10-07-reecriture-go-du-backend.md`.
 
@@ -13,9 +13,9 @@ Références :
   - commande : `parity/run.sh up && parity/run.sh test` ;
   - attendu : 0 diff, seuls les scénarios `skip` documentés tolérés ;
   - la CI `agora-go.yml` doit être verte.
-- [ ] **Écarts de classe C validés** par le produit (liste dans `DIVERGENCES.md`).
+- [x] **Écarts de classe C validés** par le produit le 12 oct. (liste dans `DIVERGENCES.md`).
 - [ ] **Valeurs de prod relevées**, et identiques dans la nouvelle app :
-  - `TZ` et `JAVA_OPTS` : fuseau et locale de la JVM ;
+  - `TZ` et `JAVA_OPTS` : fuseau et locale de la JVM. La prod Kotlin a `TZ=Europe/Paris` : le mettre tel quel sur l'app Go (elle lit `TZ` comme la JVM ; `-Duser.timezone` n'est pas lu) et recopier `JAVA_OPTS`, `LC_ALL` et `LANG` (locale de l'export TSV, C-S6-LOCALE) ;
   - `JWT_SECRET` et les `LOGIN_TOKEN_*` : les JWT et loginTokens existants doivent rester valides ;
   - `REMOTE_ADDRESS_*` : sinon les hash d'IP changent ;
   - `ALLOWED_ORIGINS`, `CMS_*`, les `IS_*_ENABLED`, `REQUIRED_*_VERSION`, `ERROR_TEXT_*`, Firebase, Sentry, ACME.
@@ -25,7 +25,7 @@ Références :
   scalingo --app <app-go> run 'bin/agora --migrate=up'
   ```
 - [ ] **Charge de la base vérifiée** : `max_connections` du plan Postgres ≥ `(conteneurs Kotlin × pool) + (conteneurs Go × DATABASE_MAX_POOL_SIZE) + crons + outils (Metabase…)`, avec une marge de 20 %.
-  - **Pool de l'app Go.** Avec 5 connexions par conteneur, l'ouverture de l'app attend la base dès environ 600 req/s. Avec 20, on passe à 760 req/s (`PERF.md` §2.3). Fixer `DATABASE_MAX_POOL_SIZE` **dans l'app Go seulement**, entre 10 et 20, selon ce budget.
+  - **Pool de l'app Go : `DATABASE_MAX_POOL_SIZE=20` dès la bascule** (décision du 12 oct.), dans l'app Go seulement : le Kotlin garde 5. Avec 5 connexions par conteneur, l'ouverture de l'app attend la base dès environ 600 req/s ; avec 20, on passe à 760 req/s (`PERF.md` §2.3). Le budget ci-dessus doit donc tenir avec 20 par conteneur Go, Kotlin encore en place.
   - **Ce qu'il faut surveiller ensuite.** Une fois le Go en place, la limite devient le CPU du plan Postgres, et non plus les conteneurs. En particulier la page « soutenues », dont le SQL est identique à celui du Kotlin et parcourt toute la table `qags`.
 
 ## 1. Création de l'app Go (aucun trafic)
@@ -85,6 +85,12 @@ Alternative sans Cloudflare : un `split_clients` dans le nginx de l'app Kotlin, 
    - désactiver `cron.json` côté Kotlin (ou le vider), dans le même créneau, **jamais les deux actifs**.
 3. Après 24 h sans incident, passer `AGORA_COEXISTENCE=false` : les caches Go retrouvent leurs TTL Kotlin, et la suppression des clés Kotlin s'arrête.
 4. Garder l'app Kotlin déployée, à 0 trafic, pendant 2 semaines.
+
+**Envois de notifications à beaucoup d'utilisateurs** (`/admin/notify*`, servis par l'app Go dès le palier 5). Les lots FCM partent :
+- de 500 jetons, à `AGORA_NOTIFICATION_FANOUT_PER_MINUTE` jetons par minute (16 700 par défaut, soit environ 1 h pour un million d'utilisateurs, contre 56 h côté Kotlin ; C-S8-FANOUT) ;
+- depuis une file **en mémoire** du conteneur qui a reçu la requête, comme en Kotlin : un redéploiement ou un redémarrage pendant l'envoi perd les lots restants.
+
+Ne pas redéployer l'app Go dans l'heure qui suit un envoi à tous les utilisateurs. Pour un pic d'ouvertures de l'app plus doux, baisser le débit.
 
 ## 5. Rollback (à répéter en staging avant l'étape 3)
 

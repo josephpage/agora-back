@@ -74,7 +74,7 @@ Réécriture en Go, avec une **parité stricte** :
 
 ## Conséquences
 
-- Tout écart observable non listé dans `DIVERGENCES.md` est un bug. Les écarts de classe C doivent être validés par le produit avant la bascule.
+- Tout écart observable non listé dans `DIVERGENCES.md` est un bug. Les écarts de classe C doivent être validés par le produit avant la bascule (fait le 12 oct.).
 - Le harnais de parité tourne en CI (`.github/workflows/agora-go.yml`). Toute évolution fonctionnelle du Kotlin pendant la transition doit être reportée dans le Go, avec ses scénarios.
 - Les crons (tâches quotidiennes et hebdomadaires, renouvellement ACME) ne tournent que dans une seule application à la fois. Ils passent côté Go à 100 % du trafic.
 - Après la bascule complète et deux semaines sans rollback, une PR séparée supprime le Kotlin et le mode coexistence. Les évolutions de schéma passent alors sous la responsabilité du Go.

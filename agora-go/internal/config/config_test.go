@@ -40,3 +40,28 @@ func TestSpringBooleanTrimsLikeJava(t *testing.T) {
 		t.Error("U+00A0 is not trimmed by String.trim()")
 	}
 }
+
+func TestNotificationFanoutPerMinute(t *testing.T) {
+	for _, tc := range []struct {
+		value string
+		set   bool
+		want  int
+		ok    bool
+	}{
+		{"", false, DefaultNotificationFanoutPerMinute, true},
+		{"", true, DefaultNotificationFanoutPerMinute, true},
+		{"30000", true, 30000, true},
+		{"0", true, 0, false},
+		{"-5", true, 0, false},
+		{"1e4", true, 0, false},
+	} {
+		env := map[string]string{"ALLOWED_ORIGINS": "https://a"}
+		if tc.set {
+			env["AGORA_NOTIFICATION_FANOUT_PER_MINUTE"] = tc.value
+		}
+		c, err := LoadFrom(lookupOf(env))
+		if (err == nil) != tc.ok || (tc.ok && c.NotificationFanoutPerMinute != tc.want) {
+			t.Errorf("%q (set=%v): %v %v", tc.value, tc.set, c, err)
+		}
+	}
+}

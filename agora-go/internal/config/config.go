@@ -63,9 +63,16 @@ type Config struct {
 	LogLevel         string
 	RedisPoolSize    int
 	DBAcquireTimeout time.Duration
+	// AGORA_NOTIFICATION_FANOUT_PER_MINUTE: FCM tokens sent per minute by a multi-notification
+	// (C-S8-FANOUT; Kotlin: 300 per minute)
+	NotificationFanoutPerMinute int
 
 	lookup func(string) (string, bool)
 }
+
+// DefaultNotificationFanoutPerMinute sends a notification to a million users in about an hour
+// (decision of 12 Oct., C-S8-FANOUT).
+const DefaultNotificationFanoutPerMinute = 16700
 
 // LoginTokenEnv mirrors the LOGIN_TOKEN_* variables.
 type LoginTokenEnv struct {
@@ -205,6 +212,14 @@ func LoadFrom(lookup func(string) (string, bool)) (*Config, error) {
 		c.RedisPoolSize = v
 	}
 	c.DBAcquireTimeout = 30 * time.Second // Hikari connectionTimeout default
+	c.NotificationFanoutPerMinute = DefaultNotificationFanoutPerMinute
+	if v, set := lookup("AGORA_NOTIFICATION_FANOUT_PER_MINUTE"); set && v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n <= 0 {
+			return nil, fmt.Errorf("AGORA_NOTIFICATION_FANOUT_PER_MINUTE must be a positive integer, got %q", v)
+		}
+		c.NotificationFanoutPerMinute = n
+	}
 	return c, nil
 }
 
