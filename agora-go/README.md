@@ -51,7 +51,9 @@ Variables propres au Go :
 | `AGORA_CRON_DISABLED` | `false` | Les commandes `--run-custom-command` se terminent sans rien faire. Pour une app parallèle qui ne doit pas exécuter les crons |
 | `AGORA_REDIS_POOL_SIZE` | `50` | Connexions Redis par conteneur (timeouts de 500 ms, jamais d'attente infinie) |
 | `AGORA_BOOTSTRAP_SCHEMA` | `false` | Crée les tables manquantes au démarrage (base vide de test ou de review app). Ne jamais activer en production : le schéma reste celui d'Hibernate |
-| `DATABASE_MAX_POOL_SIZE` | `5` | Même variable et même défaut que le Kotlin. À dimensionner selon `max_connections` (voir le runbook) |
+| `DATABASE_MAX_POOL_SIZE` | `5` | Même variable et même défaut que le Kotlin. À dimensionner selon `max_connections` (voir le runbook) ; l'attente d'une connexion est bornée à 30 s comme Hikari |
+| `GOMEMLIMIT` | 85 % de la mémoire du conteneur | Limite souple du tas Go, calculée au démarrage depuis le cgroup si la variable est absente (`GOMAXPROCS` suit déjà le quota CPU) |
+| `AGORA_PPROF_ADDR` | vide | Adresse d'écoute des profils `net/http/pprof` (ex. `127.0.0.1:6060`), sur un serveur séparé ; jamais sur le port public. Vide : désactivé |
 
 ## Déploiement Scalingo
 

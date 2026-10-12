@@ -22,6 +22,7 @@ Toute différence observable entre le backend Kotlin (référence figée au comm
 | S11-N1 | Requêtes du client ACME vers l'autorité : le Go relit le répertoire ACME une fois par session, acme4j plusieurs fois (12 appels au lieu de 14 pour une première émission) | Mêmes opérations, dans le même ordre et avec les mêmes effets ; seule l'autorité de certification voit deux lectures de répertoire en moins |
 | S7-N2 | Tirages aléatoires (texte de la notification « question acceptée », QaG retenue parmi des ex-aequo à la sélection hebdomadaire) : `Set.random()` / `List.random()` côté Kotlin, `rand.IntN` côté Go | Les deux tirages sont uniformes ; seule la séquence de hasard diffère, comme d'une exécution Kotlin à l'autre |
 | N-LOGS | Libellés et volume des logs ; événements Sentry | Hors contrat HTTP. Les WARN+ partent toujours dans Sentry |
+| N-HEAD-SIZE | Limite de 8 Kio de la tête de requête de Tomcat (ligne de requête, en-têtes, ligne vide ; au-delà : 400, page HTML, connexion fermée). Go recalcule cette taille depuis la requête analysée : exacte pour des lignes `Nom: valeur` canoniques, à quelques octets près pour un espacement exotique autour des `:` | nginx transmet des lignes canoniques ; la frontière 8 192 / 8 193 octets est vérifiée des deux côtés (`F5_head_size.yaml`) |
 
 ## Classe B (validée)
 
@@ -49,6 +50,7 @@ Toute différence observable entre le backend Kotlin (référence figée au comm
 | S5-B2 | `GET /consultations/finished/{n}` sans `territory` : liste Strapi relue à chaque requête | Liste partagée au plus 5 s (non vide seulement) |
 | S5-B3 | `consultationsAnsweredPaginated<userId>` (1 h, Redis) vidé par un scan `KEYS` **avant** l'insertion de la réponse : une lecture entre les deux remet une page périmée | Une entrée par utilisateur, invalidée sur toutes les instances **après** le commit de la réponse ; aucun scan `KEYS`. L'utilisateur voit toujours sa propre réponse |
 | S5-B4 | `consultationsFinishedPaginated` (1 h, Redis), vidé chaque jour | Même clé et même TTL en L1, vidée par la tâche quotidienne Go sur toutes les instances ; 5 s en coexistence |
+| S5-B5 | `GET /consultations` : les consultations auxquelles l'utilisateur a répondu sont relues dans Strapi à chaque requête (`getConsultationsByIds`) | La réponse Strapi d'un même ensemble d'ids (même URI) est partagée au plus 5 s (décision n° 2), jamais vide ; un nouvel ensemble (nouvelle réponse de l'utilisateur) est une autre entrée, donc lu aussitôt |
 | S11-B1 | Le stub ACME (mode `ACME_STUB_MODE`, jamais en production) garde chaque nonce généré en mémoire, sans limite | Le stub Go accepte tout nonce sans les garder (pas de fuite mémoire) |
 | S6-B1 | Résultats d'une consultation (`GET /v2/consultations/{id}/responses`) : le cache `consultationResults` est écrit mais jamais relu (désérialisation impossible), donc recalculés à chaque requête | Un calcul partagé au plus 5 s, invalidé sur toutes les instances par chaque réponse (après le commit) et par la suppression d'utilisateurs |
 | S6-B2 | Consultation inconnue ou non publiée : marqueur `""` gardé 1 h (le 400 persiste même après publication) | Même marqueur, gardé au plus 5 s |

@@ -70,6 +70,10 @@ bodies). Your handler only reproduces the controller method:
   - `List<String>?` params → `c.ParamList("p")` (one value: split on `,` + `String.trim()`; several: kept as is)
   - `@PathVariable` → `c.PathVar("name")`; Int conversions → `httpx.SpringIntPathVar(v)`,
     Boolean → `httpx.SpringBoolParam(v)`; enums: exact `valueOf` after trim, else 400.
+    Beware of the two different "trims" (oracle `springConvert`): `NumberUtils.parseNumber` removes
+    EVERY `Character.isWhitespace` char anywhere (`"1 2"` → 12, `javacompat.SpringTrimAllWhitespace`);
+    `StringToBooleanConverter` uses `String.trim()` (chars <= U+0020 at both ends,
+    `javacompat.JavaStringTrim`). Never `strings.TrimSpace` (Unicode spaces, U+0085, U+00A0).
   - `@RequestBody dto` → `c.BindBody(&dto)`. It reproduces the whole Spring/Jackson chain (captured on the
     reference, see `parity/scenarios/F5_request_layer.yaml`): firewall check of every header, Content-Type
     parsing (415 + `Accept`), charset, BOM/UTF-16/32 detection, Jackson's UTF-8 rules, first value only,
@@ -143,7 +147,13 @@ code used: `String.take/length` (UTF-16: `Take16`, `Len16`), `trim/isBlank`
 are **stable** (`sort.SliceStable`); `distinct()`, `groupBy`, `associate`,
 `toSet`, `mapOf`, `mutableMapOf` keep insertion order. `first()` on an empty
 list throws (→ 500), `firstOrNull()` does not. `LocalDateTime.now(clock)` →
-`a.Now()` (never `time.Now()` directly). Kotlin `Random`/`shuffled` →
+`a.Now()` (never `time.Now()` directly). A wall clock turned into an instant
+(`LocalDateTime.atZone`, `DateUtils.toDate`) → `javacompat.JavaAtZone` (earlier
+offset in a fall-back overlap, forward in a spring-forward gap), never
+`time.Date` (its choice depends on the sign of the offset); a
+`timestamp without time zone` column read by JDBC → `store.Local`
+(`javacompat.JavaCalendarTime`: standard time in an overlap). Both are checked
+against the JVM around the transitions of several zones. Kotlin `Random`/`shuffled` →
 document as non-deterministic and compare with `compare.unordered` in scenarios.
 
 ## 6. Database (`internal/store`)
@@ -161,7 +171,12 @@ document as non-deterministic and compare with `compare.unordered` in scenarios.
   read with `store.Local(t)`.
 - Entities with non-null Kotlin fields mapped to NULL columns crash in Kotlin
   (NPE / PropertyAccessException → 500): reproduce when reachable.
-- Use `a.DB.Pool` (pgx). Keep the number of queries per request ≤ Kotlin's.
+- Use `a.DB.Pool` (`store.Pool`: pgx with Hikari's 30 s connectionTimeout on the
+  wait for a connection, `ErrAcquireTimeout` → 500 like Hikari). Keep the number of
+  queries per request ≤ Kotlin's.
+- A shared load (`cache.GetOrLoad`) runs in the first caller's request: wrap its
+  context in `context.WithoutCancel` when the load must survive that client (the
+  other callers are not failed by it anyway: they retry a cancelled load).
 
 ## 7. Caches (`internal/cache`)
 

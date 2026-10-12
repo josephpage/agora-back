@@ -71,6 +71,34 @@ func isHex(c byte) bool {
 	return c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F'
 }
 
+// tomcatMaxHeadSize is Spring Boot's server.max-http-request-header-size (8 KB): Tomcat's
+// buffer for the request line and the header lines. A longer head is a 400 (HTML page,
+// connection closed) before any Spring code; the body does not count. Measured on the
+// reference: 8192 bytes (final empty line included) pass, 8193 do not.
+const tomcatMaxHeadSize = 8192
+
+// tomcatHeadSize rebuilds the size of the request head from the parsed request: the
+// request line, one "Name: value" line per value (net/http moves Host and
+// Transfer-Encoding out of Header) and the empty line. It is exact for canonical lines
+// (one space after the colon, what nginx forwards); other spacing is off by a few bytes.
+func tomcatHeadSize(r *http.Request) int {
+	n := len(r.Method) + 1 + len(r.RequestURI) + 1 + len(r.Proto) + 2
+	if _, ok := r.Header["Host"]; !ok && r.Host != "" {
+		n += len("Host: ") + len(r.Host) + 2
+	}
+	if len(r.TransferEncoding) > 0 {
+		if _, ok := r.Header["Transfer-Encoding"]; !ok {
+			n += len("Transfer-Encoding: ") + len(strings.Join(r.TransferEncoding, ", ")) + 2
+		}
+	}
+	for name, vals := range r.Header {
+		for _, v := range vals {
+			n += len(name) + 2 + len(v) + 2
+		}
+	}
+	return n + 2
+}
+
 // tomcatReject writes Tomcat-level rejections and returns true when handled.
 func (s *Server) tomcatReject(w http.ResponseWriter, r *http.Request) bool {
 	h := w.Header()
@@ -87,6 +115,12 @@ func (s *Server) tomcatReject(w http.ResponseWriter, r *http.Request) bool {
 		if r.Method != "HEAD" {
 			_, _ = w.Write([]byte(page))
 		}
+	}
+	if tomcatHeadSize(r) > tomcatMaxHeadSize {
+		// "Request header is too large": Tomcat answers and closes the connection
+		h["Connection"] = []string{"close"}
+		writePage(400, "Bad Request")
+		return true
 	}
 	if r.Method == "CONNECT" {
 		writePage(501, "Not Implemented")
