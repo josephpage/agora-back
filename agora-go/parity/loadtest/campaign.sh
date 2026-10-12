@@ -18,6 +18,8 @@ USERS=${USERS:-5000}; FRESH=${FRESH:-50000}; RESEED=${RESEED:-1}
 PROFILES=${PROFILES:-"app-open consultation support web"}; SIDES=${SIDES:-"ref go"}
 OUT=${OUT:-$RUN/load}
 mkdir -p "$OUT"
+# the seed writes its wall clocks in the zone of the backends
+TZ=$(sed -n 's/^TZ=//p' parity/env/common.env | tail -1); export TZ
 exec 9>"$RUN/test.lock"
 flock -n 9 || { echo "a parity run holds slot 0" >&2; exit 3; }
 

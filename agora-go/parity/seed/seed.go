@@ -18,8 +18,9 @@ import (
 // same content.
 //
 //   - now: the reference instant; every timestamp is now minus/plus a fixed
-//     offset, truncated to the millisecond, expressed in UTC (the columns are
-//     `timestamp without time zone`). The queries that use CURRENT_TIMESTAMP
+//     offset, truncated to the millisecond, written as a wall clock of the process
+//     zone (the columns are `timestamp without time zone`; the runner sets the
+//     zone of the backends, common.env TZ). The queries that use CURRENT_TIMESTAMP
 //     (trending, ...) use the database clock, so pass (about) the real current
 //     time when the SQL clock matters.
 //   - scale: 1 = the small handcrafted dataset; N > 1 additionally generates

@@ -26,7 +26,7 @@ type dbRow struct {
 }
 
 func snapshotDB(ctx context.Context, dbURL string) (map[string][]dbRow, error) {
-	conn, err := pgx.Connect(ctx, dbURL)
+	conn, err := connectDB(ctx, dbURL)
 	if err != nil {
 		return nil, err
 	}
@@ -201,4 +201,21 @@ func rowString(r dbRow) string {
 		parts[i] = c + "=" + r.vals[i]
 	}
 	return strings.Join(parts, " ")
+}
+
+// SessionTimeZone is the TimeZone of the runner's database sessions: the zone of the backends
+// (common.env TZ), so that the setup SQL writes now() as the wall clock the backends would
+// write. The databases keep the server's default zone: each backend must set its own, like
+// pgjdbc does for the JVM zone.
+var SessionTimeZone string
+
+func connectDB(ctx context.Context, dbURL string) (*pgx.Conn, error) {
+	cfg, err := pgx.ParseConfig(dbURL)
+	if err != nil {
+		return nil, err
+	}
+	if SessionTimeZone != "" {
+		cfg.RuntimeParams["TimeZone"] = SessionTimeZone
+	}
+	return pgx.ConnectConfig(ctx, cfg)
 }

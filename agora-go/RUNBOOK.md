@@ -15,7 +15,7 @@ Références :
   - la CI `agora-go.yml` doit être verte.
 - [x] **Écarts de classe C validés** par le produit le 12 oct. (liste dans `DIVERGENCES.md`).
 - [ ] **Valeurs de prod relevées**, et identiques dans la nouvelle app :
-  - `TZ` et `JAVA_OPTS` : fuseau et locale de la JVM. La prod Kotlin a `TZ=Europe/Paris` : le mettre tel quel sur l'app Go (elle lit `TZ` comme la JVM ; `-Duser.timezone` n'est pas lu) et recopier `JAVA_OPTS`, `LC_ALL` et `LANG` (locale de l'export TSV, C-S6-LOCALE) ;
+  - `TZ` et `JAVA_OPTS` : fuseau et locale de la JVM. La prod Kotlin a `TZ=Europe/Paris` : le mettre tel quel sur l'app Go (elle lit `TZ` comme la JVM ; `-Duser.timezone` n'est pas lu). C'est aussi le `TimeZone` des sessions Postgres, comme pgjdbc avec la zone du JVM : les fenêtres du trending (`CURRENT_TIMESTAMP`) en dépendent et recopier `JAVA_OPTS`, `LC_ALL` et `LANG` (locale de l'export TSV, C-S6-LOCALE) ;
   - `JWT_SECRET` et les `LOGIN_TOKEN_*` : les JWT et loginTokens existants doivent rester valides ;
   - `REMOTE_ADDRESS_*` : sinon les hash d'IP changent ;
   - `ALLOWED_ORIGINS`, `CMS_*`, les `IS_*_ENABLED`, `REQUIRED_*_VERSION`, `ERROR_TEXT_*`, Firebase, Sentry, ACME.
@@ -91,6 +91,8 @@ Alternative sans Cloudflare : un `split_clients` dans le nginx de l'app Kotlin, 
 - depuis une file **en mémoire** du conteneur qui a reçu la requête, comme en Kotlin : un redéploiement ou un redémarrage pendant l'envoi perd les lots restants.
 
 Ne pas redéployer l'app Go dans l'heure qui suit un envoi à tous les utilisateurs. Pour un pic d'ouvertures de l'app plus doux, baisser le débit.
+
+Le rythme tient tant que FCM répond en moins de 350 ms environ. Au-delà, l'envoi s'allonge et un avertissement est journalisé (« starts … late »). Les notifications à un seul utilisateur (réponse du support, QaG) ne sont jamais retardées par un envoi massif.
 
 ## 5. Rollback (à répéter en staging avant l'étape 3)
 

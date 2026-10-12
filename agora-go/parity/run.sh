@@ -28,8 +28,6 @@ export PARITY_REF_CMD="$RUN/start-ref.sh" PARITY_GO_CMD="$RUN/start-go.sh"
 REFJAR=${PARITY_REF_JAR:-/home/user/agora-ref/build/libs/agora-back-0.0.1.jar}
 JAVA17=${PARITY_JAVA:-/usr/lib/jvm/java-17-openjdk-amd64/bin/java}
 REF_JAVA_OPTS=${PARITY_REF_JAVA_OPTS:--Xmx768m}
-# the zone of the backends (and of the harness database sessions)
-PG_TZ=$(sed -n 's/^TZ=//p' parity/env/common.env | tail -1); PG_TZ=${PG_TZ:-UTC}
 # one Strapi clock for every slot of a machine (fixture dates are relative to it)
 STRAPI_NOW_FILE=${PARITY_STRAPI_NOW_FILE:-${PARITY_RUN_DIR:-/home/user/run}/strapi_now}
 
@@ -62,10 +60,11 @@ start_pg() {
     # parity/ledger/S4.md) must not depend on JDBC vs pgx switching to a generic
     # plan after 5 executions of a prepared statement: always plan with the values.
     PGPASSWORD=agora_password psql -q -h localhost -U backend -d postgres -c "ALTER DATABASE $db SET plan_cache_mode = force_custom_plan" >/dev/null
-    # The setup SQL of the scenarios writes now() into timestamp columns: in the zone of the
-    # backends (common.env TZ), like the rows they write themselves. (The application SQL does
-    # not depend on the session zone: no now() and no timestamptz.)
-    PGPASSWORD=agora_password psql -q -h localhost -U backend -d postgres -c "ALTER DATABASE $db SET timezone = '$PG_TZ'" >/dev/null
+    # The databases keep the server's default zone (like production): the application SQL compares
+    # timestamp columns with CURRENT_TIMESTAMP, so each backend must set its session TimeZone to its
+    # own zone (pgjdbc sends the JVM zone, the Go store sends TZ). The runner's sessions use the
+    # zone of common.env (runner.SessionTimeZone). RESET undoes the setting of earlier versions.
+    PGPASSWORD=agora_password psql -q -h localhost -U backend -d postgres -c "ALTER DATABASE $db RESET timezone" >/dev/null
   done
 }
 
@@ -141,9 +140,21 @@ EOT
   chmod +x "$RUN/start-ref.sh" "$RUN/start-go.sh"
 }
 
+# the zone the reference JVM was started with must be the one of common.env (it is fixed at start)
+ref_zone_current() {
+  local want pid
+  want=$(sed -n 's/^TZ=//p' parity/env/common.env | tail -1)
+  pid=$(fuser $REF_PORT/tcp 2>/dev/null | awk '{print $1}')
+  [ -n "$pid" ] && tr '\0' ' ' < /proc/$pid/cmdline 2>/dev/null | grep -q -- "-Duser.timezone=${want:-UTC} "
+}
+
 start_ref() {
   write_envs
-  if curl -s -o /dev/null http://localhost:$REF_PORT/thematiques; then return 0; fi
+  if curl -s -o /dev/null http://localhost:$REF_PORT/thematiques; then
+    if ref_zone_current; then return 0; fi
+    echo "reference JVM started in another zone: restarting it" >&2
+    stop_ref
+  fi
   nohup "$RUN/start-ref.sh" > "$RUN/ref.log" 2>&1 &
   wait_http http://localhost:$REF_PORT/thematiques ref
 }
@@ -170,7 +181,8 @@ stop_go() { pkill -f "^$RUN/agora\$" 2>/dev/null || true; fuser -k $GO_PORT/tcp 
 stop_ref() { fuser -k $REF_PORT/tcp >/dev/null 2>&1 || true; rm -f "$RUN/kotlin-queue-locks"; wait_port_free $REF_PORT; }
 
 case "${1:-up}" in
-  up) start_pg; start_redis; start_strapi; start_ref; start_go; echo "parity environment up" ;;
+  # up restarts the Go backend: a process left on the port would answer for the new build
+  up) start_pg; start_redis; start_strapi; start_ref; stop_go; start_go; echo "parity environment up" ;;
   restart-go) stop_go; start_go; echo "go restarted" ;;
   restart-ref) stop_ref; start_ref; echo "ref restarted" ;;
   test) shift

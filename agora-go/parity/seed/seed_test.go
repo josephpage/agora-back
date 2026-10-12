@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"agora/internal/javacompat"
 )
 
 var testNow = time.Date(2026, 10, 7, 12, 34, 56, 789_000_000, time.UTC) // a Wednesday, with sub-second noise
@@ -42,8 +44,9 @@ func TestBuildDeterministic(t *testing.T) {
 	}
 }
 
-// TestTimesAreMillisecondUTC checks that no timestamp has sub-millisecond precision or a non-UTC zone.
-func TestTimesAreMillisecondUTC(t *testing.T) {
+// TestTimesAreMillisecondLocal checks that no timestamp has sub-millisecond precision or another
+// zone than the process zone (the wall clocks are written in the backends' zone).
+func TestTimesAreMillisecondLocal(t *testing.T) {
 	b := newBuilder(testNow, 3)
 	if err := b.build(); err != nil {
 		t.Fatal(err)
@@ -52,8 +55,8 @@ func TestTimesAreMillisecondUTC(t *testing.T) {
 		for _, row := range rows {
 			for _, v := range row {
 				if ts, ok := v.(time.Time); ok {
-					if ts.Location() != time.UTC {
-						t.Fatalf("%s: non UTC time %v", table, ts)
+					if ts.Location() != time.Local {
+						t.Fatalf("%s: time not in the process zone %v", table, ts)
 					}
 					if ts.Nanosecond()%int(time.Millisecond) != 0 {
 						t.Fatalf("%s: sub-millisecond time %v", table, ts)
@@ -166,7 +169,14 @@ func TestSeedAgainstPostgres(t *testing.T) {
 	dbURL := withDatabase(t)
 	ctx := context.Background()
 
-	conn, err := pgx.Connect(ctx, dbURL)
+	// CURRENT_TIMESTAMP reads the timestamp columns in the session zone: the process zone, like
+	// the backends (store.Open)
+	cfg, err := pgx.ParseConfig(dbURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.RuntimeParams["TimeZone"] = javacompat.PostgresTimeZone(javacompat.JVMDefaultZoneID(os.Getenv, time.Now()))
+	conn, err := pgx.ConnectConfig(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,10 +226,11 @@ func TestSeedAgainstPostgres(t *testing.T) {
 
 	// trending window quirks
 	eq("two accepted updates in 7 days", 2, count(
-		"SELECT count(*) FROM qag_updates WHERE qag_id = $1 AND status = 1 AND moderated_date >= $2", QagAcceptedTwoUpdates, testNow.AddDate(0, 0, -7)))
+		"SELECT count(*) FROM qag_updates WHERE qag_id = $1 AND status = 1 AND moderated_date >= $2", QagAcceptedTwoUpdates, testNow.In(time.Local).AddDate(0, 0, -7)))
 	eq("accepted without update", 0, count("SELECT count(*) FROM qag_updates WHERE qag_id = $1", QagAcceptedNoUpdate))
+	// (timestamp parameters are wall clocks of the process zone, like the rows: store.Millis)
 	eq("accepted moderated < 72h", 8, count(
-		"SELECT count(DISTINCT qag_id) FROM qag_updates WHERE status = 1 AND moderated_date >= $1 AND qag_id IN (SELECT id FROM qags WHERE status = 1)", testNow.Add(-72*time.Hour)))
+		"SELECT count(DISTINCT qag_id) FROM qag_updates WHERE status = 1 AND moderated_date >= $1 AND qag_id IN (SELECT id FROM qags WHERE status = 1)", testNow.In(time.Local).Add(-72*time.Hour)))
 	cutoff := MondayCutoff(testNow)
 	if got := count("SELECT count(*) FROM qags WHERE status = 1 AND id IN (SELECT qag_id FROM qag_updates WHERE status = 1 AND moderated_date < $1)", cutoff); got < 3 {
 		t.Errorf("weekly archive candidates: want >= 3, got %d", got)
@@ -227,7 +238,7 @@ func TestSeedAgainstPostgres(t *testing.T) {
 	// duplicate support, banned supports, anonymised supporter
 	eq("duplicate support rows", 2, count("SELECT count(*) FROM supports_qag WHERE qag_id = $1 AND user_id = $2", QagAcceptedDupSupport, UserRegular5))
 	eq("banned supports (7d, unselected)", 5, count(
-		"SELECT count(*) FROM supports_qag WHERE user_id = $1 AND support_date > $2 AND qag_id NOT IN (SELECT id FROM qags WHERE status = 7)", UserBanned, testNow.AddDate(0, 0, -7)))
+		"SELECT count(*) FROM supports_qag WHERE user_id = $1 AND support_date > $2 AND qag_id NOT IN (SELECT id FROM qags WHERE status = 7)", UserBanned, testNow.In(time.Local).AddDate(0, 0, -7)))
 	eq("banned support on selected", 1, count("SELECT count(*) FROM supports_qag WHERE user_id = $1 AND qag_id = $2", UserBanned, QagSelectedVideo))
 	eq("anonymised supports", 3, count("SELECT count(*) FROM supports_qag WHERE user_id = $1", UserAnonymized))
 	eq("locked qags", 2, count("SELECT count(*) FROM moderatus_locked_qags"))

@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
 
 	"agora/parity/seed"
@@ -18,7 +17,7 @@ import (
 // reset reseeds the database, flushes Redis and resets the fake Strapi.
 func (s *Side) reset(ctx context.Context, setup Setup, now time.Time) error {
 	if setup.Reseed == nil || *setup.Reseed {
-		conn, err := pgx.Connect(ctx, s.DBURL)
+		conn, err := connectDB(ctx, s.DBURL)
 		if err != nil {
 			return fmt.Errorf("%s db: %w", s.Name, err)
 		}

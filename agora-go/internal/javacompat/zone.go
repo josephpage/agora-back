@@ -1,13 +1,16 @@
 package javacompat
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 // JavaAtZone is LocalDateTime.atZone(zone).toInstant() (ZonedDateTime.ofLocal with no
 // preferred offset) for the wall clock y-m-d h:mi:s.ns (out-of-range fields are normalized
 // like time.Date): in a gap (spring forward) the wall clock moves forward by the length
-// of the gap, in an overlap (fall back) the EARLIER offset wins. time.Date keeps the later
-// offset in an overlap (the legacy java.util.Calendar choice, which is what JDBC uses for
-// timestamp columns: see store.LocalTimestamp) and is not always forward in a gap.
+// of the gap, in an overlap (fall back) the EARLIER offset wins. time.Date does not follow
+// that rule: in an overlap it keeps the later offset east of Greenwich (Paris) and the
+// earlier one west of it (New York), and it is not always forward in a gap.
 func JavaAtZone(y int, m time.Month, d, h, mi, s, ns int, loc *time.Location) time.Time {
 	return resolveWall(y, m, d, h, mi, s, ns, loc, false)
 }
@@ -36,11 +39,13 @@ func JavaLegacyOffset(t time.Time, loc *time.Location) int {
 	if t.Before(javaLegacyStart) {
 		return javaRawOffset(loc)
 	}
-	if raw := javaRawOffset(loc); t.Add(time.Duration(raw)*time.Second).UTC().Year() >= javaLegacyLastYear {
-		// In the last year a long can hold, SimpleTimeZone never reaches the start of daylight
-		// saving time (its computation overflows) but still ends it: only a daylight saving
-		// period carried over from the previous year applies, until its end.
-		return javaLastYearOffset(t, loc, raw)
+	if t.UTC().Year() >= javaLegacyLastYear-1 {
+		if raw := javaRawOffset(loc); t.Add(time.Duration(raw)*time.Second).UTC().Year() >= javaLegacyLastYear {
+			// In the last year a long can hold, SimpleTimeZone never reaches the start of daylight
+			// saving time (its computation overflows) but still ends it: only a daylight saving
+			// period carried over from the previous year applies, until its end.
+			return javaLastYearOffset(t, loc, raw)
+		}
 	}
 	_, off := t.In(loc).Zone()
 	return off
@@ -67,6 +72,18 @@ func javaLastYearOffset(t time.Time, loc *time.Location, raw int) int {
 // zone's current rules. (Zones whose tzdb main data has a negative daylight saving time,
 // such as Europe/Dublin, are compiled by the JDK from the rearguard data and may differ.)
 func javaRawOffset(loc *time.Location) int {
+	if v, ok := rawOffsets.Load(loc); ok {
+		return v.(int)
+	}
+	off := computeRawOffset(loc)
+	rawOffsets.Store(loc, off)
+	return off
+}
+
+// rawOffsets caches javaRawOffset per *time.Location (a handful of zones per process).
+var rawOffsets sync.Map
+
+func computeRawOffset(loc *time.Location) int {
 	for _, m := range []time.Month{time.January, time.July} {
 		if t := time.Date(2100, m, 1, 0, 0, 0, 0, loc); !t.IsDST() {
 			_, off := t.Zone()
@@ -101,8 +118,10 @@ func resolveWall(y int, m time.Month, d, h, mi, s, ns int, loc *time.Location, l
 	}
 	if best.IsZero() {
 		// gap: the wall clock read with the offset in force before the transition (time.Date
-		// moves backward instead when the offsets are negative, e.g. America/Santiago)
-		before := offAt(t.Add(-12 * time.Hour))
+		// moves backward instead when the offsets are negative, e.g. America/Santiago). The
+		// transition is after wall - 14 h (no offset exceeds 14 h), even for a skipped day
+		// (Pacific/Kiritimati 1994-12-31, Pacific/Apia 2011-12-30).
+		before := offAt(wall.Add(-14 * time.Hour))
 		return wall.Add(-time.Duration(before) * time.Second).In(loc)
 	}
 	return best

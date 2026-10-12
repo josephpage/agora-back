@@ -53,7 +53,7 @@ Variables propres au Go :
 | `AGORA_BOOTSTRAP_SCHEMA` | `false` | Crée les tables manquantes au démarrage (base vide de test ou de review app). Ne jamais activer en production : le schéma reste celui d'Hibernate |
 | `DATABASE_MAX_POOL_SIZE` | `5` | Même variable et même défaut que le Kotlin. À dimensionner selon `max_connections` (voir le runbook) ; l'attente d'une connexion est bornée à 30 s comme Hikari |
 | `GOMEMLIMIT` | 85 % de la mémoire du conteneur | Limite souple du tas Go, calculée au démarrage depuis le cgroup si la variable est absente (`GOMAXPROCS` suit déjà le quota CPU) |
-| `AGORA_NOTIFICATION_FANOUT_PER_MINUTE` | `16700` | Jetons FCM envoyés par minute par une notification multiple, en lots de 500 : environ 1 h pour un million d'utilisateurs (Kotlin : 300 par minute, ~56 h ; C-S8-FANOUT). Plus haut, l'envoi est plus court mais le pic d'ouvertures de l'app plus fort ; valeur invalide : échec au démarrage |
+| `AGORA_NOTIFICATION_FANOUT_PER_MINUTE` | `16700` | Jetons FCM envoyés par minute par une notification multiple, en lots de 500 : environ 1 h pour un million d'utilisateurs (Kotlin : 300 par minute, ~56 h ; C-S8-FANOUT). Plus haut, l'envoi est plus court mais le pic d'ouvertures de l'app plus fort. Le rythme suppose que FCM réponde en moins de 350 ms environ (100 requêtes en parallèle par lot) ; sinon l'envoi s'allonge et un avertissement est journalisé. Valeur invalide : échec au démarrage |
 | `AGORA_PPROF_ADDR` | vide | Adresse d'écoute des profils `net/http/pprof` (ex. `127.0.0.1:6060`), sur un serveur séparé ; jamais sur le port public. Vide : désactivé |
 
 ## Déploiement Scalingo
@@ -108,7 +108,7 @@ PARITY_SLOT=1 ./parity/run.sh up        # environnement isolé (ports et bases d
 - `PARITY_JAVA` : binaire `java` 17 ;
 - `PARITY_RUN_DIR` : répertoire de travail ;
 - `PARITY_PG_EXTERNAL=1` : PostgreSQL déjà lancé (CI) ;
-- Fuseau : les deux backends, les sessions Postgres du harnais et le runner tournent dans le `TZ` de `parity/env/common.env`, `Europe/Paris` comme la production. Les tests unitaires et oracle passent dans n'importe quel fuseau ; la CI les joue en UTC et en `Europe/Paris`.
+- Fuseau : les deux backends, le seed et le runner tournent dans le `TZ` de `parity/env/common.env`, `Europe/Paris` comme la production. Les bases gardent le fuseau par défaut du serveur (UTC) : chaque backend fixe le `TimeZone` de ses sessions (pgjdbc la zone du JVM, le Go celle du processus), et le runner celui de `common.env` pour le SQL de setup. Les tests unitaires et oracle passent dans n'importe quel fuseau ; la CI les joue en UTC et en `Europe/Paris`.
 - `PARITY_PROFILE` : profil d'environnement (`acme`, `acme-gates-a`, `acme-gates-b`, `acme-health`). Les deux backends démarrent alors avec `parity/env/<profil>-{ref,go}.env`, et seuls les scénarios marqués `profile: <profil>` sont joués (`PARITY_PROFILE=acme ./parity/run.sh restart-ref && … restart-go && … test -tags S11`). Sans profil, ces scénarios sont ignorés.
 
 **L'oracle JVM** (`parity/oracle`) compare les implémentations Go aux classes Java de la référence : Jackson, Woodstox, sanitizer OWASP, jjwt, `URLEncoder`, décodeurs… Il est appelé par les tests Go quand `PARITY_ORACLE=1` et que `REFJAR_DIR` pointe vers le jar extrait.

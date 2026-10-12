@@ -261,3 +261,30 @@ func waitFor[T any](t *testing.T, ch <-chan T) {
 		t.Fatal("timeout")
 	}
 }
+
+// A single-batch notification (one user) is sent at once, even when the batches of a send to
+// many users are stuck behind a slow FCM.
+func TestSingleBatchDoesNotWaitBehindBulk(t *testing.T) {
+	now := time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	a := &app.App{Log: log, Clock: func() time.Time { return now }, Background: ctx}
+	release := make(chan struct{})
+	t.Cleanup(func() { close(release) })
+	solo := make(chan struct{}, 1)
+	s := &Sender{a: a, interval: time.Millisecond, send: func(_ context.Context, m fcm.Message) (fcm.BatchResponse, error) {
+		if m.Tokens[0] == "solo" {
+			solo <- struct{}{}
+			return fcm.BatchResponse{SuccessCount: 1}, nil
+		}
+		<-release // FCM never answers the bulk batches
+		return fcm.BatchResponse{}, nil
+	}}
+	clock := func() time.Time { return now.Add(time.Hour) }
+	s.sched = newScheduler(ctx, clock, nil)
+	s.immediate = newScheduler(ctx, clock, nil)
+	s.SendGenericMultiNotification("t", "d", tokensOf(1001), HomeQags, nil)
+	s.SendGenericMultiNotification("t", "d", []string{"solo"}, ReponseSupport, nil)
+	waitFor(t, solo)
+}

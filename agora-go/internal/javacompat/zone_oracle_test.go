@@ -74,8 +74,13 @@ func TestJavaZoneFarDatesOracle(t *testing.T) {
 	for m := -180; m <= 180; m += 10 { // around the 1900 boundary of java.util.TimeZone
 		walls = append(walls, time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(m)*time.Minute))
 	}
+	for _, d := range []time.Time{time.Date(1994, 12, 31, 0, 0, 0, 0, time.UTC), time.Date(2011, 12, 30, 0, 0, 0, 0, time.UTC)} { // skipped days
+		for h := 0; h < 24*60; h += 90 {
+			walls = append(walls, d.Add(time.Duration(h)*time.Minute))
+		}
+	}
 	n := 0
-	for _, zone := range []string{"Europe/Paris", "America/New_York", "America/Santiago", "Australia/Lord_Howe", "Asia/Kolkata", "Europe/Dublin", "UTC"} {
+	for _, zone := range []string{"Europe/Paris", "America/New_York", "America/Santiago", "Australia/Lord_Howe", "Asia/Kolkata", "Europe/Dublin", "Pacific/Kiritimati", "Pacific/Apia", "UTC"} {
 		loc, err := time.LoadLocation(zone)
 		if err != nil {
 			t.Fatal(err)

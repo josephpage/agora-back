@@ -69,6 +69,7 @@ func main() {
 	if tz := common["TZ"]; tz != "" {
 		if loc, err := time.LoadLocation(tz); err == nil {
 			time.Local = loc
+			runner.SessionTimeZone = tz
 		} else {
 			fmt.Fprintf(os.Stderr, "common.env TZ=%q: %v\n", tz, err)
 			os.Exit(2)

@@ -3,6 +3,7 @@ package notification
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"agora/internal/app"
@@ -57,6 +58,10 @@ func (t *tokenChunks) release() { t.seen = nil }
 type Sender struct {
 	a     *app.App
 	sched *scheduler
+	// immediate runs the notifications of a single batch (one user: support reply, QaG
+	// notification): they never wait behind the batches of a send to many users, which may
+	// lag when FCM is slow (Kotlin's single queue holds at most the batch in progress then).
+	immediate *scheduler
 	// interval separates the due times of two consecutive batches.
 	interval time.Duration
 	// send performs the FCM call of one batch (FirebaseMessaging.sendEachForMulticast); replaced in tests.
@@ -76,9 +81,11 @@ func newSender(a *app.App) *Sender {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	s.sched = newScheduler(ctx, a.Now, func(r any) {
+	onPanic := func(r any) {
 		a.Log.Error(fmt.Sprintf("⚠️ Unexpected error occurred in scheduled task: %v", r))
-	})
+	}
+	s.sched = newScheduler(ctx, a.Now, onPanic)
+	s.immediate = newScheduler(ctx, a.Now, onPanic)
 	return s
 }
 
@@ -121,10 +128,23 @@ func batchInterval(perMinute int) time.Duration {
 // LocalDateTime.now(clock).plusMinutes(i), C-S8-FANOUT).
 func (s *Sender) scheduleBatches(messages []fcm.Message) {
 	now := s.a.Now()
+	sched := s.sched
+	if len(messages) == 1 && s.immediate != nil {
+		sched = s.immediate
+	}
+	var lateReported atomic.Bool
 	for i, m := range messages {
 		index, count := i, len(messages)
 		msg := m
-		s.sched.schedule(now.Add(time.Duration(index)*s.interval), func() { s.runBatch(msg, index, count) })
+		due := now.Add(time.Duration(index) * s.interval)
+		sched.schedule(due, func() {
+			// the batches are due at a fixed pace; when FCM answers slower than that, the worker
+			// falls behind (reported once per notification)
+			if late := s.a.Now().Sub(due); late > time.Minute && !lateReported.Swap(true) {
+				s.a.Log.Warn(fmt.Sprintf("📩 Multi-notification batch n°%d/%d starts %s late: FCM is slower than AGORA_NOTIFICATION_FANOUT_PER_MINUTE", index+1, count, late.Round(time.Second)))
+			}
+			s.runBatch(msg, index, count)
+		})
 	}
 }
 

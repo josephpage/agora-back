@@ -3,8 +3,10 @@
 // to one user, to everybody, to a department or to the users of a consultation, and the QaG
 // moderation notifications used by the Moderatus slice.
 //
-// A notification is (1) cut in batches of 300 FCM tokens, scheduled one batch per minute on a
-// single-threaded in-memory scheduler (the HTTP request does not wait for the sends), then (2) written
+// A notification is (1) cut in batches of up to 500 FCM tokens, scheduled at
+// AGORA_NOTIFICATION_FANOUT_PER_MINUTE tokens a minute (16 700 by default; Kotlin: 300 a minute,
+// C-S8-FANOUT) on a single-threaded in-memory scheduler, a single batch on a second one (the HTTP
+// request does not wait for the sends), then (2) written
 // as one row per user in `notifications`, with set-based statements (never one round trip per user).
 package notification
 

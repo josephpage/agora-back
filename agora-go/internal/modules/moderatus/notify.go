@@ -139,7 +139,8 @@ func (n *qagNotifier) send(ctx context.Context, qagID, title, description string
 
 // sendGenericMultiNotification is NotificationSendingRepositoryImpl.sendGenericMultiNotification
 // for one token list of DETAILS_QAG: blank tokens dropped, duplicates dropped, chunks of 300, one
-// FCM multicast per chunk (the chunk n is scheduled n minutes later), always SUCCESS once scheduled.
+// FCM multicast per chunk, always SUCCESS once scheduled. The list is the token of the QaG author:
+// a single chunk, sent at once, so the batch size and cadence of C-S8-FANOUT never apply here.
 func (n *qagNotifier) sendGenericMultiNotification(title, description string, tokens []string, pageArgument string) NotificationResult {
 	n.logf("📩 Sending multi-notification: %s", title)
 	seen := map[string]bool{}

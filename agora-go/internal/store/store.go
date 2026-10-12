@@ -16,6 +16,7 @@ import (
 	"embed"
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -62,6 +63,10 @@ func Open(ctx context.Context, databaseURL string, maxConns int, acquireTimeout 
 	}
 	// Statement cache per connection (prepared statements reused).
 	cfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeCacheStatement
+	// pgjdbc sends the JVM zone as the session TimeZone; the SQL compares timestamp columns with
+	// CURRENT_TIMESTAMP (the trending windows), which reads them in that zone. pgx sends nothing
+	// (the server's default zone): send the process zone like the JVM would.
+	cfg.ConnConfig.RuntimeParams["TimeZone"] = javacompat.PostgresTimeZone(javacompat.JVMDefaultZoneID(os.Getenv, time.Now()))
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		return nil, err

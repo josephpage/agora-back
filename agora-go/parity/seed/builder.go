@@ -87,7 +87,9 @@ type builder struct {
 }
 
 func newBuilder(now time.Time, scale int) *builder {
-	now = now.UTC().Truncate(time.Millisecond)
+	// the wall clocks are written in the process zone: the runner sets it to the backends' zone
+	// (common.env TZ), so that the rows read like the ones the backends write
+	now = now.In(time.Local).Truncate(time.Millisecond)
 	return &builder{
 		now:   now,
 		scale: scale,
@@ -136,7 +138,7 @@ func uid(s string) pgtype.UUID {
 }
 
 // ---------------------------------------------------------------------------
-// time helpers (everything is UTC, truncated to the millisecond)
+// time helpers (everything in the process zone, truncated to the millisecond)
 // ---------------------------------------------------------------------------
 
 // ago returns now - d.
@@ -145,24 +147,23 @@ func (b *builder) ago(d time.Duration) time.Time { return b.now.Add(-d).Truncate
 // at returns now + d (d may be negative).
 func (b *builder) at(d time.Duration) time.Time { return b.now.Add(d).Truncate(time.Millisecond) }
 
-// dayAt returns the instant `daysAgo` calendar days before today (UTC) at hh:mm.
+// dayAt returns the instant `daysAgo` calendar days before today (process zone) at hh:mm.
 // It is used where the SQL compares dates (DATE(event_date), "today - 2 weeks")
 // so that the rows stay on the intended calendar day whatever the time of day
 // `now` is.
 func (b *builder) dayAt(daysAgo, hh, mm int) time.Time {
 	y, m, d := b.now.Date()
-	return time.Date(y, m, d, hh, mm, 0, 0, time.UTC).AddDate(0, 0, -daysAgo)
+	return time.Date(y, m, d-daysAgo, hh, mm, 0, 0, b.now.Location())
 }
 
-// MondayCutoff returns "this week's Monday 10:00" (UTC) for the given instant,
+// MondayCutoff returns "this week's Monday 10:00" (process zone) for the given instant,
 // the threshold used by the weekly QaG archive job and by the weekly
 // "ask a QaG" limit.
 func MondayCutoff(now time.Time) time.Time {
-	now = now.UTC()
+	now = now.In(time.Local)
 	y, m, d := now.Date()
-	midnight := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
-	offset := (int(midnight.Weekday()) + 6) % 7 // Monday = 0
-	return midnight.AddDate(0, 0, -offset).Add(10 * hour)
+	offset := (int(time.Date(y, m, d, 12, 0, 0, 0, time.UTC).Weekday()) + 6) % 7 // Monday = 0
+	return time.Date(y, m, d-offset, 10, 0, 0, 0, time.Local)
 }
 
 // between returns the instant at fraction i/(n+1) of [from, to], truncated to ms.

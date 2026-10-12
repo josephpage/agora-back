@@ -10,7 +10,7 @@ import (
 
 // audience is the list of users a notification goes to (`userList` of the Kotlin use cases): the ids,
 // in the order of the selection and possibly repeated, and the FCM tokens of those users, filtered
-// (non-blank), de-duplicated and cut in batches of 300.
+// (non-blank), de-duplicated and cut in batches of up to 500 (C-S8-FANOUT).
 type audience struct {
 	ids    [][16]byte
 	tokens *tokenChunks

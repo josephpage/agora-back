@@ -79,6 +79,11 @@ func New(ctx context.Context, credentialsJSON string, log *slog.Logger) (*Sender
 	return s, nil
 }
 
+// multicastConcurrency bounds the requests in flight for one multicast. The Java SDK sends the
+// messages of a batch all at once (an unbounded cached thread pool); 100 is the usual HTTP/2
+// stream limit of one connection: a batch of 500 takes about five round trips.
+const multicastConcurrency = 100
+
 // SendEachForMulticast sends one request per token, concurrently (the Java
 // SDK uses a thread pool), and returns the success/failure counts.
 func (s *Sender) SendEachForMulticast(ctx context.Context, m Message) (BatchResponse, error) {
@@ -94,7 +99,7 @@ func (s *Sender) SendEachForMulticast(ctx context.Context, m Message) (BatchResp
 	}
 	var mu sync.Mutex
 	var br BatchResponse
-	sem := make(chan struct{}, 16)
+	sem := make(chan struct{}, multicastConcurrency)
 	var wg sync.WaitGroup
 	for _, t := range m.Tokens {
 		wg.Add(1)

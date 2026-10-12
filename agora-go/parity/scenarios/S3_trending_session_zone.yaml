@@ -1,0 +1,17 @@
+# The trending candidates are the QaGs moderated in the last 7 days, compared with
+# CURRENT_TIMESTAMP by the SQL (verbatim Kotlin @Query): the timestamp column is read in the
+# session TimeZone, which pgjdbc sets to the JVM zone. A QaG moderated 169 h ago (wall clock of
+# the backends' zone, written by the runner's session in that zone) is outside the window; read
+# in another zone (Europe/Paris vs UTC) it would look 2 h younger and come back in.
+name: S3-trending-session-zone
+tags: [S3]
+dbdiff: none
+setup:
+  sql:
+    - "INSERT INTO qags (id, title, description, post_date, status, thematique_id, user_id, username) VALUES ('00000000-0000-4000-8000-000000001011', 'Modérée il y a 169 heures', 'desc', localtimestamp - interval '170 hours', 1, 'th0000000000000000000001', '00000000-0000-4000-9000-000000000001', 'Gus'), ('00000000-0000-4000-8000-000000001012', 'Modérée il y a 166 heures', 'desc', localtimestamp - interval '170 hours', 1, 'th0000000000000000000002', '00000000-0000-4000-9000-000000000002', 'Hana'), ('00000000-0000-4000-8000-000000001013', 'Modérée il y a 167 heures et demie', 'desc', localtimestamp - interval '170 hours', 1, 'th0000000000000000000001', '00000000-0000-4000-9000-000000000003', 'Ivo')"
+    - "INSERT INTO qag_updates (id, moderated_date, qag_id, should_delete_flag, status, user_id) SELECT gen_random_uuid(), localtimestamp - (m || ' minutes')::interval, id::uuid, 0, 1, '00000000-0000-4000-9000-00000000000b' FROM (VALUES ('00000000-0000-4000-8000-000000001011', 169 * 60), ('00000000-0000-4000-8000-000000001012', 166 * 60), ('00000000-0000-4000-8000-000000001013', 167 * 60 + 30)) AS v(id, m)"
+    # 55 supports each (the seeded users): they outrank the seed's old QaGs for the 3 slots of the QaGs older than 72 h
+    - "INSERT INTO supports_qag (id, qag_id, support_date, user_id) SELECT gen_random_uuid(), q::uuid, localtimestamp, u.id FROM (VALUES ('00000000-0000-4000-8000-000000001011'), ('00000000-0000-4000-8000-000000001012'), ('00000000-0000-4000-8000-000000001013')) AS v(q), (SELECT id FROM agora_users ORDER BY id LIMIT 55) AS u"
+steps:
+  - {id: trending, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserIdle}}"}
+  - {id: trending-other-user, path: "/v2/qags?filterType=trending&pageNumber=1", as: "{{seed.UserRegular1}}"}

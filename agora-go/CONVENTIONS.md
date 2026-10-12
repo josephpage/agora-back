@@ -182,7 +182,15 @@ document as non-deterministic and compare with `compare.unordered` in scenarios.
   inserts. `saveAll` → one transaction.
 - `timestamp without time zone`: write `store.Millis(a.Now())` for
   `java.util.Date` fields, `store.Micros(a.Now())` for `LocalDateTime` fields;
-  read with `store.Local(t)`.
+  read with `store.Local(t)`. A `time.Time` parameter is sent as its own wall
+  clock: always pass it in `time.Local`.
+- The session `TimeZone` matters: the SQL compares timestamp columns with
+  `CURRENT_TIMESTAMP` (trending windows), which reads them in the session zone.
+  pgjdbc sends the JVM zone; `store.Open` sends the process zone the same way
+  (`javacompat.PostgresTimeZone(JVMDefaultZoneID(...))`). Any other connection
+  that compares with `CURRENT_TIMESTAMP` must do the same. The harness databases
+  keep the server's default zone (UTC) so that a backend that forgets it differs
+  (`S3-trending-session-zone`).
 - Entities with non-null Kotlin fields mapped to NULL columns crash in Kotlin
   (NPE / PropertyAccessException → 500): reproduce when reachable.
 - Use `a.DB.Pool` (`store.Pool`: pgx with Hikari's 30 s connectionTimeout on the

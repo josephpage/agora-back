@@ -27,22 +27,24 @@ idle. The `acme_*` tables are truncated and stay empty.
 
 ## Time model - read this
 
-* Every timestamp is `now` minus a fixed offset, in UTC, truncated to the
-  millisecond (columns are `timestamp without time zone`). No row is in the
-  future. `now` is a parameter: the harness controls it.
+* Every timestamp is `now` minus a fixed offset, written as a wall clock of the
+  process zone (`TZ`; the runner and the load campaign use the backends' zone,
+  `parity/env/common.env`), truncated to the millisecond (columns are
+  `timestamp without time zone`). No row is in the future. `now` is a
+  parameter: the harness controls it.
 * The SQL that uses `CURRENT_TIMESTAMP` (trending queries: 7 days / N hours
   windows) uses the **database clock**, and the Kotlin code uses the JVM
   clock. So pass (about) the real current time as `-now`, or freeze all three.
   Offsets leave margins of several hours around the interesting thresholds.
 * Rows that must stay on a calendar day (signup abuse detection compares
   `DATE(event_date)` and "today - 2 weeks .. today 00:00") are built from
-  `today 00:00 UTC - N days + hh:mm`, not from `now - N days`.
+  `today 00:00 (process zone) - N days + hh:mm`, not from `now - N days`.
 * Weekday dependent outcomes (because of "this week's Monday 10:00", see
   `seed.MondayCutoff(now)`): which of the *recently* moderated accepted QaGs are
   also archive candidates; the "ask a QaG" status of UserRegular3/4/5.
   Always deterministic: UserRegular1 -> `ENABLED` (last QaG is 9 days old),
   UserRegular2 -> `WEEKLY_LIMIT_REACHED` (posted 22 minutes ago, unless `now` is
-  within ~30 min after Monday 10:00 UTC).
+  within ~30 min after Monday 10:00, process zone).
   QaGs moderated >= 8 days ago (0b, 0c, 0d) are always archive candidates.
 
 ## ID plan (shared with the fake Strapi fixtures)

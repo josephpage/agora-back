@@ -25,9 +25,12 @@ jobs:
           cache-dependency-path: agora-go/go.sum
       - run: test -z "$(gofmt -l cmd internal parity)"
       - run: go vet ./...
-      - run: go test -race ./...
+      # -count=1: the test cache does not key on TZ (the time package reads it with syscall.Getenv)
+      - run: go test -race -count=1 ./...
+        env:
+          TZ: UTC
       # production runs with TZ=Europe/Paris: the same tests in that zone (daylight saving time)
-      - run: go test ./...
+      - run: go test -count=1 ./...
         env:
           TZ: Europe/Paris
 
@@ -71,7 +74,8 @@ jobs:
         working-directory: agora-go
         env:
           ORACLE_JAVA_HOME: ${{ env.JAVA_HOME }}
-        run: go test ./internal/... ./parity/oracle/
+          TZ: UTC
+        run: go test -count=1 ./internal/... ./parity/oracle/
       - name: Oracle tests in the production zone (Europe/Paris)
         working-directory: agora-go
         env:
