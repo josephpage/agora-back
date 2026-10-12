@@ -270,6 +270,9 @@ add(F, scenario("S7-result-qag-status-values", [
     st("okay", RES, query=moderate_q(MOD, OPEN_PLAIN, "OKAY")),
     st("numeric", RES, query=moderate_q(MOD, OPEN_PLAIN, "1")),
     st("enum-name", RES, query=moderate_q(MOD, OPEN_PLAIN, "MODERATED_ACCEPTED")),
+    # `status` is a String here: the values are joined with "," ("OK,NOK" is not a status)
+    st("repeated-status", path=mint_path(RES, [("password", MOD), ("mediaType", "xml"), ("content_id", OPEN_PLAIN),
+                                               ("status", "OK"), ("status", "NOK")])),
     st("invalid-status-unknown-id", RES, query=moderate_q(MOD, UNKNOWN_QAG, "maybe")),
     st("invalid-status-not-uuid", RES, query=moderate_q(MOD, NOT_UUID, "maybe")),
     st("invalid-status-archived", RES, query=moderate_q(MOD, ARCHIVED_RECENT, "maybe")),
@@ -497,6 +500,13 @@ add(F, scenario("S7-known-foundation-xml-escape-attribute-nonchar", [
     st("ffff-in-content-id-moderator", ACK, query=lock_q(MOD, "a￿b")),
 ], tags=[KNOWN], dbdiff="step",
     skip="F-XML-ESC (internal/xmljava): Woodstox writes U+FFFE / U+FFFF as &#xfffe; / &#xffff; in attributes, xmljava writes them raw"))
+add(F, scenario("S7-known-c-xml-control-char-content-id", [
+    # the anonymous error path echoes the content_id of the request in an attribute: U+0001 is refused by Woodstox
+    # (plain text / attribute), the reference cuts the body (curl exit 18) with status 401, Go answers a clean 500
+    st("anonymous-c0-in-content-id", ACK, query=lock_q("abc", "a\u0001b")),
+    st("moderator-c0-in-content-id", ACK, query=lock_q(MOD, "a\u0001b")),
+], tags=["S7-known-C"], dbdiff="step",
+    skip="C-XML-CONTROL-CHAR (DIVERGENCES.md): Woodstox fails while writing an attribute with a control character; the reference cuts the body, Go answers 500"))
 add(F, scenario("S7-known-foundation-xml-cdata-control-username", [
     st("list-with-control-username", NEW, query=list_q(MOD)),
 ], tags=[KNOWN], dbdiff="none",

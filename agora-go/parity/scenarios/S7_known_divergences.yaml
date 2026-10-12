@@ -7,6 +7,14 @@ steps:
   - {"id": "fffe-in-content-id-anonymous", "path": "/moderatus/ack_qags", "query": {"password": "abc", "mediaType": "xml", "content_id": "a\ufffeb"}}
   - {"id": "ffff-in-content-id-moderator", "path": "/moderatus/ack_qags", "query": {"password": "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhKU3VRuX960dELeRbF3P/AIucljy6EHMr/wCr2RPFF3uQ==", "mediaType": "xml", "content_id": "a\uffffb"}}
 ---
+name: "S7-known-c-xml-control-char-content-id"
+tags: ["S7-known-C"]
+dbdiff: "step"
+skip: "C-XML-CONTROL-CHAR (DIVERGENCES.md): Woodstox fails while writing an attribute with a control character; the reference cuts the body, Go answers 500"
+steps:
+  - {"id": "anonymous-c0-in-content-id", "path": "/moderatus/ack_qags", "query": {"password": "abc", "mediaType": "xml", "content_id": "a\u0001b"}}
+  - {"id": "moderator-c0-in-content-id", "path": "/moderatus/ack_qags", "query": {"password": "euxogrrEhl4PRVh40bRahniogi/YOWRgTDtjYUFhOhKU3VRuX960dELeRbF3P/AIucljy6EHMr/wCr2RPFF3uQ==", "mediaType": "xml", "content_id": "a\u0001b"}}
+---
 name: "S7-known-foundation-xml-cdata-control-username"
 tags: ["S7-known-foundation"]
 dbdiff: "none"
