@@ -35,35 +35,6 @@ import (
 	"agora/internal/tasks"
 )
 
-const customCommandPrefix = "--run-custom-command="
-
-// parseCustomCommand reproduces AgoraCustomCommandHelper: the command name
-// and the following "--key=value" arguments.
-func parseCustomCommand(args []string) (string, map[string]string, bool) {
-	for i, a := range args {
-		if !strings.HasPrefix(a, customCommandPrefix) {
-			continue
-		}
-		cmd := strings.TrimSpace(strings.TrimPrefix(a, customCommandPrefix))
-		if cmd == "" {
-			return "", nil, false
-		}
-		params := map[string]string{}
-		for _, arg := range args[i+1:] {
-			if strings.TrimSpace(arg) == "" {
-				continue
-			}
-			if strings.HasPrefix(arg, "--") && strings.Contains(arg, "=") {
-				k := strings.SplitN(strings.TrimPrefix(arg, "--"), "=", 2)[0]
-				v := arg[strings.Index(arg, "=")+1:]
-				params[k] = v
-			}
-		}
-		return cmd, params, true
-	}
-	return "", nil, false
-}
-
 func main() {
 	logger := newLogger()
 	slog.SetDefault(logger)
@@ -89,9 +60,14 @@ func main() {
 		os.Exit(1)
 	}
 	defer cleanup()
+	// FeatureFlagsLogger: a Kotlin bean, so it runs at the start-up of every process.
+	if err := tasks.LogFeatureFlags(ctx, a); err != nil {
+		logger.Error("feature flags", "err", err)
+		os.Exit(1)
+	}
 
-	if cmd, args, ok := parseCustomCommand(os.Args[1:]); ok {
-		os.Exit(runCustomCommand(ctx, a, cmd, args))
+	if cmd, ok := tasks.ParseCustomCommand(os.Args[1:]); ok {
+		os.Exit(runCustomCommand(ctx, a, cmd.Command, cmd.Arguments))
 	}
 	if err := serve(ctx, a); err != nil {
 		logger.Error("server error", "err", err)
