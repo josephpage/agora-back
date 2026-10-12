@@ -85,6 +85,7 @@ func (f *fakeUpdates) InsertQagUpdates(_ context.Context, u qag.QagInsertingUpda
 type fakeLocks struct {
 	log    *callLog
 	locked []string
+	added  []string
 	err    error
 }
 
@@ -95,6 +96,7 @@ func (f *fakeLocks) GetLockedQagIDs(context.Context) ([]string, error) {
 
 func (f *fakeLocks) AddLockedIDs(_ context.Context, ids []string) error {
 	f.log.add("addLockedIds%v", ids)
+	f.added = append(f.added, ids...)
 	return nil
 }
 

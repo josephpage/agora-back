@@ -65,8 +65,14 @@ final class S7Functions {
         return n.get(k).longValue();
     }
 
+    /** JSON and XML like Spring MVC; an XML that Woodstox refuses to write is reported as "xmlError". */
     private static Map<String, Object> bodies(Object body) throws Exception {
-        return Functions.map("json", Functions.encode(Functions.springJson(), body), "xml", Functions.encode(Functions.springXml(), body));
+        String json = Functions.encode(Functions.springJson(), body);
+        try {
+            return Functions.map("json", json, "xml", Functions.encode(Functions.springXml(), body));
+        } catch (Exception e) {
+            return Functions.map("json", json, "xmlError", e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
     }
 
     private static QagInfo qagInfo(JsonNode n) {

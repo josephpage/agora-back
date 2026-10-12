@@ -52,12 +52,7 @@ func (r *LockRepository) GetLockedQagIDs(ctx context.Context) ([]string, error) 
 // are dropped; the others are saved by one saveAll (one transaction, a fresh random id
 // and "now" as lock date per row; a QaG may therefore be locked twice).
 func (r *LockRepository) AddLockedIDs(ctx context.Context, lockedQagIDs []string) error {
-	uuids := make([]string, 0, len(lockedQagIDs))
-	for _, id := range lockedQagIDs {
-		if u, ok := javacompat.ToUUIDOrNull(id); ok {
-			uuids = append(uuids, u)
-		}
-	}
+	uuids := lockedUUIDs(lockedQagIDs)
 	if len(uuids) == 0 {
 		return nil
 	}
@@ -71,6 +66,17 @@ func (r *LockRepository) AddLockedIDs(ctx context.Context, lockedQagIDs []string
 		}
 		return nil
 	})
+}
+
+// lockedUUIDs is the mapper.toDto filter of addLockedIds: the canonical UUID of every id that parses.
+func lockedUUIDs(ids []string) []string {
+	uuids := make([]string, 0, len(ids))
+	for _, id := range ids {
+		if u, ok := javacompat.ToUUIDOrNull(id); ok {
+			uuids = append(uuids, u)
+		}
+	}
+	return uuids
 }
 
 // RemoveLockedQagID is removeLockedQagId: UUID.fromString (an invalid id does nothing),
