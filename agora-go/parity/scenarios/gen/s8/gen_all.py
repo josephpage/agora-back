@@ -219,7 +219,7 @@ def notify_user_scenarios():
     out.append(scenario("S8-notify-user-unknown", [
         step("x-unknown-uuid", "/admin/notifyUser/%s" % UNKNOWN_USER, **{"as": ADMIN}),
         step("x-not-uuid", "/admin/notifyUser/not-a-uuid", **{"as": ADMIN}),
-        step("x-uppercase", "/admin/notifyUser/%s" % R[2].upper(), **{"as": ADMIN}),
+        step("x-uppercase", "/admin/notifyUser/%s" % "00000000-0000-4000-9000-00000000000a".upper(), **{"as": ADMIN}),  # UserPublisher, letters only in the hex digit a
         step("x-trailing-slash", "/admin/notifyUser/%s/" % R[2], **{"as": ADMIN}),
         step("x-empty-id", "/admin/notifyUser/", **{"as": ADMIN}),
         step("x-zero-uuid", "/admin/notifyUser/00000000-0000-0000-0000-000000000000", **{"as": ADMIN}),
@@ -316,6 +316,8 @@ def department_scenarios():
         step("b-no-segment", "/admin/notifyUsersInDepartement/", **{"as": ADMIN}),
         step("b-bad-type-valid-code", "/admin/notifyUsersInDepartement/75?type=FOO", **{"as": ADMIN}),
         step("b-bad-type-bad-code", "/admin/notifyUsersInDepartement/00?type=FOO", **{"as": ADMIN}),
+        step("b-repeated-empty-first-bad-code", "/admin/notifyUsersInDepartement/00?type=&type=HOME_QAGS", **{"as": ADMIN}),
+        step("b-repeated-empty-first-valid-code", "/admin/notifyUsersInDepartement/75?type=&type=HOME_QAGS", **{"as": ADMIN}),
     ], tags=TAG, dbdiff="step"))
     out.append(scenario("S8-department-params", [
         step("p-type-%d" % i, "/admin/notifyUsersInDepartement/75?type=%s&title=T%d" % (t, i), **{"as": ADMIN})

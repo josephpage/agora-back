@@ -30,7 +30,7 @@ dbdiff: "step"
 steps:
   - {"id": "x-unknown-uuid", "path": "/admin/notifyUser/00000000-0000-4000-9000-0000000000ff", "as": "{{seed.UserAdmin}}"}
   - {"id": "x-not-uuid", "path": "/admin/notifyUser/not-a-uuid", "as": "{{seed.UserAdmin}}"}
-  - {"id": "x-uppercase", "path": "/admin/notifyUser/{{SEED.USERREGULAR2}}", "as": "{{seed.UserAdmin}}"}
+  - {"id": "x-uppercase", "path": "/admin/notifyUser/00000000-0000-4000-9000-00000000000A", "as": "{{seed.UserAdmin}}"}
   - {"id": "x-trailing-slash", "path": "/admin/notifyUser/{{seed.UserRegular2}}/", "as": "{{seed.UserAdmin}}"}
   - {"id": "x-empty-id", "path": "/admin/notifyUser/", "as": "{{seed.UserAdmin}}"}
   - {"id": "x-zero-uuid", "path": "/admin/notifyUser/00000000-0000-0000-0000-000000000000", "as": "{{seed.UserAdmin}}"}

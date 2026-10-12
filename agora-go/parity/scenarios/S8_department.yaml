@@ -38,6 +38,8 @@ steps:
   - {"id": "b-no-segment", "path": "/admin/notifyUsersInDepartement/", "as": "{{seed.UserAdmin}}"}
   - {"id": "b-bad-type-valid-code", "path": "/admin/notifyUsersInDepartement/75?type=FOO", "as": "{{seed.UserAdmin}}"}
   - {"id": "b-bad-type-bad-code", "path": "/admin/notifyUsersInDepartement/00?type=FOO", "as": "{{seed.UserAdmin}}"}
+  - {"id": "b-repeated-empty-first-bad-code", "path": "/admin/notifyUsersInDepartement/00?type=&type=HOME_QAGS", "as": "{{seed.UserAdmin}}"}
+  - {"id": "b-repeated-empty-first-valid-code", "path": "/admin/notifyUsersInDepartement/75?type=&type=HOME_QAGS", "as": "{{seed.UserAdmin}}"}
 ---
 name: "S8-department-params"
 tags: ["S8"]
