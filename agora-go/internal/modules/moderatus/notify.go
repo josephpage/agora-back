@@ -2,14 +2,11 @@ package moderatus
 
 import (
 	"context"
-	"math/rand/v2"
 
-	"agora/internal/app"
 	"agora/internal/fcm"
 	"agora/internal/javacompat"
 	"agora/internal/modules/qag"
 	"agora/internal/modules/users"
-	"agora/internal/store"
 )
 
 // NotificationResult is usecase/notification/repository/NotificationResult.
@@ -23,9 +20,9 @@ const (
 
 // QagNotifier is the part of SendQagNotificationUseCase the moderation uses: the
 // notification of the author of a QaG. That use case belongs to the notifications
-// slice (S8); until the integration of that slice, Get builds the port below
-// (qagNotifier, same messages, same notifications row, same FCM message). SetNotifier
-// lets the integration plug the S8 implementation in.
+// slice (S8): Get plugs it in (s8Notifier). The port below (qagNotifier, same messages,
+// same notifications row, same FCM message) is only used by the unit tests of this
+// package and is kept equal to S8 by the oracle tests of both slices.
 type QagNotifier interface {
 	SendNotificationQagRejected(ctx context.Context, qagID string) (NotificationResult, error)
 	SendNotificationQagAccepted(ctx context.Context, qagID string) (NotificationResult, error)
@@ -184,52 +181,3 @@ func (n *qagNotifier) sendBatch(msg fcm.Message, batchIndex, batchCount int) {
 	n.logf("📩 Send multi-notification n°%d/%d results: %d successes, %d failures", batchIndex+1, batchCount, resp.SuccessCount, resp.FailureCount)
 }
 
-// ---------------------------------------------------------------------------
-// notifications table (NotificationRepositoryImpl.insertNotifications)
-// ---------------------------------------------------------------------------
-
-type pgNotifications struct{ a *app.App }
-
-// InsertNotification is insertNotifications for one user: the user id is parsed with
-// toUuidOrNull (nothing is written otherwise), the id is generated, the date is now.
-func (r pgNotifications) InsertNotification(ctx context.Context, title, description, typeOrdinal, userID string) error {
-	uid, ok := javacompat.ToUUIDOrNull(userID)
-	if !ok {
-		return nil
-	}
-	_, err := r.a.DB.Pool.Exec(ctx, "INSERT INTO notifications (id, date, description, title, type, user_id) VALUES ($1, $2, $3, $4, $5, $6)",
-		users.RandomUUID(), store.Millis(r.a.Now()), description, title, typeOrdinal, uid)
-	return err
-}
-
-// newQagNotifier builds the default notifier of an App.
-func newQagNotifier(a *app.App, qags notifQagReader, u notifUserReader) *qagNotifier {
-	return &qagNotifier{
-		qags:  qags,
-		users: u,
-		sender: func() fcmSender {
-			if a.FCM == nil {
-				return nil
-			}
-			return &appSender{a}
-		},
-		notifs: pgNotifications{a},
-		pick:   func(n int) int { return rand.IntN(n) },
-		runSend: func(f func()) {
-			// the Kotlin task runs on the scheduler pool, after the request
-			go f()
-		},
-		logf: func(format string, args ...any) { logInfo(a, format, args...) },
-	}
-}
-
-// appSender sends with the App's FCM sender, which fails like the Kotlin code
-// without FirebaseApp when no credentials are configured.
-type appSender struct{ a *app.App }
-
-func (s *appSender) SendEachForMulticast(ctx context.Context, m fcm.Message) (fcm.BatchResponse, error) {
-	if s.a.Background != nil {
-		ctx = s.a.Background
-	}
-	return s.a.FCM.SendEachForMulticast(ctx, m)
-}

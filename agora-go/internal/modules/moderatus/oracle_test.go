@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -140,14 +139,10 @@ func TestOracleXMLCDATAFoundationChars(t *testing.T) {
 
 // TestOracleXMLEscapeFoundation is the known foundation divergence F-XML-ESC: Woodstox writes the element-text code
 // points of foundationEscapeTexts and the attribute non-characters U+FFFE / U+FFFF as &#x..; (lowercase hex),
-// internal/xmljava writes them raw. It runs when PARITY_FOUNDATION_XML_ESC=1 is set (once xmljava escapes them) and
-// is skipped otherwise.
+// internal/xmljava writes them the same way (formerly the foundation divergence F-XML-ESC).
 func TestOracleXMLEscapeFoundation(t *testing.T) {
 	if !oracle.Available() {
 		t.Skip("PARITY_ORACLE!=1")
-	}
-	if os.Getenv("PARITY_FOUNDATION_XML_ESC") == "" {
-		t.Skip("known foundation divergence F-XML-ESC (internal/xmljava): run with PARITY_FOUNDATION_XML_ESC=1 once xmljava escapes U+007F-U+009F, U+FFFE, U+FFFF")
 	}
 	for _, s := range foundationEscapeTexts {
 		var want bodiesWant
@@ -176,13 +171,10 @@ func TestOracleXMLAttributeC1Chars(t *testing.T) {
 
 // TestOracleXMLCDATAControlFoundation is the known foundation divergence F-XML-CTRL: a control character inside CDATA
 // (here the username of a QaG, `pseudo`) is written raw by Woodstox (HTTP 200) and refused by xmljava.MarshalChecked
-// (HTTP 500). It runs when PARITY_FOUNDATION_XML_CTRL=1 is set (once xmljava accepts them) and is skipped otherwise.
+// (HTTP 500) before xmljava accepted them (formerly the foundation divergence F-XML-CTRL).
 func TestOracleXMLCDATAControlFoundation(t *testing.T) {
 	if !oracle.Available() {
 		t.Skip("PARITY_ORACLE!=1")
-	}
-	if os.Getenv("PARITY_FOUNDATION_XML_CTRL") == "" {
-		t.Skip("known foundation divergence F-XML-CTRL (internal/xmljava): run with PARITY_FOUNDATION_XML_CTRL=1 once control characters are written in CDATA")
 	}
 	for _, s := range controlTexts {
 		args := []map[string]any{{"qagId": "id", "title": "t", "description": "d", "dateMs": int64(0), "username": s, "userId": "user"}}

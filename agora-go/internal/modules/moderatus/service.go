@@ -21,6 +21,7 @@
 package moderatus
 
 import (
+	"agora/internal/modules/notification"
 	"context"
 	"fmt"
 
@@ -78,7 +79,7 @@ func build(a *app.App) *Service {
 	s.Lock = &LockModeratusQagListUseCase{qags: q.Info, locks: locks}
 	s.Moderate = &ModerateModeratusQagUseCase{
 		qags:              q.Info,
-		notifier:          newQagNotifier(a, q.Info, u),
+		notifier:          s8Notifier{notification.Get(a)},
 		updates:           q.Updates,
 		locks:             locks,
 		afterStatusChange: evict,

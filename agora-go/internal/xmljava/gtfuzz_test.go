@@ -17,7 +17,7 @@ func TestOracleTextEscapingRandom(t *testing.T) {
 		t.Skip("PARITY_ORACLE!=1")
 	}
 	r := rand.New(rand.NewSource(5))
-	alphabet := []rune("ab]>&<\r\né😀 \"'")
+	alphabet := []rune("ab]>&<\r\né😀 \"'\u007f\u0085\u009f\ufffe\uffff")
 	for i := 0; i < 1500; i++ {
 		n := []int{1, 5, 10, 11, 12, 13, 30, 511, 512, 513, 1030}[r.Intn(11)]
 		var b strings.Builder

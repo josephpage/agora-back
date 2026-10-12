@@ -60,6 +60,9 @@ bodies). Your handler only reproduces the controller method:
   - `@RequestHeader("X", required=false) x: String?` → `c.OptionalHeader("X")`
   - `@RequestParam("p") p: String` → `c.RequiredParam("p")`; `String?` → `c.OptionalParam("p")` (repeated
     values joined with `,` like Spring); `request.getParameter` → `c.Param`; all values → `c.ParamValues`
+  - `@RequestParam` of a non-`String` type (enum, `Int`…): Spring converts the FIRST value of a
+    repeated parameter (`status=OPEN&status=ARCHIVED` → `OPEN`): read it with `c.Param("p")` (first
+    value), never `c.RequiredParam` (which joins the values like a `String` parameter) — found by S7.
   - `@RequestParam(defaultValue=d)` → `c.ParamDefault("p", d)` (absent or empty → d). Caveat (found by
     S8): with a `defaultValue`, Spring does not report a value that *converts* to null (e.g. a repeated
     parameter whose first value is empty, `type=&type=X`, bound to a list or an enum): the null reaches

@@ -12,6 +12,7 @@
 package xmljava
 
 import (
+	"bytes"
 	"errors"
 	"reflect"
 	"strconv"
@@ -126,11 +127,29 @@ func Marshal(v any) []byte {
 // MarshalChecked is Marshal but fails like Woodstox when the output would
 // contain characters invalid in XML 1.0 (control characters other than
 // TAB/LF/CR): Jackson throws, Spring answers 500.
+//
+// Inside CDATA sections Woodstox writes control characters raw (no failure):
+// only the bytes outside them are checked (the "]]>" marker byte of a CDATA
+// value is written before its section, so it is always checked).
 func MarshalChecked(v any) ([]byte, error) {
 	b := Marshal(v)
-	for _, c := range b {
-		if c < 0x20 && c != '\t' && c != '\n' && c != '\r' {
-			return nil, errInvalidXMLChar
+	const open, close = "<![CDATA[", "]]>"
+	inCDATA := false
+	for i := 0; i < len(b); i++ {
+		if !inCDATA {
+			if b[i] == '<' && bytes.HasPrefix(b[i:], []byte(open)) {
+				inCDATA = true
+				i += len(open) - 1
+				continue
+			}
+			if c := b[i]; c < 0x20 && c != '\t' && c != '\n' && c != '\r' {
+				return nil, errInvalidXMLChar
+			}
+			continue
+		}
+		if b[i] == ']' && bytes.HasPrefix(b[i:], []byte(close)) {
+			inCDATA = false
+			i += len(close) - 1
 		}
 	}
 	return b, nil
@@ -308,6 +327,10 @@ func appendEscapedText(b []byte, s string) []byte {
 			b = append(b, "&#xd;"...)
 			segStart = i + 1
 			continue
+		case 0xFFFE, 0xFFFF:
+			b = appendCharRef(b, u)
+			segStart = i + 1
+			continue
 		case '>':
 			esc := false
 			if short {
@@ -320,6 +343,12 @@ func appendEscapedText(b []byte, s string) []byte {
 				segStart = i + 1
 				continue
 			}
+		}
+		if u >= 0x7F && u <= 0x9F {
+			// Woodstox escapes DEL and the C1 controls in element text
+			b = appendCharRef(b, u)
+			segStart = i + 1
+			continue
 		}
 		// re-encode this unit (surrogate pairs are handled by decoding pairs)
 		if u >= 0xD800 && u < 0xDC00 && i+1 < n && units[i+1] >= 0xDC00 && units[i+1] < 0xE000 {
@@ -335,9 +364,23 @@ func appendEscapedText(b []byte, s string) []byte {
 	return b
 }
 
+// appendCharRef writes a character reference like Woodstox: lowercase hex.
+func appendCharRef(b []byte, u uint16) []byte {
+	b = append(b, "&#x"...)
+	b = strconv.AppendUint(b, uint64(u), 16)
+	return append(b, ';')
+}
+
 func appendEscapedAttr(b []byte, s string) []byte {
 	for i := 0; i < len(s); i++ {
 		c := s[i]
+		// U+FFFE / U+FFFF (EF BF BE / EF BF BF): escaped by Woodstox in attributes too
+		// (the C1 controls are written raw in attributes)
+		if c == 0xEF && i+2 < len(s) && s[i+1] == 0xBF && (s[i+2] == 0xBE || s[i+2] == 0xBF) {
+			b = appendCharRef(b, 0xFFFE+uint16(s[i+2]-0xBE))
+			i += 2
+			continue
+		}
 		switch c {
 		case '&':
 			b = append(b, "&amp;"...)

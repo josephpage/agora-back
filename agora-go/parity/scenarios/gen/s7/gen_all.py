@@ -495,11 +495,11 @@ KNOWN = "S7-known-foundation"
 # F-XML-ESC: Woodstox writes U+FFFE and U+FFFF as &#xfffe; / &#xffff; in attribute values (lock results
 # content_id), internal/xmljava writes them raw. U+007F..U+009F are written raw in attributes by both (see
 # S7_ack_qags.yaml); they are escaped only in element text (not reachable from the S7 routes).
-add(F, scenario("S7-known-foundation-xml-escape-attribute-nonchar", [
+# formerly known foundation divergences F-XML-ESC / F-XML-CTRL, fixed in internal/xmljava
+add("S7_xml_chars.yaml", scenario("S7-xml-escape-attribute-nonchar", [
     st("fffe-in-content-id-anonymous", ACK, query=lock_q("abc", "a￾b")),
     st("ffff-in-content-id-moderator", ACK, query=lock_q(MOD, "a￿b")),
-], tags=[KNOWN], dbdiff="step",
-    skip="F-XML-ESC (internal/xmljava): Woodstox writes U+FFFE / U+FFFF as &#xfffe; / &#xffff; in attributes, xmljava writes them raw"))
+], tags=TAG, dbdiff="step"))
 add(F, scenario("S7-known-c-xml-control-char-content-id", [
     # the anonymous error path echoes the content_id of the request in an attribute: U+0001 is refused by Woodstox
     # (plain text / attribute), the reference cuts the body (curl exit 18) with status 401, Go answers a clean 500
@@ -507,11 +507,10 @@ add(F, scenario("S7-known-c-xml-control-char-content-id", [
     st("moderator-c0-in-content-id", ACK, query=lock_q(MOD, "a\u0001b")),
 ], tags=["S7-known-C"], dbdiff="step",
     skip="C-XML-CONTROL-CHAR (DIVERGENCES.md): Woodstox fails while writing an attribute with a control character; the reference cuts the body, Go answers 500"))
-add(F, scenario("S7-known-foundation-xml-cdata-control-username", [
+add("S7_xml_chars.yaml", scenario("S7-xml-cdata-control-username", [
     st("list-with-control-username", NEW, query=list_q(MOD)),
-], tags=[KNOWN], dbdiff="none",
-    setup={"sql": ["UPDATE qags SET username = 'a' || chr(1) || 'b' WHERE id = '%s'" % ID(0x23)]},
-    skip="F-XML-CTRL (internal/xmljava): Woodstox writes U+0001 raw in CDATA (200), MarshalChecked refuses it (500)"))
+], tags=TAG, dbdiff="none",
+    setup={"sql": ["UPDATE qags SET username = 'a' || chr(1) || 'b' WHERE id = '%s'" % ID(0x23)]}))
 
 add(F, scenario("S7-known-foundation-cdata-end-marker", [
     st("list-with-end-marker-in-title", NEW, query=list_q(MOD)),
