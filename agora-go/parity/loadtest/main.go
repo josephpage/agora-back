@@ -112,7 +112,8 @@ func main() {
 	secret := flag.String("jwt-secret", os.Getenv("JWT_SECRET"), "JWT secret (base64)")
 	report := flag.String("report", "", "JSON report path")
 	usersDB := flag.String("users-db", "", "take the -users first active users (logged in, not banned) of this database instead of the bulk ids 1..users")
-	freshUsers := flag.Int("fresh-users", 0, "with -users-db: the next active users after -users, each used once by the one-time writes (consultation answers)")
+	freshUsers := flag.Int("fresh-users", 0, "with -users-db: active users that have not answered -fresh-consultation, each used once by the one-time writes (consultation answers)")
+	freshConsultation := flag.String("fresh-consultation", "co0000000000000000000001", "the consultation the fresh users have not answered yet")
 	flag.Parse()
 
 	reqs, ok := profiles[*profile]
@@ -134,12 +135,12 @@ func main() {
 		// the token filter of both backends fails (500) for a user without last_connection_date:
 		// real clients always have one (it is set at login)
 		var err error
-		if ids, err = activeUsers(*usersDB, *users, false); err != nil {
+		if ids, err = activeUsers(*usersDB, *users, ""); err != nil {
 			fmt.Fprintln(os.Stderr, "users-db:", err)
 			os.Exit(2)
 		}
 		if *freshUsers > 0 {
-			if freshIDs, err = activeUsers(*usersDB, *freshUsers, true); err != nil {
+			if freshIDs, err = activeUsers(*usersDB, *freshUsers, *freshConsultation); err != nil {
 				fmt.Fprintln(os.Stderr, "users-db:", err)
 				os.Exit(2)
 			}
@@ -289,20 +290,21 @@ func main() {
 }
 
 // activeUsers returns up to n user ids that can authenticate (last connection known, not
-// banned); fresh ones (highest ids first) have answered no consultation yet.
-func activeUsers(dbURL string, n int, fresh bool) ([]string, error) {
+// banned); with a consultation, users (highest ids first) that have not answered it yet.
+func activeUsers(dbURL string, n int, notAnswered string) ([]string, error) {
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, dbURL)
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close(ctx)
-	q := `SELECT id::text FROM agora_users WHERE last_connection_date IS NOT NULL AND is_banned = 0 ORDER BY id LIMIT $1`
-	if fresh {
+	q, args := `SELECT id::text FROM agora_users WHERE last_connection_date IS NOT NULL AND is_banned = 0 ORDER BY id LIMIT $1`, []any{n}
+	if notAnswered != "" {
 		q = `SELECT id::text FROM agora_users u WHERE last_connection_date IS NOT NULL AND is_banned = 0
-			AND NOT EXISTS (SELECT 1 FROM user_answered_consultation a WHERE a.user_id = u.id) ORDER BY id DESC LIMIT $1`
+			AND NOT EXISTS (SELECT 1 FROM user_answered_consultation a WHERE a.user_id = u.id AND a.consultation_id = $2) ORDER BY id DESC LIMIT $1`
+		args = append(args, notAnswered)
 	}
-	rows, err := conn.Query(ctx, q, n)
+	rows, err := conn.Query(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}

@@ -78,6 +78,12 @@ for side in $SIDES; do
     # (a JVM still draining the requests of the previous profile) does not spill over
     stop_backends
     for s in ref go; do redis-cli -p ${REDIS[$s]} -a ${PASS[$s]} --no-auth-warning flushall >/dev/null; done
+    if [ "$p" = consultation ]; then
+      # the answers of earlier load runs (marked by their free text) are removed, so the fresh
+      # answerers (users that have not answered the consultation) are never exhausted
+      psql -q "${DB[$side]}" -c "DELETE FROM user_answered_consultation WHERE consultation_id = 'co0000000000000000000001' AND user_id IN (SELECT user_id FROM reponses_consultation WHERE consultation_id = 'co0000000000000000000001' AND response_text = 'Réponse libre de test')" \
+        -c "DELETE FROM reponses_consultation WHERE consultation_id = 'co0000000000000000000001' AND participation_id IN (SELECT participation_id FROM reponses_consultation WHERE consultation_id = 'co0000000000000000000001' AND response_text = 'Réponse libre de test')"
+    fi
     echo 0 > /sys/fs/cgroup/memory/$name/memory.max_usage_in_bytes 2>/dev/null || true
     t0=$(awk '/throttled_time/ {print $2}' /sys/fs/cgroup/cpu/$name/cpu.stat)
     # started from a shell already inside the cgroup: the JVM / Go runtime see the limits from the start
