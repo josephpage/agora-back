@@ -64,6 +64,16 @@ func main() {
 		}
 	}
 	common := loadEnvFile(env("PARITY_COMMON_ENV", "parity/env/common.env"))
+	// the backends run in the TZ of common.env: dates generated "now" and the "recent" rows of
+	// the database diff are read in the same zone
+	if tz := common["TZ"]; tz != "" {
+		if loc, err := time.LoadLocation(tz); err == nil {
+			time.Local = loc
+		} else {
+			fmt.Fprintf(os.Stderr, "common.env TZ=%q: %v\n", tz, err)
+			os.Exit(2)
+		}
+	}
 	now := time.Now().UTC().Truncate(time.Second)
 	if v := os.Getenv("PARITY_NOW"); v != "" {
 		if t, err := time.Parse(time.RFC3339, v); err == nil {

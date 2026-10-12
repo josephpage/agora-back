@@ -157,7 +157,17 @@ offset in a fall-back overlap, forward in a spring-forward gap), never
 `time.Date` (its choice depends on the sign of the offset); a
 `timestamp without time zone` column read by JDBC → `store.Local`
 (`javacompat.JavaCalendarTime`: standard time in an overlap). Both are checked
-against the JVM around the transitions of several zones. Kotlin `Random`/`shuffled` →
+against the JVM around the transitions of several zones. `java.util` calendars
+(`GregorianCalendar`, `SimpleDateFormat`, pgjdbc) use `java.util.TimeZone`
+offsets, not the full tzdb: the raw offset before 1900 (Paris: +01:00, where
+`java.time` and Go have the local mean time +00:09:21), no daylight saving
+start in the last year a long can hold → `javacompat.JavaLegacyOffset` (built
+into `JavaCalendarTime`). A `LocalDate` is a civil date: never carry it as a
+`time.Time` built with `time.Date(..., time.Local)` at midnight (in a zone whose
+midnight can fall in a daylight saving gap, Go moves it to the previous day):
+count days on a UTC-midnight carrier, `JavaAtZone(y, m, d, 0, 0, 0, 0, time.Local)`
+for `atStartOfDay`, `common.FormatLocalDate` to print it. Production runs in
+`TZ=Europe/Paris`. Kotlin `Random`/`shuffled` →
 document as non-deterministic and compare with `compare.unordered` in scenarios.
 
 ## 6. Database (`internal/store`)
@@ -233,6 +243,12 @@ Rich text: `strapi.RichText` (`ToHTML()`, `ToHTMLBody()`); media:
    genuinely unordered outputs (SQL ties, random), never to hide a bug.
 4. New JVM oracle functions go in your own `parity/oracle/java/<SLICE>Functions.java`,
    registered with ONE line in `Functions.java` (`<SLICE>Functions.register(F);`).
+   A name is registered once (the oracle refuses a second registration at startup).
+   The JVM runs in the zone of the Go test process (`TZ`), never pinned by `common.env`.
+6. Tests pass in any zone: CI runs them in UTC and in `Europe/Paris` (the production
+   zone, also the zone of the parity backends in `parity/env/common.env`). Never pin
+   `time.Local` in a `TestMain`; a test that needs a zone sets it and restores it, and
+   an expected date is computed in `time.Local` when the code reads the local clock.
 5. Record the file mapping in `parity/ledger/<slice>.md`: every Kotlin file of
    the slice → Go file(s), tests ported, scenarios, divergences, open questions.
 

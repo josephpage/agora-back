@@ -19,8 +19,8 @@ type IncomingResponsePreview struct {
 	Thematique         thematique.Thematique
 	Title              string
 	SupportCount       int
-	DateLundiPrecedent time.Time
-	DateLundiSuivant   time.Time
+	DateLundiPrecedent time.Time // LocalDate: the start of the day in the process zone
+	DateLundiSuivant   time.Time // LocalDate: the start of the day in the process zone
 	Order              int
 }
 
@@ -130,8 +130,8 @@ func ToResponsesJSON(l ResponseQagPreviewList) QagResponsesJSON {
 			Title:              q.Title,
 			Support:            qag.ToSupportQagJSON(q.SupportCount, true),
 			Order:              q.Order,
-			PreviousMondayDate: common.FormatDate(q.DateLundiPrecedent),
-			NextMondayDate:     common.FormatDate(q.DateLundiSuivant),
+			PreviousMondayDate: common.FormatLocalDate(q.DateLundiPrecedent),
+			NextMondayDate:     common.FormatLocalDate(q.DateLundiSuivant),
 		}
 	}
 	for i, r := range l.Responses {

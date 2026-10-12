@@ -108,6 +108,7 @@ PARITY_SLOT=1 ./parity/run.sh up        # environnement isolé (ports et bases d
 - `PARITY_JAVA` : binaire `java` 17 ;
 - `PARITY_RUN_DIR` : répertoire de travail ;
 - `PARITY_PG_EXTERNAL=1` : PostgreSQL déjà lancé (CI) ;
+- Fuseau : les deux backends, les sessions Postgres du harnais et le runner tournent dans le `TZ` de `parity/env/common.env`, `Europe/Paris` comme la production. Les tests unitaires et oracle passent dans n'importe quel fuseau ; la CI les joue en UTC et en `Europe/Paris`.
 - `PARITY_PROFILE` : profil d'environnement (`acme`, `acme-gates-a`, `acme-gates-b`, `acme-health`). Les deux backends démarrent alors avec `parity/env/<profil>-{ref,go}.env`, et seuls les scénarios marqués `profile: <profil>` sont joués (`PARITY_PROFILE=acme ./parity/run.sh restart-ref && … restart-go && … test -tags S11`). Sans profil, ces scénarios sont ignorés.
 
 **L'oracle JVM** (`parity/oracle`) compare les implémentations Go aux classes Java de la référence : Jackson, Woodstox, sanitizer OWASP, jjwt, `URLEncoder`, décodeurs… Il est appelé par les tests Go quand `PARITY_ORACLE=1` et que `REFJAR_DIR` pointe vers le jar extrait.

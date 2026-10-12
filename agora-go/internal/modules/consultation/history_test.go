@@ -74,9 +74,10 @@ func TestHistoryMapper(t *testing.T) {
 		t.Fatalf("%+v", got)
 	}
 
-	// dates are java.util.Date (milliseconds), the end of the consultation is the date of the results
+	// dates are java.util.Date (milliseconds), the end of the consultation is the date of the results:
+	// the wall clock of the payload (written in UTC) read in the process zone
 	got = historyOfSpec(t, consultationSpec{end: pastDate})
-	if d := findHistory(got, "apres-c").UpdateDate; d == nil || !d.Equal(pastDate) {
+	if d := findHistory(got, "apres-c").UpdateDate; d == nil || !FromTime(*d).T.Equal(pastDate) {
 		t.Fatalf("%v", d)
 	}
 }

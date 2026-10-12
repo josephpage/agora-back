@@ -83,9 +83,11 @@ func toResponseQagPreviewWithoutOrder(info qag.QagInfo, response qag.ResponseQag
 
 // toIncomingResponsePreview is ResponseQagPreviewListMapper.toIncomingResponsePreview: the Monday
 // of the week the QaG was posted (itself when it is a Monday) and the next Monday, in the process zone.
+// Kotlin works on LocalDate: the days are counted on the calendar (a civil date carried at UTC
+// midnight), then each Monday is the start of that day.
 func toIncomingResponsePreview(q qag.QagInfoWithSupportCount, order int, th thematique.Thematique) IncomingResponsePreview {
 	d := q.Date.In(time.Local)
-	day := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.Local)
+	day := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.UTC)
 	back := (int(day.Weekday()) + 6) % 7 // days since the previous Monday (0 on a Monday)
 	ahead := 7 - back                    // next(MONDAY) is strictly after
 	return IncomingResponsePreview{
@@ -93,10 +95,16 @@ func toIncomingResponsePreview(q qag.QagInfoWithSupportCount, order int, th them
 		Thematique:         th,
 		Title:              q.Title,
 		SupportCount:       q.SupportCount,
-		DateLundiPrecedent: day.AddDate(0, 0, -back),
-		DateLundiSuivant:   day.AddDate(0, 0, ahead),
+		DateLundiPrecedent: startOfDay(day.AddDate(0, 0, -back)),
+		DateLundiSuivant:   startOfDay(day.AddDate(0, 0, ahead)),
 		Order:              order,
 	}
+}
+
+// startOfDay is LocalDate.atStartOfDay(ZoneId.systemDefault()) of a civil date: its first instant
+// (a midnight in a daylight saving gap moves forward, the date never changes).
+func startOfDay(civil time.Time) time.Time {
+	return javacompat.JavaAtZone(civil.Year(), civil.Month(), civil.Day(), 0, 0, 0, 0, time.Local)
 }
 
 // ---------------------------------------------------------------------------

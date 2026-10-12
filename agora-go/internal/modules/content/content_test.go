@@ -120,7 +120,9 @@ func TestCharterRoute(t *testing.T) {
 	if len(r.header["ETag"]) == 0 {
 		t.Fatal("missing ETag")
 	}
-	if got, want := ta.strapi.lastURI(), "charte-participations?pagination[pageSize]=100&populate=*&filters[datetime_debut][$lt]=2026-10-06T12:00:00&sort[0]=datetime_debut:desc"; got != want {
+	// LocalDateTime.now(): the wall clock of the process zone
+	wall := ta.now.In(time.Local).Format("2006-01-02T15:04:05")
+	if got, want := ta.strapi.lastURI(), "charte-participations?pagination[pageSize]=100&populate=*&filters[datetime_debut][$lt]="+wall+"&sort[0]=datetime_debut:desc"; got != want {
 		t.Fatalf("uri %s", got)
 	}
 	if r2 := ta.do("GET", "/participation_charter", map[string]string{"If-None-Match": r.header["ETag"][0]}); r2.status != 304 {

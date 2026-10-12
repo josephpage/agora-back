@@ -121,16 +121,18 @@ func TestStrapiRepositoryURIs(t *testing.T) {
 	repo := ta.strapiRepo()
 	ctx := context.Background()
 	now := time.Date(2026, 6, 1, 12, 0, 0, 123456000, time.UTC)
+	// LocalDateTime.now(): the wall clock of the process zone
+	wall := now.In(time.Local).Format("2006-01-02T15:04:05.000000")
 
 	repo.GetConsultationsOngoing(ctx, now, nil)
 	got := ta.strapi.last()
 	if !strings.HasPrefix(got, "consultations?pagination[pageSize]=100&populate[thematique]=*&populate[questions][populate]=*&populate[consultation_contenu_a_venir]=*&populate[consultation_avant_reponse][populate]=*") ||
-		!strings.HasSuffix(got, "&filters[datetime_de_debut][$lt]=2026-06-01T12:00:00.123456&filters[datetime_de_fin][$gt]=2026-06-01T12:00:00.123456") {
+		!strings.HasSuffix(got, "&filters[datetime_de_debut][$lt]="+wall+"&filters[datetime_de_fin][$gt]="+wall+"") {
 		t.Fatalf("%s", got)
 	}
 	repo.GetConsultationsFinishedWithUnpublished(ctx, now, []domain.Territoire{domain.PaysValues[0]})
 	got = ta.strapi.last()
-	if !strings.Contains(got, "pageSize]=100&status=draft&populate") || !strings.HasSuffix(got, "&filters[datetime_de_fin][$lt]=2026-06-01T12:00:00.123456&filters[territoire][$in]=France") {
+	if !strings.Contains(got, "pageSize]=100&status=draft&populate") || !strings.HasSuffix(got, "&filters[datetime_de_fin][$lt]="+wall+"&filters[territoire][$in]=France") {
 		t.Fatalf("%s", got)
 	}
 	n := ta.strapi.count()
@@ -146,7 +148,7 @@ func TestStrapiRepositoryURIs(t *testing.T) {
 		t.Fatalf("%s", got)
 	}
 	repo.GetConsultationsEnded14DaysAgo(ctx, now)
-	if got = ta.strapi.last(); !strings.HasSuffix(got, "&filters[datetime_de_fin][$lt]=2026-05-18T12:00:00.123456") {
+	if got = ta.strapi.last(); !strings.HasSuffix(got, "&filters[datetime_de_fin][$lt]="+FromTime(now).PlusDays(-14).T.Format("2006-01-02T15:04:05.000000")) {
 		t.Fatalf("%s", got)
 	}
 	repo.IsConsultationExists(ctx, "a")
@@ -154,7 +156,7 @@ func TestStrapiRepositoryURIs(t *testing.T) {
 		t.Fatalf("%s", got)
 	}
 	repo.CountFinishedConsultations(ctx, now)
-	if got = ta.strapi.last(); got != "consultations?pagination[pageSize]=100&populate=*&filters[datetime_de_fin][$lt]=2026-06-01T12:00:00.123456" {
+	if got = ta.strapi.last(); got != "consultations?pagination[pageSize]=100&populate=*&filters[datetime_de_fin][$lt]="+wall+"" {
 		t.Fatalf("%s", got)
 	}
 }

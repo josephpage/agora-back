@@ -382,12 +382,12 @@ func TestOracleJSON(t *testing.T) {
 		var incoming []IncomingResponsePreview
 		var jin []map[string]any
 		for i := 0; i < r.Intn(4); i++ {
-			prev := time.Date(2020+r.Intn(10), time.Month(1+r.Intn(12)), 1+r.Intn(28), 0, 0, 0, 0, time.Local)
-			next := prev.AddDate(0, 0, 7)
+			civil := time.Date(2020+r.Intn(10), time.Month(1+r.Intn(12)), 1+r.Intn(28), 0, 0, 0, 0, time.UTC)
+			prev, next := startOfDay(civil), startOfDay(civil.AddDate(0, 0, 7))
 			m := jth()
 			p := IncomingResponsePreview{ID: rs(), Thematique: qagTh(m), Title: rs(), SupportCount: r.Intn(100), DateLundiPrecedent: prev, DateLundiSuivant: next, Order: r.Intn(10)}
 			incoming = append(incoming, p)
-			jin = append(jin, map[string]any{"id": p.ID, "thematique": m, "title": p.Title, "supportCount": p.SupportCount, "previous": prev.Format("2006-01-02"), "next": next.Format("2006-01-02"), "order": p.Order})
+			jin = append(jin, map[string]any{"id": p.ID, "thematique": m, "title": p.Title, "supportCount": p.SupportCount, "previous": civil.Format("2006-01-02"), "next": civil.AddDate(0, 0, 7).Format("2006-01-02"), "order": p.Order})
 		}
 		var responses []ResponseQagPreview
 		var jr []map[string]any

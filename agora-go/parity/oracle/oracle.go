@@ -240,6 +240,9 @@ func parseEnvFile(path string) (map[string]string, []string, error) {
 	return vars, order, nil
 }
 
+// childEnv is the environment of the JVM: the test process's, completed by the defaults of
+// common.env, except TZ: the JVM must run in the zone of the Go test process (its time.Local),
+// whatever the zone of the backends.
 func childEnv() []string {
 	env := os.Environ()
 	path := os.Getenv("PARITY_ORACLE_ENV_FILE")
@@ -251,7 +254,7 @@ func childEnv() []string {
 		return env
 	}
 	for _, k := range order {
-		if _, set := os.LookupEnv(k); !set {
+		if _, set := os.LookupEnv(k); !set && k != "TZ" {
 			env = append(env, k+"="+vars[k])
 		}
 	}

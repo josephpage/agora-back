@@ -28,6 +28,8 @@ export PARITY_REF_CMD="$RUN/start-ref.sh" PARITY_GO_CMD="$RUN/start-go.sh"
 REFJAR=${PARITY_REF_JAR:-/home/user/agora-ref/build/libs/agora-back-0.0.1.jar}
 JAVA17=${PARITY_JAVA:-/usr/lib/jvm/java-17-openjdk-amd64/bin/java}
 REF_JAVA_OPTS=${PARITY_REF_JAVA_OPTS:--Xmx768m}
+# the zone of the backends (and of the harness database sessions)
+PG_TZ=$(sed -n 's/^TZ=//p' parity/env/common.env | tail -1); PG_TZ=${PG_TZ:-UTC}
 # one Strapi clock for every slot of a machine (fixture dates are relative to it)
 STRAPI_NOW_FILE=${PARITY_STRAPI_NOW_FILE:-${PARITY_RUN_DIR:-/home/user/run}/strapi_now}
 
@@ -60,6 +62,10 @@ start_pg() {
     # parity/ledger/S4.md) must not depend on JDBC vs pgx switching to a generic
     # plan after 5 executions of a prepared statement: always plan with the values.
     PGPASSWORD=agora_password psql -q -h localhost -U backend -d postgres -c "ALTER DATABASE $db SET plan_cache_mode = force_custom_plan" >/dev/null
+    # The setup SQL of the scenarios writes now() into timestamp columns: in the zone of the
+    # backends (common.env TZ), like the rows they write themselves. (The application SQL does
+    # not depend on the session zone: no now() and no timestamptz.)
+    PGPASSWORD=agora_password psql -q -h localhost -U backend -d postgres -c "ALTER DATABASE $db SET timezone = '$PG_TZ'" >/dev/null
   done
 }
 

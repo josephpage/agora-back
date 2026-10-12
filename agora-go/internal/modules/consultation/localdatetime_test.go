@@ -9,7 +9,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	time.Local = time.UTC
 	os.Exit(m.Run())
 }
 

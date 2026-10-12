@@ -109,7 +109,9 @@ func TestToResponseQagPreviewWithoutOrder(t *testing.T) {
 }
 
 func TestToIncomingResponsePreview(t *testing.T) {
-	day := func(y int, m time.Month, d int) time.Time { return time.Date(y, m, d, 0, 0, 0, 0, time.Local) }
+	day := func(y int, m time.Month, d int) time.Time {
+		return startOfDay(time.Date(y, m, d, 0, 0, 0, 0, time.UTC))
+	}
 	for _, tc := range []struct {
 		name       string
 		date       time.Time

@@ -56,3 +56,46 @@ func TestJavaAtZoneOracle(t *testing.T) {
 	}
 	t.Logf("%d wall clocks compared", n)
 }
+
+// Far wall clocks: java.time (JavaAtZone) uses the whole tzdb (local mean time before the
+// first transition), java.util.TimeZone (JavaCalendarTime) the raw offset before 1900; both
+// apply the daylight saving rules far in the future. The calendar is checked from 1583 on
+// (GregorianCalendar is Julian before the 1582 cutover).
+func TestJavaZoneFarDatesOracle(t *testing.T) {
+	if !oracle.Available() {
+		t.Skip("oracle disabled (PARITY_ORACLE=1)")
+	}
+	var walls []time.Time
+	for _, y := range []int{24, 1000, 1583, 1700, 1850, 1891, 1899, 1900, 1901, 1911, 1916, 1940, 2037, 2038, 2100, 2500, 9999} {
+		for _, md := range [][2]int{{1, 1}, {3, 11}, {3, 30}, {7, 1}, {10, 26}, {12, 31}} {
+			walls = append(walls, time.Date(y, time.Month(md[0]), md[1], 12, 0, 0, 0, time.UTC), time.Date(y, time.Month(md[0]), md[1], 2, 30, 0, 0, time.UTC))
+		}
+	}
+	for m := -180; m <= 180; m += 10 { // around the 1900 boundary of java.util.TimeZone
+		walls = append(walls, time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(m)*time.Minute))
+	}
+	n := 0
+	for _, zone := range []string{"Europe/Paris", "America/New_York", "America/Santiago", "Australia/Lord_Howe", "Asia/Kolkata", "Europe/Dublin", "UTC"} {
+		loc, err := time.LoadLocation(zone)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, w := range walls {
+			wall := w.Format("2006-01-02T15:04:05.000")
+			var want int64
+			oracle.MustCall(t, "javaAtZone", map[string]any{"wall": wall, "zone": zone}, &want)
+			if got := JavaAtZone(w.Year(), w.Month(), w.Day(), w.Hour(), w.Minute(), w.Second(), w.Nanosecond(), loc).UnixMilli(); got != want {
+				t.Errorf("atZone %s %s: Go %s, Java %s", zone, wall, time.UnixMilli(got).UTC(), time.UnixMilli(want).UTC())
+			}
+			if w.Year() >= 1583 {
+				var wantCal int64
+				oracle.MustCall(t, "javaCalendarTimestamp", map[string]any{"wall": wall, "zone": zone}, &wantCal)
+				if got := JavaCalendarTime(w.Year(), w.Month(), w.Day(), w.Hour(), w.Minute(), w.Second(), w.Nanosecond(), loc).UnixMilli(); got != wantCal {
+					t.Errorf("calendar %s %s: Go %s, Java %s", zone, wall, time.UnixMilli(got).UTC(), time.UnixMilli(wantCal).UTC())
+				}
+			}
+			n++
+		}
+	}
+	t.Logf("%d wall clocks compared", n)
+}

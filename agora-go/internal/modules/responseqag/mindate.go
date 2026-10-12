@@ -292,16 +292,14 @@ func epochDay(year, month, day int) int64 {
 	return jdn - 2440588
 }
 
-// zoneOffsetMillis is the UTC offset of the process zone at the given local wall time.
+// zoneOffsetMillis is the offset GregorianCalendar.computeTime subtracts from the local wall
+// time (ZoneInfo.getOffsetsByWall): the java.util.TimeZone offsets of the process zone (the raw
+// offset before 1900, the daylight saving rules at any later date), as JavaCalendarTime.
 func zoneOffsetMillis(localMillis int64) int64 {
 	if time.Local == time.UTC {
 		return 0
 	}
-	// two passes: the offset at the guessed instant, then at the corrected one
-	if localMillis < -62135596800000 || localMillis > 253402300799000 {
-		return 0
-	}
-	_, off := time.UnixMilli(localMillis).In(time.Local).Zone()
-	_, off2 := time.UnixMilli(localMillis - int64(off)*1000).In(time.Local).Zone()
-	return int64(off2) * 1000
+	w := time.UnixMilli(localMillis).UTC()
+	at := javacompat.JavaCalendarTime(w.Year(), w.Month(), w.Day(), w.Hour(), w.Minute(), w.Second(), w.Nanosecond(), time.Local)
+	return localMillis - at.UnixMilli()
 }
