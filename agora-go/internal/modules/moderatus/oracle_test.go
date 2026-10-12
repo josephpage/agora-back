@@ -49,11 +49,12 @@ func checkBodies(t *testing.T, label string, v any, want bodiesWant) {
 	}
 }
 
-// foundationEscapeTexts are the code points that Woodstox escapes in plain element text and in attribute values
-// (`&#x7f;`, `&#x85;`, `&#xfffe;`: lowercase hex) while the foundation internal/xmljava writes them raw (finding
-// F-XML-ESC, parity/ledger/S7.md). Inside CDATA both write them raw: TestOracleXMLCDATAFoundationChars keeps that
-// path under test; the plain-text paths are TestOracleXMLEscapeFoundation (skipped until xmljava is fixed).
-var foundationEscapeTexts = []string{"\u007f del", "\u0085 nel", "￿ nonchar", "￾ nonchar"}
+// foundationEscapeTexts are the code points that Woodstox writes as lowercase `&#x..;` references: in plain element
+// text U+007F..U+009F, U+FFFE and U+FFFF, in attribute values U+FFFE and U+FFFF. internal/xmljava writes them raw
+// (finding F-XML-ESC, parity/ledger/S7.md). Inside CDATA both write them raw: TestOracleXMLCDATAFoundationChars keeps
+// that path under test; TestOracleXMLAttributeC1Chars checks the attributes that agree; TestOracleXMLEscapeFoundation
+// is the known divergence (skipped until xmljava is fixed).
+var foundationEscapeTexts = []string{"\u007f del", "\u0085 nel", "\uffff nonchar", "\ufffe nonchar"}
 
 // controlTexts are the control characters U+0000-U+001F other than TAB, LF and CR. Woodstox refuses them in plain
 // element text (a 500 for both sides) but writes them raw inside CDATA, where xmljava.MarshalChecked refuses them
@@ -137,9 +138,10 @@ func TestOracleXMLCDATAFoundationChars(t *testing.T) {
 	}
 }
 
-// TestOracleXMLEscapeFoundation is the known foundation divergence F-XML-ESC: Woodstox writes the plain-text
-// code points of foundationEscapeTexts as &#x..; (lowercase hex), internal/xmljava writes them raw. It runs when
-// PARITY_FOUNDATION_XML_ESC=1 is set (once xmljava escapes them) and is skipped otherwise.
+// TestOracleXMLEscapeFoundation is the known foundation divergence F-XML-ESC: Woodstox writes the element-text code
+// points of foundationEscapeTexts and the attribute non-characters U+FFFE / U+FFFF as &#x..; (lowercase hex),
+// internal/xmljava writes them raw. It runs when PARITY_FOUNDATION_XML_ESC=1 is set (once xmljava escapes them) and
+// is skipped otherwise.
 func TestOracleXMLEscapeFoundation(t *testing.T) {
 	if !oracle.Available() {
 		t.Skip("PARITY_ORACLE!=1")
@@ -151,6 +153,24 @@ func TestOracleXMLEscapeFoundation(t *testing.T) {
 		var want bodiesWant
 		oracle.MustCall(t, "moderatusListErrorXml", map[string]any{"message": s}, &want)
 		checkBodies(t, fmt.Sprintf("error %q", s), ModeratusQagListErrorXML{ErrorMessage: s}, want)
+	}
+	for _, s := range []string{"￾ nonchar", "￿ nonchar"} {
+		var want bodiesWant
+		oracle.MustCall(t, "moderatusLockXml", map[string]any{"ids": []string{s}, "errorMessage": "x"}, &want)
+		checkBodies(t, fmt.Sprintf("attribute %q", s), lockResultsXML(errorLockResults([]string{s}, "x")), want)
+	}
+}
+
+// TestOracleXMLAttributeC1Chars: U+007F..U+009F are written raw in attribute values by Woodstox and by xmljava
+// (the lock results echo the ids of the request in content_id).
+func TestOracleXMLAttributeC1Chars(t *testing.T) {
+	if !oracle.Available() {
+		t.Skip("PARITY_ORACLE!=1")
+	}
+	for _, s := range []string{"\u007f del", "\u0085 nel", "\u0080x\u009f"} {
+		var want bodiesWant
+		oracle.MustCall(t, "moderatusLockXml", map[string]any{"ids": []string{s}, "errorMessage": "x"}, &want)
+		checkBodies(t, fmt.Sprintf("attribute %q", s), lockResultsXML(errorLockResults([]string{s}, "x")), want)
 	}
 }
 

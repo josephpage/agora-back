@@ -145,7 +145,13 @@ func toModerateResultXML(result ModeratusQagModerateResult, errorMessage string)
 // updateQagStatus is AdminQagController.updateQagStatus (PUT /admin/qags/{qagId}/status).
 func (h *handlers) updateQagStatus(c *httpx.Ctx) *httpx.Response {
 	qagID := c.PathVar("qagId")
-	status := springQagStatus(c.RequiredParam("status"))
+	// `status: QagStatus` is an enum, not a String: a repeated parameter is converted from its FIRST value
+	// (Spring's ArrayToObjectConverter), it is not joined with "," like a String parameter.
+	raw, ok := c.Param("status")
+	if !ok {
+		panic(&httpx.SpringError{Status: 400, Cause: "MissingServletRequestParameterException: status"})
+	}
+	status := springQagStatus(raw)
 
 	ctx := c.Context()
 	result := must(h.svc.qags.AdminUpdateQagStatus(ctx, qagID, status))
