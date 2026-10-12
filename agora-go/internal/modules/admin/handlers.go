@@ -31,7 +31,8 @@ func boolParam(c *httpx.Ctx, name, def string) bool {
 // request, with force_question_selection as the string "true" or "false".
 func (h *handlers) runWeeklyTasks(c *httpx.Ctx) *httpx.Response {
 	force := boolParam(c, "force_question_selection", "false")
-	err := tasks.Weekly(c.Context(), h.a, map[string]string{"force_question_selection": strconv.FormatBool(force)})
+	// A client that goes away does not stop the QaG steps half-way (the Kotlin request keeps running).
+	err := tasks.Weekly(context.WithoutCancel(c.Context()), h.a, map[string]string{"force_question_selection": strconv.FormatBool(force)})
 	if err != nil {
 		panic(err)
 	}
