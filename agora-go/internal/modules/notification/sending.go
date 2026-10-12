@@ -115,7 +115,7 @@ func (s *Sender) scheduleBatches(messages []fcm.Message) {
 // minutes are added to the wall clock, then the local time is resolved in the process zone.
 func plusMinutes(t time.Time, n int) time.Time {
 	l := t.In(time.Local)
-	return time.Date(l.Year(), l.Month(), l.Day(), l.Hour(), l.Minute()+n, l.Second(), l.Nanosecond(), time.Local)
+	return javacompat.JavaAtZone(l.Year(), l.Month(), l.Day(), l.Hour(), l.Minute()+n, l.Second(), l.Nanosecond(), time.Local)
 }
 
 // runBatch is SendNotificationTask.run.

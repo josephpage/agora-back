@@ -32,6 +32,7 @@ type request struct {
 	method  string
 	path    func(r *rand.Rand, u int) string
 	auth    bool
+	fresh   bool // authenticated as the next unused user of the -fresh-users pool (one-time writes)
 	body    func(r *rand.Rand, u int) string
 	headers map[string]string
 }
@@ -65,7 +66,7 @@ var profiles = map[string][]request{
 		{name: "details", weight: 30, method: "GET", path: static("/v2/consultations/co0000000000000000000001"), auth: true},
 		{name: "questions", weight: 25, method: "GET", path: static("/consultations/co0000000000000000000001/questions")},
 		{name: "results", weight: 20, method: "GET", path: static("/v2/consultations/co0000000000000000000004/responses")},
-		{name: "answer", weight: 10, method: "POST", path: static("/consultations/co0000000000000000000001/responses"), auth: true, body: func(r *rand.Rand, u int) string {
+		{name: "answer", weight: 10, method: "POST", path: static("/consultations/co0000000000000000000001/responses"), auth: true, fresh: true, body: func(r *rand.Rand, u int) string {
 			return `{"consultationId":"co0000000000000000000001","responses":[{"questionId":"101","choiceIds":["1011"],"responseText":""},{"questionId":"103","choiceIds":[],"responseText":"Réponse libre de test"}]}`
 		}, headers: map[string]string{"X-Forwarded-For": ""}},
 		{name: "list", weight: 15, method: "GET", path: static("/consultations"), auth: true},
@@ -111,6 +112,7 @@ func main() {
 	secret := flag.String("jwt-secret", os.Getenv("JWT_SECRET"), "JWT secret (base64)")
 	report := flag.String("report", "", "JSON report path")
 	usersDB := flag.String("users-db", "", "take the -users first active users (logged in, not banned) of this database instead of the bulk ids 1..users")
+	freshUsers := flag.Int("fresh-users", 0, "with -users-db: the next active users after -users, each used once by the one-time writes (consultation answers)")
 	flag.Parse()
 
 	reqs, ok := profiles[*profile]
@@ -123,6 +125,7 @@ func main() {
 		total += r.weight
 	}
 	jwt := auth.NewJWT(*secret, nil)
+	var freshIDs []string
 	ids := make([]string, *users)
 	for i := range ids {
 		ids[i] = bulkUser(i + 1)
@@ -131,9 +134,15 @@ func main() {
 		// the token filter of both backends fails (500) for a user without last_connection_date:
 		// real clients always have one (it is set at login)
 		var err error
-		if ids, err = activeUsers(*usersDB, *users); err != nil {
+		if ids, err = activeUsers(*usersDB, *users, false); err != nil {
 			fmt.Fprintln(os.Stderr, "users-db:", err)
 			os.Exit(2)
+		}
+		if *freshUsers > 0 {
+			if freshIDs, err = activeUsers(*usersDB, *freshUsers, true); err != nil {
+				fmt.Fprintln(os.Stderr, "users-db:", err)
+				os.Exit(2)
+			}
 		}
 		*users = len(ids)
 	}
@@ -141,6 +150,11 @@ func main() {
 	for i := range tokens {
 		tokens[i], _, _ = jwt.Generate(ids[i])
 	}
+	freshTokens := make([]string, len(freshIDs))
+	for i := range freshTokens {
+		freshTokens[i], _, _ = jwt.Generate(freshIDs[i])
+	}
+	var freshNext atomic.Int64
 	tr := &http.Transport{
 		MaxIdleConns:        *conc * 2,
 		MaxIdleConnsPerHost: *conc * 2,
@@ -173,6 +187,12 @@ func main() {
 					pick -= r.weight
 				}
 				u := rnd.Intn(*users)
+				tok := tokens[u]
+				if rq.fresh && len(freshTokens) > 0 {
+					n := int(freshNext.Add(1)-1) % len(freshTokens) // wraps when exhausted (then answered twice: 400)
+					tok = freshTokens[n]
+					u = *users + n // its own forwarded address too
+				}
 				var body io.Reader
 				if rq.body != nil {
 					body = strings.NewReader(rq.body(rnd, u))
@@ -188,7 +208,7 @@ func main() {
 					}
 				}
 				if rq.auth {
-					req.Header.Set("Authorization", "Bearer "+tokens[u])
+					req.Header.Set("Authorization", "Bearer "+tok)
 				}
 				start := time.Now()
 				resp, err := client.Do(req)
@@ -268,15 +288,21 @@ func main() {
 	}
 }
 
-// activeUsers returns up to n user ids that can authenticate (last connection known, not banned).
-func activeUsers(dbURL string, n int) ([]string, error) {
+// activeUsers returns up to n user ids that can authenticate (last connection known, not
+// banned); fresh ones (highest ids first) have answered no consultation yet.
+func activeUsers(dbURL string, n int, fresh bool) ([]string, error) {
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, dbURL)
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close(ctx)
-	rows, err := conn.Query(ctx, `SELECT id::text FROM agora_users WHERE last_connection_date IS NOT NULL AND is_banned = 0 ORDER BY id LIMIT $1`, n)
+	q := `SELECT id::text FROM agora_users WHERE last_connection_date IS NOT NULL AND is_banned = 0 ORDER BY id LIMIT $1`
+	if fresh {
+		q = `SELECT id::text FROM agora_users u WHERE last_connection_date IS NOT NULL AND is_banned = 0
+			AND NOT EXISTS (SELECT 1 FROM user_answered_consultation a WHERE a.user_id = u.id) ORDER BY id DESC LIMIT $1`
+	}
+	rows, err := conn.Query(ctx, q, n)
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 	"math/rand/v2"
 	"time"
 
+	"agora/internal/javacompat"
 	"agora/internal/modules/qag"
 )
 
@@ -72,7 +73,7 @@ func (u *ArchiveOldQagUseCase) ArchiveOldQag(ctx context.Context) (ArchiveQagLis
 // mondayThisWeekAt10 is now.with(DayOfWeek.MONDAY).withHour(10).withMinute(0).withSecond(0).
 func mondayThisWeekAt10(now time.Time) time.Time {
 	daysSinceMonday := (int(now.Weekday()) + 6) % 7
-	return time.Date(now.Year(), now.Month(), now.Day()-daysSinceMonday, 10, 0, 0, now.Nanosecond(), now.Location())
+	return javacompat.JavaAtZone(now.Year(), now.Month(), now.Day()-daysSinceMonday, 10, 0, 0, now.Nanosecond(), now.Location())
 }
 
 // AnonymizeOldQagUseCase blanks the username of the archived QaGs moderated more than three weeks ago.
@@ -96,7 +97,7 @@ func (u *AnonymizeOldQagUseCase) AnonymizeOldQag(ctx context.Context) (Anonymize
 	}
 	u.logf("🕵️ Anonymizing old QaGs...")
 	now := u.now()
-	threeWeeksAgo := time.Date(now.Year(), now.Month(), now.Day()-21, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), now.Location())
+	threeWeeksAgo := javacompat.JavaAtZone(now.Year(), now.Month(), now.Day()-21, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), now.Location())
 	err = u.qags.AnonymizeOldQags(ctx, threeWeeksAgo)
 	u.afterSave(ctx)
 	if err != nil {

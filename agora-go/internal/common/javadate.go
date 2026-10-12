@@ -196,5 +196,5 @@ func (d *LocalDate) UnmarshalJavaTree(tree any) error {
 // time of day (LocalTime.now) in the process zone.
 func (d LocalDate) ToDate(now time.Time) time.Time {
 	n := now.In(time.Local)
-	return time.Date(d.Year, time.Month(d.Month), d.Day, n.Hour(), n.Minute(), n.Second(), n.Nanosecond(), time.Local)
+	return javacompat.JavaAtZone(d.Year, time.Month(d.Month), d.Day, n.Hour(), n.Minute(), n.Second(), n.Nanosecond(), time.Local)
 }

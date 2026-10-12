@@ -33,8 +33,7 @@ func FormatDate(t time.Time) string {
 
 // FormatLocalDate is DateMapper.toFormattedDate(LocalDate) (atStartOfDay).
 func FormatLocalDate(t time.Time) string {
-	l := t.In(time.Local)
-	return time.Date(l.Year(), l.Month(), l.Day(), 0, 0, 0, 0, time.Local).Format("2006-01-02 15:04:05")
+	return t.In(time.Local).Format("2006-01-02") + " 00:00:00"
 }
 
 // ParseLocalDate is DateMapper.toLocalDate(String): strict "yyyy-MM-dd"

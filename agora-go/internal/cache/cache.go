@@ -19,6 +19,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -111,15 +112,31 @@ func (c *Cache) Run(ctx context.Context) {
 	go c.watchEpoch(ctx)
 }
 
+// subscribe applies the invalidations of the other instances. The messages published
+// while the subscription is down (Redis restart, network cut) are lost, so every
+// (re)subscription after the first one clears the whole L1: entries are reloaded
+// instead of being served stale until their TTL.
 func (c *Cache) subscribe(ctx context.Context) {
+	subscribed := false
 	for ctx.Err() == nil {
 		sub := c.rdb.Subscribe(ctx, invalidationChannel)
-		ch := sub.Channel()
-		for msg := range ch {
-			c.applyInvalidation(msg.Payload)
-			if nonce, ok := strings.CutPrefix(msg.Payload, "*\x00ack:"); ok {
-				// flush acknowledgement awaited by the parity harness
-				_ = c.rdb.Set(ctx, invalidationChannel+":ack:"+nonce, "1", 30*time.Second).Err()
+		for m := range sub.ChannelWithSubscriptions() {
+			switch msg := m.(type) {
+			case *redis.Subscription:
+				if msg.Kind != "subscribe" {
+					continue
+				}
+				if subscribed {
+					c.FlushLocal()
+					c.log.Warn("cache invalidation channel resubscribed: L1 cleared")
+				}
+				subscribed = true
+			case *redis.Message:
+				c.applyInvalidation(msg.Payload)
+				if nonce, ok := strings.CutPrefix(msg.Payload, "*\x00ack:"); ok {
+					// flush acknowledgement awaited by the parity harness
+					_ = c.rdb.Set(ctx, invalidationChannel+":ack:"+nonce, "1", 30*time.Second).Err()
+				}
 			}
 		}
 		_ = sub.Close()
@@ -263,34 +280,48 @@ func (c *Cache) evictExpiredLocked() {
 // Errors are not cached. A load that overlapped an invalidation of its key is
 // returned to the callers that joined it before the invalidation, but it is
 // not stored, and callers arriving after the invalidation start a new load.
+//
+// A caller that joined a load which failed because the context of the caller running
+// it was cancelled (its client went away) loads again with its own load function: one
+// request never fails another one's (Kotlin has no shared loads).
 func GetOrLoad[T any](c *Cache, name, key string, ttl time.Duration, load func() (T, error)) (T, error) {
 	if v, ok := c.Get(name, key); ok {
 		return v.(T), nil
 	}
 	k := l1Key(name, key)
-	c.mu.RLock()
-	gen := c.lastInvalLocked(name, k)
-	c.mu.RUnlock()
-	v, err, _ := c.group.Do(k+"\x00"+strconv.FormatUint(gen, 10), func() (any, error) {
-		if v, ok := c.Get(name, key); ok {
-			return v, nil
-		}
+	for attempt := 0; ; attempt++ {
 		c.mu.RLock()
-		start, startAt := c.seq, c.now()
+		gen := c.lastInvalLocked(name, k)
 		c.mu.RUnlock()
-		val, err := load()
+		ran := false // set only by this goroutine: singleflight runs the function in the leader's
+		v, err, _ := c.group.Do(k+"\x00"+strconv.FormatUint(gen, 10), func() (any, error) {
+			ran = true
+			if v, ok := c.Get(name, key); ok {
+				return v, nil
+			}
+			c.mu.RLock()
+			start, startAt := c.seq, c.now()
+			c.mu.RUnlock()
+			val, err := load()
+			if err != nil {
+				return nil, err
+			}
+			c.putIfNotInvalidated(name, k, val, ttl, start, startAt)
+			return val, nil
+		})
 		if err != nil {
-			return nil, err
+			if !ran && attempt < maxJoinRetries && (errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)) {
+				continue
+			}
+			var zero T
+			return zero, err
 		}
-		c.putIfNotInvalidated(name, k, val, ttl, start, startAt)
-		return val, nil
-	})
-	if err != nil {
-		var zero T
-		return zero, err
+		return v.(T), nil
 	}
-	return v.(T), nil
 }
+
+// maxJoinRetries bounds the new loads of a caller whose joined loads were cancelled.
+const maxJoinRetries = 3
 
 func (c *Cache) putIfNotInvalidated(name, k string, v any, ttl time.Duration, start uint64, startAt time.Time) {
 	if ttl <= 0 {
@@ -308,14 +339,34 @@ func (c *Cache) putIfNotInvalidated(name, k string, v any, ttl time.Duration, st
 	}
 }
 
-// Invalidate drops a key locally and on every other instance.
+// Invalidate drops a key locally and on every other instance. A failed publish is
+// retried in the background for a few seconds (an instance that lost its subscription
+// meanwhile clears its whole L1 when it resubscribes).
 func (c *Cache) Invalidate(ctx context.Context, name, key string) {
-	c.applyInvalidation(name + "\x00" + key)
-	if c.rdb != nil {
-		if err := c.rdb.Publish(ctx, invalidationChannel, name+"\x00"+key).Err(); err != nil {
-			c.log.Warn("cache invalidation publish failed", "err", err)
-		}
+	payload := name + "\x00" + key
+	c.applyInvalidation(payload)
+	if c.rdb == nil {
+		return
 	}
+	if err := c.rdb.Publish(ctx, invalidationChannel, payload).Err(); err != nil {
+		c.log.Warn("cache invalidation publish failed, retrying", "err", err)
+		go c.republish(payload)
+	}
+}
+
+func (c *Cache) republish(payload string) {
+	delay := 100 * time.Millisecond
+	for attempt := 0; attempt < 6; attempt++ {
+		time.Sleep(delay)
+		pctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		err := c.rdb.Publish(pctx, invalidationChannel, payload).Err()
+		cancel()
+		if err == nil {
+			return
+		}
+		delay *= 2
+	}
+	c.log.Error("cache invalidation publish failed: other instances keep the entry until it expires or they resubscribe", "payload", strings.ReplaceAll(payload, "\x00", "::"))
 }
 
 // InvalidateAll drops every key of a cache name everywhere.

@@ -97,10 +97,11 @@ func (s *redisRateStore) checkAndIncrement(ctx context.Context, key string, max 
 
 // memoryRateStore is the same rule over a map (tests, process without Redis).
 type memoryRateStore struct {
-	mu      sync.Mutex
-	counts  map[string]int
-	expires map[string]time.Time
-	now     func() time.Time
+	mu        sync.Mutex
+	counts    map[string]int
+	expires   map[string]time.Time
+	now       func() time.Time
+	lastPrune time.Time
 }
 
 func newMemoryRateStore() *memoryRateStore {
@@ -110,6 +111,17 @@ func newMemoryRateStore() *memoryRateStore {
 func (s *memoryRateStore) checkAndIncrement(_ context.Context, key string, max int, ttl time.Duration) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if now := s.now(); now.Sub(s.lastPrune) > time.Minute {
+		// expired windows count as 0 anyway: drop them so the maps stay bounded by the
+		// clients of the last window (one entry per IP hash otherwise, for the process life)
+		s.lastPrune = now
+		for k, exp := range s.expires {
+			if !now.Before(exp) {
+				delete(s.expires, k)
+				delete(s.counts, k)
+			}
+		}
+	}
 	count := 0
 	if exp, ok := s.expires[key]; ok && s.now().Before(exp) {
 		count = s.counts[key]

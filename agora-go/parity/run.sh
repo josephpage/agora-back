@@ -27,6 +27,7 @@ export PARITY_REF_STRAPI=http://localhost:$REF_STRAPI PARITY_GO_STRAPI=http://lo
 export PARITY_REF_CMD="$RUN/start-ref.sh" PARITY_GO_CMD="$RUN/start-go.sh"
 REFJAR=${PARITY_REF_JAR:-/home/user/agora-ref/build/libs/agora-back-0.0.1.jar}
 JAVA17=${PARITY_JAVA:-/usr/lib/jvm/java-17-openjdk-amd64/bin/java}
+REF_JAVA_OPTS=${PARITY_REF_JAVA_OPTS:--Xmx768m}
 # one Strapi clock for every slot of a machine (fixture dates are relative to it)
 STRAPI_NOW_FILE=${PARITY_STRAPI_NOW_FILE:-${PARITY_RUN_DIR:-/home/user/run}/strapi_now}
 
@@ -121,7 +122,7 @@ set -a
 while IFS= read -r line; do [[ -z "\$line" || "\$line" == \#* ]] && continue; export "\$line"; done < "$here/parity/env/common.env"
 while IFS= read -r line; do [[ -z "\$line" || "\$line" == \#* ]] && continue; export "\$line"; done < "$RUN/ref.env"
 set +a
-exec "$JAVA17" -Duser.timezone=\${TZ:-UTC} -Xmx768m -jar "$REFJAR" "\$@"
+exec "$JAVA17" -Duser.timezone=\${TZ:-UTC} $REF_JAVA_OPTS -jar "$REFJAR" "\$@"
 EOT
   cat > "$RUN/start-go.sh" <<EOT
 #!/bin/bash

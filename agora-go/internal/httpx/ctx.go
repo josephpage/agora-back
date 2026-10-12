@@ -223,9 +223,10 @@ func (c *Ctx) ParamList(name string) []string {
 }
 
 // SpringBoolParam converts a @RequestParam Boolean like StringToBooleanConverter
-// (true/on/yes/1, false/off/no/0); anything else → 400.
+// (String.trim(), so only chars <= U+0020 at both ends, then lower case;
+// true/on/yes/1, false/off/no/0); anything else → 400.
 func SpringBoolParam(v string) bool {
-	switch strings.ToLower(strings.TrimSpace(v)) {
+	switch strings.ToLower(javacompat.JavaStringTrim(v)) {
 	case "true", "on", "yes", "1":
 		return true
 	case "false", "off", "no", "0":
@@ -235,12 +236,14 @@ func SpringBoolParam(v string) bool {
 }
 
 // SpringIntPathVar converts an Int @PathVariable/@RequestParam like Spring's
-// StringToNumberConverterFactory (NumberUtils.parseNumber, trimmed): invalid → 400.
+// StringToNumberConverterFactory (NumberUtils.parseNumber: every Character.isWhitespace
+// removed, anywhere in the text, then Integer.valueOf or Integer.decode): invalid → 400.
 func SpringIntPathVar(v string) int {
-	n, ok := javacompat.KotlinToIntOrNull(strings.TrimSpace(v))
+	t := javacompat.SpringTrimAllWhitespace(v)
+	n, ok := javacompat.KotlinToIntOrNull(t)
 	if !ok {
 		// Spring's NumberUtils also accepts hex "0x.." / "#.." prefixes
-		if i, ok2 := parseSpringHexInt(strings.TrimSpace(v)); ok2 {
+		if i, ok2 := parseSpringHexInt(t); ok2 {
 			return i
 		}
 		panic(&SpringError{Status: 400, Cause: "MethodArgumentTypeMismatchException: int " + v})

@@ -24,8 +24,9 @@ const (
 	// property '__component'"), so Kotlin asks Strapi at every call and only an empty
 	// list is ever served from the cache: Go shares a non empty list for
 	// AGORA_MICROCACHE_TTL (class B, parity/divergences/S4.md S4-B2).
-	ongoingListCacheName  = "strapiOngoingConsultations"
-	finishedListCacheName = "strapiFinishedConsultations"
+	ongoingListCacheName   = "strapiOngoingConsultations"
+	finishedListCacheName  = "strapiFinishedConsultations"
+	answeredByIDsCacheName = "strapiConsultationsByIds" // Go only (micro-cache)
 )
 
 // InfoRepository is ConsultationInfoRepositoryImpl.
@@ -102,7 +103,16 @@ func (r *InfoRepository) GetAnsweredConsultations(ctx context.Context, userID st
 	if err != nil {
 		return nil, err
 	}
-	return r.mapper.toDomainFinished(r.strapi.GetConsultationsByIDs(ctx, ids), FromTime(now)), nil
+	if len(ids) == 0 {
+		return r.mapper.toDomainFinished(nil, FromTime(now)), nil
+	}
+	// Kotlin asks Strapi at each request; the list of a set of ids (the same Strapi URI) is
+	// shared at most AGORA_MICROCACHE_TTL (decision #2, never stored empty): S5-B5
+	list, _ := loadCached(r.a, answeredByIDsCacheName, strings.Join(ids, ","), r.a.Cfg.MicroCacheTTL, func() ([]*strapiConsultation, bool, error) {
+		l := r.strapi.GetConsultationsByIDs(context.WithoutCancel(ctx), ids)
+		return l, len(l) > 0, nil
+	})
+	return r.mapper.toDomainFinished(list, FromTime(now)), nil
 }
 
 // IsConsultationExists is isConsultationExists(consultationId).

@@ -262,6 +262,31 @@ func KotlinIsWhitespace(r rune) bool {
 	return unicode.In(r, unicode.Zs, unicode.Zl, unicode.Zp)
 }
 
+// JavaIsWhitespace reproduces java.lang.Character.isWhitespace(char): the Unicode
+// space, line and paragraph separators except the non-breaking ones (U+00A0, U+2007,
+// U+202F), plus \t \n \v \f \r and U+001C..U+001F.
+func JavaIsWhitespace(r rune) bool {
+	switch r {
+	case '\t', '\n', '\v', '\f', '\r', 0x1C, 0x1D, 0x1E, 0x1F:
+		return true
+	case 0xA0, 0x2007, 0x202F:
+		return false
+	}
+	return unicode.In(r, unicode.Zs, unicode.Zl, unicode.Zp)
+}
+
+// SpringTrimAllWhitespace reproduces org.springframework.util.StringUtils.trimAllWhitespace:
+// every character for which Character.isWhitespace is true is removed, anywhere in the text
+// (NumberUtils.parseNumber applies it before parsing, so "1 2" is 12).
+func SpringTrimAllWhitespace(s string) string {
+	return strings.Map(func(r rune) rune {
+		if JavaIsWhitespace(r) {
+			return -1
+		}
+		return r
+	}, s)
+}
+
 // KotlinTrim reproduces Kotlin CharSequence.trim().
 func KotlinTrim(s string) string {
 	return strings.TrimFunc(s, KotlinIsWhitespace)

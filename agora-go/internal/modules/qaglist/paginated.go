@@ -3,7 +3,6 @@ package qaglist
 import (
 	"context"
 	"math"
-	"sort"
 	"time"
 
 	"agora/internal/javacompat"
@@ -91,6 +90,7 @@ type PaginatedUseCase struct {
 	clusters   clusterReader
 	exponent   float64
 	now        func() time.Time
+	rank       trendingRank // the order of the trending candidates, reused while it cannot change
 }
 
 // GetPopularQagPaginated is getPopularQagPaginated; nil is Kotlin's null (HTTP 400).
@@ -228,28 +228,15 @@ func (u *PaginatedUseCase) GetTrendingQag(ctx context.Context, userID string) (*
 	}
 	clusterCount := map[string]int{}
 
-	type scored struct {
-		q     qag.QagInfoWithSupportCount
-		score float64
-	}
-	var candidates []scored
-	for _, q := range all {
-		if q.ID != pinned.ID {
-			candidates = append(candidates, scored{q, score(q)})
-		}
-	}
-	// sortedByDescending: stable, Double.compareTo order
-	sort.SliceStable(candidates, func(i, j int) bool {
-		return javaDoubleCompare(candidates[j].score, candidates[i].score) < 0
-	})
+	order := u.rank.ranked(all, now, score)
 
 	slots := make([]qag.QagInfoWithSupportCount, 0, trendingSlots)
 	oldQagCount := 0
-	for _, c := range candidates {
+	for _, idx := range order {
 		if len(slots) >= trendingSlots {
 			break
 		}
-		q := c.q
+		q := all[idx]
 		isOld := hoursSince(q, now) > trendingOldThresholdHours
 		if isOld && oldQagCount >= trendingMaxOldQags {
 			continue

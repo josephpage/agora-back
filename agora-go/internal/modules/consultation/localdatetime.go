@@ -34,7 +34,7 @@ func (d LocalDateTime) After(o LocalDateTime) bool { return d.T.After(o.T) }
 // ToDate is DateUtils.LocalDateTime.toDate(): the instant of the wall clock in
 // the process zone (a time in a daylight saving gap is shifted like Java does).
 func (d LocalDateTime) ToDate() time.Time {
-	return time.Date(d.T.Year(), d.T.Month(), d.T.Day(), d.T.Hour(), d.T.Minute(), d.T.Second(), d.T.Nanosecond(), time.Local)
+	return javacompat.JavaAtZone(d.T.Year(), d.T.Month(), d.T.Day(), d.T.Hour(), d.T.Minute(), d.T.Second(), d.T.Nanosecond(), time.Local)
 }
 
 // PlusDays is LocalDateTime.plusDays.

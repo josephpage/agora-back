@@ -2,6 +2,10 @@ package cache
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -104,5 +108,44 @@ func TestGetOrLoadNameAndFlushInvalidation(t *testing.T) {
 	<-done
 	if v, ok := c.Get("users", "u3"); !ok || v != 3 {
 		t.Fatal("unrelated invalidation dropped the store")
+	}
+}
+
+// The caller running a shared load is cancelled (its client went away): a caller that
+// joined it loads again with its own function instead of failing.
+func TestGetOrLoadJoinerSurvivesLeaderCancellation(t *testing.T) {
+	c := New(nil, slog.New(slog.NewTextHandler(io.Discard, nil)), false)
+	leaderCtx, cancelLeader := context.WithCancel(context.Background())
+	started := make(chan struct{})
+	leaderDone := make(chan error, 1)
+	go func() {
+		_, err := GetOrLoad(c, "n", "k", time.Minute, func() (string, error) {
+			close(started)
+			<-leaderCtx.Done()
+			return "", fmt.Errorf("query: %w", leaderCtx.Err())
+		})
+		leaderDone <- err
+	}()
+	<-started
+	joinerDone := make(chan struct{})
+	var got string
+	var gotErr error
+	go func() {
+		defer close(joinerDone)
+		got, gotErr = GetOrLoad(c, "n", "k", time.Minute, func() (string, error) { return "fresh", nil })
+	}()
+	time.Sleep(20 * time.Millisecond) // let the joiner join the leader's flight
+	cancelLeader()
+	if err := <-leaderDone; !errors.Is(err, context.Canceled) {
+		t.Fatalf("leader: %v", err)
+	}
+	<-joinerDone
+	if gotErr != nil || got != "fresh" {
+		t.Fatalf("joiner: %q, %v", got, gotErr)
+	}
+	// any other error is shared as before
+	boom := errors.New("boom")
+	if _, err := GetOrLoad(c, "n", "other", time.Minute, func() (string, error) { return "", boom }); !errors.Is(err, boom) {
+		t.Fatalf("got %v", err)
 	}
 }

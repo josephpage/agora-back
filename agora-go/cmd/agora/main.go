@@ -93,7 +93,7 @@ func runMigrate(direction string, logger *slog.Logger) int {
 	}
 	defer db.Pool.Close()
 	if direction == "status" {
-		lines, err := store.MigrationStatus(ctx, db.Pool)
+		lines, err := store.MigrationStatus(ctx, db.Pool.Pool)
 		if err != nil {
 			logger.Error("migration status", "err", err)
 			return 1
@@ -103,7 +103,7 @@ func runMigrate(direction string, logger *slog.Logger) int {
 		}
 		return 0
 	}
-	if err := store.Migrate(ctx, db.Pool, direction, logger); err != nil {
+	if err := store.Migrate(ctx, db.Pool.Pool, direction, logger); err != nil {
 		logger.Error("migration failed", "direction", direction, "err", err)
 		return 1
 	}
@@ -284,6 +284,7 @@ func runCustomCommand(ctx context.Context, a *app.App, cmd string, args map[stri
 }
 
 func serve(ctx context.Context, a *app.App) error {
+	startPprof(a.Log)
 	a.Cache.Run(ctx)
 	u := users.Get(a)
 	a.Server = httpx.NewServer(httpx.Options{

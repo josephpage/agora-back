@@ -22,6 +22,9 @@ import (
 
 const scope = "https://www.googleapis.com/auth/firebase.messaging"
 
+// tokenTimeout bounds each OAuth token request (google-http-client: 20 s connect, 20 s read).
+var tokenTimeout = 20 * time.Second
+
 // Message is one multicast notification (MulticastMessage).
 type Message struct {
 	Tokens []string
@@ -62,6 +65,11 @@ func New(ctx context.Context, credentialsJSON string, log *slog.Logger) (*Sender
 	if credentialsJSON == "" {
 		return s, nil
 	}
+	// The token source fetches (and refreshes, about hourly) its OAuth token with the
+	// client of this context, http.DefaultClient otherwise, which never times out: a
+	// silent token endpoint would block the single notification worker forever. The
+	// Java SDK (google-http-client) gives up after 20 s (connect and read timeouts).
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Timeout: tokenTimeout})
 	creds, err := google.CredentialsFromJSON(ctx, []byte(credentialsJSON), scope)
 	if err != nil {
 		return nil, fmt.Errorf("FIREBASE_CREDENTIALS_JSON: %w", err)

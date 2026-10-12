@@ -35,6 +35,34 @@ final class F5Functions {
         // Tomcat ByteChunk.toString / Charset.decode: UTF-8 with REPLACE (query parameters).
         F.put("javaUtf8Decode", a -> units(Charset.forName("UTF-8").decode(ByteBuffer.wrap(bytes(a))).toString()));
 
+        // Spring's conversion of a @RequestParam / @PathVariable text to Integer or Boolean
+        // (StringToNumberConverterFactory → NumberUtils.parseNumber, StringToBooleanConverter).
+        F.put("springConvert", a -> {
+            Class<?> type = "Boolean".equals(Functions.s(a, "type")) ? Boolean.class : Integer.class;
+            try {
+                Object v = org.springframework.core.convert.support.DefaultConversionService.getSharedInstance()
+                        .convert(Functions.s(a, "s"), type);
+                return Functions.map("value", v == null ? null : v.toString());
+            } catch (RuntimeException e) {
+                return Functions.map("error", e.getClass().getSimpleName());
+            }
+        });
+
+        // LocalDateTime.atZone(zone).toInstant() (DateUtils.toDate): epoch milliseconds.
+        F.put("javaAtZone", a -> java.time.LocalDateTime.parse(Functions.s(a, "wall"))
+                .atZone(java.time.ZoneId.of(Functions.s(a, "zone"))).toInstant().toEpochMilli());
+
+        // pgjdbc TimestampUtils.toTimestamp: the wall clock set on a lenient GregorianCalendar of
+        // the JVM zone (timestamp without time zone columns): epoch milliseconds.
+        F.put("javaCalendarTimestamp", a -> {
+            java.time.LocalDateTime w = java.time.LocalDateTime.parse(Functions.s(a, "wall"));
+            java.util.GregorianCalendar cal = new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone(Functions.s(a, "zone")));
+            cal.clear();
+            cal.set(w.getYear(), w.getMonthValue() - 1, w.getDayOfMonth(), w.getHour(), w.getMinute(), w.getSecond());
+            cal.set(java.util.Calendar.MILLISECOND, w.getNano() / 1_000_000);
+            return cal.getTimeInMillis();
+        });
+
         // Tomcat request.getRemoteAddr(): InetAddress.getHostAddress() of the peer socket address
         // (raw 4 or 16 bytes, optional numeric IPv6 scope).
         F.put("javaInetHostAddress", a -> {

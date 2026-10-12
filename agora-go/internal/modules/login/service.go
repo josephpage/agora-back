@@ -2,9 +2,9 @@ package login
 
 import (
 	"context"
-	"time"
 
 	"agora/internal/app"
+	"agora/internal/javacompat"
 	"agora/internal/modules/users"
 )
 
@@ -95,11 +95,11 @@ func (s *Service) FlagSuspiciousUsers(ctx context.Context) (int, error) {
 		return 0, err
 	}
 	now := s.a.Now()
-	// LocalDate.toDate(): start of that day with the *current* time of day.
-	timeOfDay := now.Sub(time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()))
-	dateNow := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	end := dateNow.Add(timeOfDay)
-	start := dateNow.AddDate(0, 0, -14).Add(timeOfDay)
+	// LocalDate.toDate(): that day at the *current* wall-clock time, then atZone (the
+	// wall clock, not the elapsed time since midnight, across a daylight saving change).
+	h, mi, sec := now.Clock()
+	end := javacompat.JavaAtZone(now.Year(), now.Month(), now.Day(), h, mi, sec, now.Nanosecond(), now.Location())
+	start := javacompat.JavaAtZone(now.Year(), now.Month(), now.Day()-14, h, mi, sec, now.Nanosecond(), now.Location())
 	n, err := s.UserData.FlagUsersWithSuspiciousActivity(ctx, 3, start, end)
 	if err != nil {
 		return 0, err

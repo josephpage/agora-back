@@ -22,6 +22,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"agora/internal/javacompat"
 )
 
 //go:embed schema/*.sql
@@ -29,7 +31,7 @@ var schemaFS embed.FS
 
 // DB wraps the pgx pool.
 type DB struct {
-	Pool *pgxpool.Pool
+	Pool *Pool
 }
 
 // Querier is satisfied by *pgxpool.Pool, pgx.Tx and *pgx.Conn.
@@ -54,6 +56,8 @@ func Open(ctx context.Context, databaseURL string, maxConns int, acquireTimeout 
 	cfg.MaxConnIdleTime = 10 * time.Minute
 	cfg.HealthCheckPeriod = time.Minute
 	if acquireTimeout > 0 {
+		// Hikari's connectionTimeout bounds both the wait for a pooled connection (Pool)
+		// and the opening of a new one
 		cfg.ConnConfig.ConnectTimeout = acquireTimeout
 	}
 	// Statement cache per connection (prepared statements reused).
@@ -62,7 +66,7 @@ func Open(ctx context.Context, databaseURL string, maxConns int, acquireTimeout 
 	if err != nil {
 		return nil, err
 	}
-	return &DB{Pool: pool}, nil
+	return &DB{Pool: &Pool{Pool: pool, acquireTimeout: acquireTimeout}}, nil
 }
 
 // normalizeURL accepts the Scalingo/Heroku style URL and drops JDBC-only
@@ -96,9 +100,10 @@ func (db *DB) Tx(ctx context.Context, fn func(tx pgx.Tx) error) error {
 }
 
 // Local reinterprets a scanned `timestamp without time zone` (returned by pgx
-// with the UTC location) as a wall clock time in the process zone.
+// with the UTC location) as a wall clock time in the process zone, resolved like
+// pgjdbc (GregorianCalendar: standard time in a fall-back overlap).
 func Local(t time.Time) time.Time {
-	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.Local)
+	return javacompat.JavaCalendarTime(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.Local)
 }
 
 // LocalPtr is Local for nullable columns.

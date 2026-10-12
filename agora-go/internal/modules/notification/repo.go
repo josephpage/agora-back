@@ -85,6 +85,9 @@ SELECT gen_random_uuid(), $1::timestamp, $2::text, $3::text, $4::text, u FROM un
 	})
 }
 
+// maxJDBCParameters is the largest number of bind parameters pgjdbc sends in one statement.
+const maxJDBCParameters = 65535
+
 // DeleteUsersNotifications is deleteUsersNotifications (DeleteUsersUseCase): the ids that are not UUIDs
 // are dropped; an empty list deletes nothing.
 func (r *Repository) DeleteUsersNotifications(ctx context.Context, userIDs []string) error {
@@ -96,6 +99,12 @@ func (r *Repository) DeleteUsersNotifications(ctx context.Context, userIDs []str
 	}
 	if len(ids) == 0 {
 		return nil
+	}
+	if len(ids) > maxJDBCParameters {
+		// Hibernate binds one parameter per id of the IN list and pgjdbc 42.5.4 refuses more
+		// than 65535 (PGStream.sendInteger2): the first step of the user deletion fails, so
+		// nothing is deleted (the later steps never run).
+		return errJavaException
 	}
 	_, err := r.a.DB.Pool.Exec(ctx, "DELETE FROM notifications WHERE user_id = ANY($1::uuid[])", ids)
 	return err
