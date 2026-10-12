@@ -3,7 +3,7 @@
 name: "S6-answer-bodies-1"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"]}
+setup: {"sql": ["DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "DROP FUNCTION IF EXISTS s6_participation()"]}
 steps:
   - {"id": "body-ok", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "body": {"consultationId": "x", "responses": [{"questionId": "201", "choiceIds": ["2011"], "responseText": null}]}, "as": "{{seed.UserRegular1}}", "headers": {"X-Forwarded-For": "10.6.0.208"}}
   - {"id": "body-no-consultation-id", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "body": {"responses": [{"questionId": "201", "choiceIds": ["2011"], "responseText": null}]}, "as": "{{seed.UserRegular2}}", "headers": {"X-Forwarded-For": "10.6.0.209"}}
@@ -31,7 +31,7 @@ steps:
 name: "S6-answer-bodies-2"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"]}
+setup: {"sql": ["DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "DROP FUNCTION IF EXISTS s6_participation()"]}
 steps:
   - {"id": "body-object-choice-ids", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "body": {"consultationId": "x", "responses": [{"questionId": "201", "choiceIds": {"a": 1}, "responseText": null}]}, "as": "{{seed.UserProfile10}}", "headers": {"X-Forwarded-For": "10.6.0.230"}}
   - {"id": "body-number-choice-id", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "body": {"consultationId": "x", "responses": [{"questionId": "201", "choiceIds": [2011], "responseText": null}]}, "as": "{{seed.UserProfile11}}", "headers": {"X-Forwarded-For": "10.6.0.231"}}
@@ -59,7 +59,7 @@ steps:
 name: "S6-answer-bodies-3"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"]}
+setup: {"sql": ["DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "DROP FUNCTION IF EXISTS s6_participation()"]}
 steps:
   - {"id": "body-bom", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "bodyRaw": "\ufeff{\"consultationId\": \"x\", \"responses\": []}", "contentType": "application/json", "as": "{{seed.UserProfile6}}", "headers": {"X-Forwarded-For": "10.6.1.2"}}
   - {"id": "body-leading-whitespace", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "bodyRaw": "  \n {\"consultationId\": \"x\", \"responses\": []}", "contentType": "application/json", "as": "{{seed.UserProfile7}}", "headers": {"X-Forwarded-For": "10.6.1.3"}}
@@ -69,7 +69,7 @@ steps:
 name: "S6-answer-content-types"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"]}
+setup: {"sql": ["DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "DROP FUNCTION IF EXISTS s6_participation()"]}
 steps:
   - {"id": "ct-charset-iso", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "bodyRaw": "{\"consultationId\": \"x\", \"responses\": [{\"questionId\": \"203\", \"choiceIds\": [], \"responseText\": \"café\"}]}", "contentType": "application/json;charset=ISO-8859-1", "as": "{{seed.UserRegular1}}", "headers": {"X-Forwarded-For": "10.6.1.6"}}
   - {"id": "ct-text-plain", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "bodyRaw": "{\"consultationId\": \"x\", \"responses\": []}", "contentType": "text/plain", "as": "{{seed.UserRegular3}}", "headers": {"X-Forwarded-For": "10.6.1.7"}}
@@ -86,7 +86,7 @@ steps:
 name: "S6-answer-null-elements"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"]}
+setup: {"sql": ["DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "DROP FUNCTION IF EXISTS s6_participation()"]}
 steps:
   - {"id": "body-null-response-element", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "body": {"consultationId": "x", "responses": [null]}, "as": "00000000-0000-4000-9000-000000000040", "headers": {"X-Forwarded-For": "10.6.1.17"}}
   - {"id": "body-null-response-element-after-ok", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "body": {"consultationId": "x", "responses": [{"questionId": "201", "choiceIds": ["2011"], "responseText": null}, null]}, "as": "00000000-0000-4000-9000-000000000041", "headers": {"X-Forwarded-For": "10.6.1.18"}}
@@ -101,7 +101,7 @@ steps:
 name: "S6-answer-http"
 tags: ["S6"]
 dbdiff: "step"
-setup: {"sql": ["CREATE OR REPLACE FUNCTION s6_participation() RETURNS trigger AS $$ BEGIN IF NEW.participation_id IS NOT NULL AND NEW.participation_id <> '00000000-0000-0000-0000-000000000000' AND NEW.participation_date >= localtimestamp - interval '10 minutes' THEN NEW.participation_id := md5(coalesce(NEW.user_id::text, '') || '/' || coalesce(NEW.consultation_id, ''))::uuid; END IF; RETURN NEW; END $$ LANGUAGE plpgsql", "DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "CREATE TRIGGER s6_participation BEFORE INSERT ON reponses_consultation FOR EACH ROW EXECUTE FUNCTION s6_participation()"]}
+setup: {"sql": ["DROP TRIGGER IF EXISTS s6_participation ON reponses_consultation", "DROP FUNCTION IF EXISTS s6_participation()"]}
 steps:
   - {"id": "anonymous", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "body": {"consultationId": "{{seed.Consultation2}}", "responses": [{"questionId": "201", "choiceIds": ["2011"], "responseText": null}]}, "headers": {"X-Forwarded-For": "10.6.1.24"}}
   - {"id": "bad-jwt", "method": "POST", "path": "/consultations/{{seed.Consultation2}}/responses", "body": {"consultationId": "x", "responses": [{"questionId": "201", "choiceIds": ["2011"], "responseText": null}]}, "bearer": "abc.def.ghi", "headers": {"X-Forwarded-For": "10.6.1.25"}}
