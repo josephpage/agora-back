@@ -36,9 +36,15 @@ const (
 // NotificationCacheRepository).
 type Repository struct {
 	a *app.App
+	// findAll is NotificationDatabaseRepository.findAllByUserId (replaced in the unit tests).
+	findAll func(ctx context.Context, uid string) ([]row, error)
 }
 
-func newRepository(a *app.App) *Repository { return &Repository{a: a} }
+func newRepository(a *app.App) *Repository {
+	r := &Repository{a: a}
+	r.findAll = r.loadRows
+	return r
+}
 
 // InsertNotifications is insertNotifications(NotificationInserting): one row per element of
 // userIDs (a user listed twice gets two rows; an id that is not a UUID is dropped, mapNotNull).
@@ -183,7 +189,7 @@ func (r *Repository) userRows(ctx context.Context, userID string) ([]row, error)
 	}
 	return cache.GetOrLoad(r.a.Cache, notificationCacheName, notificationCacheKey+userID,
 		r.a.Cache.CoexistenceTTL(notificationCacheTTL), func() ([]row, error) {
-			return r.loadRows(ctx, uid)
+			return r.findAll(ctx, uid)
 		})
 }
 
