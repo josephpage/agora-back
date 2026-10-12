@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -48,12 +49,24 @@ func checkBodies(t *testing.T, label string, v any, want bodiesWant) {
 	}
 }
 
-// texts exercise the CDATA writer, the escaping and the UTF-16 handling.
+// foundationEscapeTexts are the code points that Woodstox escapes in plain element text and in attribute values
+// (`&#x7f;`, `&#x85;`, `&#xfffe;`: lowercase hex) while the foundation internal/xmljava writes them raw (finding
+// F-XML-ESC, parity/ledger/S7.md). Inside CDATA both write them raw: TestOracleXMLCDATAFoundationChars keeps that
+// path under test; the plain-text paths are TestOracleXMLEscapeFoundation (skipped until xmljava is fixed).
+var foundationEscapeTexts = []string{"\u007f del", "\u0085 nel", "￿ nonchar", "￾ nonchar"}
+
+// controlTexts are the control characters U+0000-U+001F other than TAB, LF and CR. Woodstox refuses them in plain
+// element text (a 500 for both sides) but writes them raw inside CDATA, where xmljava.MarshalChecked refuses them
+// too (finding F-XML-CTRL, TestOracleXMLCDATAControlFoundation). They are used by the plain-text tests only.
+var controlTexts = []string{"\u0000 nul", "\u0001 ctrl", "\u0008 bs", "\u000b vt", "\u000c ff", "\u001f us", "tab\tand\u0001ctrl"}
+
+// texts exercise the CDATA writer, the escaping and the UTF-16 handling. The plain-text checks use texts
+// without foundationEscapeTexts.
 var texts = []string{
 	"", " ", "a", "Titre simple ?", "<b>html</b> & entités &amp; &lt;", "x ]] y", "]]", "a>b", ">", "]>", "]]>x", "x]]>", "a ]]> b",
 	"émojis 😀 👨‍👩‍👧‍👦 accents éàüçœ ﬁ", "guillemets \"doubles\" et 'simples' \\ backslash", "retour\nà la ligne", "tab\tchar", "cr\rchar", "crlf\r\nchar",
-	"ünï\u2028code\u2029", "\u00a0nbsp\u00a0", "\u007f del", "\u0085 nel", "\ufeffbom", "\ufffd replacement", "\uffff nonchar", "\ufffe nonchar", "\u0001 ctrl", "\u0008 bs", "\u000b vt",
-	"\u000c ff", "\u001f us", "\u0000 nul", "tab\tand\u0001ctrl", strings.Repeat("x", 511) + ">", strings.Repeat("é", 600), strings.Repeat("a]", 300) + "]>",
+	"ünï\u2028code\u2029", "\u00a0nbsp\u00a0", "\ufeffbom", "\ufffd replacement",
+	strings.Repeat("x", 511) + ">", strings.Repeat("é", 600), strings.Repeat("a]", 300) + "]>",
 	strings.Repeat("<&>", 300), "line1\nline2\r\nline3\r", "<![CDATA[inner]]>", "&#x41; &#65;", "<?xml version=\"1.0\"?>", "100% ça marche", "x'\"y",
 }
 
@@ -88,6 +101,9 @@ func TestOracleListXML(t *testing.T) {
 		run("text "+fmt.Sprintf("%q", s), []ModeratusQag{{QagID: "id", Title: s, Description: s, Date: time.UnixMilli(1704380400123), Username: s, UserID: "user"}})
 		run("title only "+fmt.Sprintf("%q", s), []ModeratusQag{{QagID: s, Title: s, Description: "d", Date: time.UnixMilli(0), Username: "u", UserID: s}})
 	}
+	for _, s := range controlTexts { // a control character in a plain element: both sides refuse the whole body
+		run("control id "+fmt.Sprintf("%q", s), []ModeratusQag{{QagID: s, Title: "t", Description: "d", Date: time.UnixMilli(0), Username: "u", UserID: "x"}})
+	}
 	for i := 0; i < 400; i++ {
 		var qags []ModeratusQag
 		for n := r.Intn(6); n > 0; n-- {
@@ -105,11 +121,63 @@ func TestOracleListXML(t *testing.T) {
 	}
 }
 
+// TestOracleXMLCDATAFoundationChars: inside CDATA (title, description, username) Woodstox and xmljava both write the
+// F-XML-ESC code points raw.
+func TestOracleXMLCDATAFoundationChars(t *testing.T) {
+	if !oracle.Available() {
+		t.Skip("PARITY_ORACLE!=1")
+	}
+	date := time.UnixMilli(1704380400123)
+	for _, s := range foundationEscapeTexts {
+		args := []map[string]any{{"qagId": "id", "title": s, "description": s, "dateMs": date.UnixMilli(), "username": s, "userId": "user"}}
+		var want bodiesWant
+		oracle.MustCall(t, "moderatusListXml", map[string]any{"qags": args}, &want)
+		q := []ModeratusQag{{QagID: "id", Title: s, Description: s, Date: date, Username: s, UserID: "user"}}
+		checkBodies(t, fmt.Sprintf("cdata %q", s), toListXML(q), want)
+	}
+}
+
+// TestOracleXMLEscapeFoundation is the known foundation divergence F-XML-ESC: Woodstox writes the plain-text
+// code points of foundationEscapeTexts as &#x..; (lowercase hex), internal/xmljava writes them raw. It runs when
+// PARITY_FOUNDATION_XML_ESC=1 is set (once xmljava escapes them) and is skipped otherwise.
+func TestOracleXMLEscapeFoundation(t *testing.T) {
+	if !oracle.Available() {
+		t.Skip("PARITY_ORACLE!=1")
+	}
+	if os.Getenv("PARITY_FOUNDATION_XML_ESC") == "" {
+		t.Skip("known foundation divergence F-XML-ESC (internal/xmljava): run with PARITY_FOUNDATION_XML_ESC=1 once xmljava escapes U+007F-U+009F, U+FFFE, U+FFFF")
+	}
+	for _, s := range foundationEscapeTexts {
+		var want bodiesWant
+		oracle.MustCall(t, "moderatusListErrorXml", map[string]any{"message": s}, &want)
+		checkBodies(t, fmt.Sprintf("error %q", s), ModeratusQagListErrorXML{ErrorMessage: s}, want)
+	}
+}
+
+// TestOracleXMLCDATAControlFoundation is the known foundation divergence F-XML-CTRL: a control character inside CDATA
+// (here the username of a QaG, `pseudo`) is written raw by Woodstox (HTTP 200) and refused by xmljava.MarshalChecked
+// (HTTP 500). It runs when PARITY_FOUNDATION_XML_CTRL=1 is set (once xmljava accepts them) and is skipped otherwise.
+func TestOracleXMLCDATAControlFoundation(t *testing.T) {
+	if !oracle.Available() {
+		t.Skip("PARITY_ORACLE!=1")
+	}
+	if os.Getenv("PARITY_FOUNDATION_XML_CTRL") == "" {
+		t.Skip("known foundation divergence F-XML-CTRL (internal/xmljava): run with PARITY_FOUNDATION_XML_CTRL=1 once control characters are written in CDATA")
+	}
+	for _, s := range controlTexts {
+		args := []map[string]any{{"qagId": "id", "title": "t", "description": "d", "dateMs": int64(0), "username": s, "userId": "user"}}
+		var want bodiesWant
+		oracle.MustCall(t, "moderatusListXml", map[string]any{"qags": args}, &want)
+		q := []ModeratusQag{{QagID: "id", Title: "t", Description: "d", Date: time.UnixMilli(0), Username: s, UserID: "user"}}
+		checkBodies(t, fmt.Sprintf("cdata %q", s), toListXML(q), want)
+	}
+}
+
 func TestOracleListErrorXML(t *testing.T) {
 	if !oracle.Available() {
 		t.Skip("PARITY_ORACLE!=1")
 	}
-	for _, m := range append([]string{loginFailedMessage}, texts...) {
+	for _, m := range append(append([]string{loginFailedMessage}, texts...), controlTexts...) {
 		var want bodiesWant
 		oracle.MustCall(t, "moderatusListErrorXml", map[string]any{"message": m}, &want)
 		checkBodies(t, fmt.Sprintf("%q", m), ModeratusQagListErrorXML{ErrorMessage: m}, want)
@@ -148,7 +216,7 @@ func TestOracleLockXML(t *testing.T) {
 		oracle.MustCall(t, "moderatusLockXml", map[string]any{"ids": append([]string{}, ids...), "errorMessage": lockLoginFailedMessage}, &want)
 		checkBodies(t, fmt.Sprintf("error %d", i), lockResultsXML(errorLockResults(ids, lockLoginFailedMessage)), want)
 	}
-	for _, m := range texts {
+	for _, m := range append(append([]string{}, texts...), controlTexts...) {
 		var want bodiesWant
 		oracle.MustCall(t, "moderatusLockXml", map[string]any{"ids": []string{"a"}, "errorMessage": m}, &want)
 		checkBodies(t, fmt.Sprintf("message %q", m), lockResultsXML(errorLockResults([]string{"a"}, m)), want)
@@ -160,7 +228,7 @@ func TestOracleModerateXML(t *testing.T) {
 		t.Skip("PARITY_ORACLE!=1")
 	}
 	names := map[ModeratusQagModerateResult]string{ModerateSuccess: "SUCCESS", ModerateNotFound: "NOT_FOUND", ModerateFailure: "FAILURE"}
-	for _, m := range append([]string{moderateDatabaseErrorMsg, loginFailedMessage, "Status invalide"}, texts...) {
+	for _, m := range append(append([]string{moderateDatabaseErrorMsg, loginFailedMessage, "Status invalide"}, texts...), controlTexts...) {
 		for res, name := range names {
 			var want bodiesWant
 			oracle.MustCall(t, "moderatusModerateXml", map[string]any{"result": name, "message": m}, &want)

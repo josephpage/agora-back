@@ -41,20 +41,20 @@ const (
 	qagRejectedTitle   = "Question hors Charte."
 	qagRejectedMessage = "Malheureusement, votre question a du être modérée."
 
-	qagAcceptedAfterRejectTitle   = "Bonne nouvelle !"
+	qagAcceptedAfterRejectTitle   = "Bonne nouvelle !"
 	qagAcceptedAfterRejectMessage = "Votre question a été ré-évaluée et correspond à la charte."
 )
 
 // QagAcceptedNotifications is QAG_ACCEPTED_NOTIFICATIONS.
 var QagAcceptedNotifications = []NotificationMessage{
-	{"Et si vous partagiez votre question ?", "Proposez à vos amis de la soutenir pour avoir plus de chance d’obtenir une réponse !"},
+	{"Et si vous partagiez votre question ?", "Proposez à vos amis de la soutenir pour avoir plus de chance d’obtenir une réponse !"},
 	{"✅ Question publiée", "Votre question est désormais proposée à tous les utilisateurs sur Agora."},
-	{"🙏 Merci pour votre question !", "Partagez-la à vos amis pour la faire monter dans le classement."},
+	{"🙏 Merci pour votre question !", "Partagez-la à vos amis pour la faire monter dans le classement."},
 	{"👋 Votre question est en ligne", "Faites-la connaître pour obtenir une réponse."},
-	{"🗓 Votre question sur Agora", "Elle est publiée. Vous avez jusqu’à lundi pour la faire gagner !"},
+	{"🗓 Votre question sur Agora", "Elle est publiée. Vous avez jusqu’à lundi pour la faire gagner !"},
 	{"🥳 Votre question est en ligne", "Multipliez vos chances de la faire gagner en la partageant."},
-	{"✅ Question publiée !", "La réponse pourrait intéresser vos proches ? Partagez-leur pour augmenter vos chances."},
-	{"🥁 Question publiée avec succès", "Sera-t-elle en tête lundi à 10h ? Proposez à vos amis de la soutenir."},
+	{"✅ Question publiée !", "La réponse pourrait intéresser vos proches ? Partagez-leur pour augmenter vos chances."},
+	{"🥁 Question publiée avec succès", "Sera-t-elle en tête lundi à 10h ? Proposez à vos amis de la soutenir."},
 }
 
 // typeDetailsQag is TypeNotification.DETAILS_QAG: its name goes in the FCM data, its ordinal
