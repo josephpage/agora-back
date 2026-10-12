@@ -287,6 +287,27 @@ func SpringTrimAllWhitespace(s string) string {
 	}, s)
 }
 
+// KotlinLines reproduces Kotlin CharSequence.lines(): split on CRLF, LF and CR (a lone
+// CR is a line break too); the text after the last break is a line, even empty.
+func KotlinLines(s string) []string {
+	var out []string
+	start := 0
+	for i := 0; i < len(s); i++ {
+		switch s[i] {
+		case '\n':
+			out = append(out, s[start:i])
+			start = i + 1
+		case '\r':
+			out = append(out, s[start:i])
+			if i+1 < len(s) && s[i+1] == '\n' {
+				i++
+			}
+			start = i + 1
+		}
+	}
+	return append(out, s[start:])
+}
+
 // KotlinTrim reproduces Kotlin CharSequence.trim().
 func KotlinTrim(s string) string {
 	return strings.TrimFunc(s, KotlinIsWhitespace)

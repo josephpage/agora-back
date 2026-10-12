@@ -6,11 +6,9 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/sha512"
-	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"hash"
 	"strconv"
 	"strings"
@@ -115,134 +113,6 @@ type Claims struct {
 	Subject string
 	HasExp  bool
 	Exp     time.Time
-}
-
-// Parse validates a compact token like jjwt parseClaimsJws + the Kotlin
-// isCorrectSignatureAndTokenNotExpired / extractUserId pair.
-// Returns (userId, nil) when the token authenticates the request,
-// ErrInvalidJWT when jjwt throws a JwtException (request stays anonymous),
-// ErrEmptyToken for an empty token (uncaught → HTTP 500).
-func (j *JWT) Parse(token string) (string, error) {
-	if token == "" || strings.TrimSpace(token) == "" {
-		return "", ErrEmptyToken
-	}
-	parts := strings.Split(token, ".")
-	if len(parts) != 3 {
-		return "", ErrInvalidJWT
-	}
-	if parts[2] == "" {
-		// unsigned token passed to parseClaimsJws → UnsupportedJwtException
-		return "", ErrInvalidJWT
-	}
-	headerJSON, err := decodeB64URL(parts[0])
-	if err != nil {
-		return "", ErrInvalidJWT
-	}
-	var header map[string]any
-	if json.Unmarshal(headerJSON, &header) != nil {
-		return "", ErrInvalidJWT
-	}
-	alg, _ := header["alg"].(string)
-	if _, ok := header["zip"]; ok {
-		// compression is never produced by this backend; treat as invalid
-		return "", ErrInvalidJWT
-	}
-	h, minBits := hasherFor(alg)
-	if h == nil {
-		return "", ErrInvalidJWT
-	}
-	if j.invalid || len(j.key)*8 < minBits {
-		return "", ErrInvalidJWT
-	}
-	payloadJSON, err := decodeB64URL(parts[1])
-	if err != nil {
-		return "", ErrInvalidJWT
-	}
-	sig, err := decodeB64URL(parts[2])
-	if err != nil {
-		return "", ErrInvalidJWT
-	}
-	mac := hmac.New(h, j.key)
-	mac.Write([]byte(parts[0] + "." + parts[1]))
-	if subtle.ConstantTimeCompare(mac.Sum(nil), sig) != 1 {
-		return "", ErrInvalidJWT
-	}
-	dec := json.NewDecoder(strings.NewReader(string(payloadJSON)))
-	dec.UseNumber()
-	var claims map[string]any
-	if err := dec.Decode(&claims); err != nil || claims == nil {
-		return "", ErrInvalidJWT
-	}
-	now := j.now()
-	exp, hasExp, ok := numericDateClaim(claims, "exp")
-	if !ok {
-		return "", ErrInvalidJWT
-	}
-	if hasExp && now.After(exp) {
-		return "", ErrInvalidJWT // ExpiredJwtException
-	}
-	nbf, hasNbf, ok := numericDateClaim(claims, "nbf")
-	if !ok {
-		return "", ErrInvalidJWT
-	}
-	if hasNbf && now.Before(nbf) {
-		return "", ErrInvalidJWT // PrematureJwtException
-	}
-	if !hasExp {
-		// Kotlin: claims.expiration is null → NPE → 500. Only reachable with a
-		// forged-but-correctly-signed token; mirror as an empty-token style crash.
-		return "", errors.New("NullPointerException: missing exp")
-	}
-	// isCorrectSignatureAndTokenNotExpired: expiration.after(Date())
-	if !exp.After(now) {
-		return "", ErrInvalidJWT
-	}
-	// Claims.getSubject(): String.valueOf(value); a missing or null subject
-	// reaches loginWithUserId(userId: String) → NullPointerException → 500.
-	switch v := claims["sub"].(type) {
-	case string:
-		return v, nil
-	case json.Number:
-		return v.String(), nil
-	case bool:
-		if v {
-			return "true", nil
-		}
-		return "false", nil
-	case nil:
-		return "", errors.New("NullPointerException: missing sub")
-	default:
-		return "", fmt.Errorf("unsupported sub claim %T", v)
-	}
-}
-
-func numericDateClaim(c map[string]any, name string) (time.Time, bool, bool) {
-	v, present := c[name]
-	if !present || v == nil {
-		return time.Time{}, false, true
-	}
-	switch n := v.(type) {
-	case json.Number:
-		if i, err := n.Int64(); err == nil {
-			return time.UnixMilli(i * 1000), true, true
-		}
-		if f, err := n.Float64(); err == nil {
-			return time.UnixMilli(int64(f * 1000)), true, true
-		}
-	case string:
-		if i, err := strconv.ParseInt(n, 10, 64); err == nil {
-			return time.UnixMilli(i * 1000), true, true
-		}
-		if t, err := time.Parse(time.RFC3339, n); err == nil {
-			return t, true, true
-		}
-	}
-	return time.Time{}, false, false
-}
-
-func decodeB64URL(s string) ([]byte, error) {
-	s = strings.TrimRight(s, "=")
-	return base64.RawURLEncoding.DecodeString(s)
 }
 
 // ExtractBearer mirrors JwtTokenUtils.extractJwtFromHeader: the header must

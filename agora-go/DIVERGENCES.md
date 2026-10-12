@@ -61,6 +61,7 @@ Toute différence observable entre le backend Kotlin (référence figée au comm
 | S8-B1 | Liste paginée des notifications (`notificationCache`, 5 min, Redis, jamais évincé à l'écriture) | Même cache et même TTL, en L1 ; plafonné à 5 s en coexistence seulement |
 | B-MODLOCK (S7) | Cache des verrous Moderatus jamais rempli (décision « cache de verrous Moderatus jamais rempli ») : la table est relue à chaque appel | Pas de cache : la table est lue à chaque appel (même comportement observable) |
 | S7-B1 | Listes de QaG (S3) recalculées à chaque requête | Les micro-caches des listes (≤ 5 s) sont vidés sur toutes les instances par chaque modération, changement de statut admin, archivage, anonymisation et sélection |
+| B-DBURL | `DATABASE_URL` dont les identifiants contiennent un second `:` ou un caractère encodé (`%40`…) : `DatabaseConfig` ne garde que la partie du mot de passe avant le second `:` (`userInfo.split(":")`) et ne retire pas des identifiants encodés de l'URL JDBC : la connexion échoue, l'application ne démarre pas | L'URL est lue selon la RFC 3986 (pgx) : la connexion réussit. Les URL générées par Scalingo (identifiants alphanumériques) sont lues de la même façon des deux côtés |
 | *(complété par les tranches suivantes : compteur de participants figé, `userFeedbackQags`, cache en ajout seul, verrous Moderatus, entrées `RedisCacheManager` par utilisateur)* | | |
 
 ## Classe C (à valider)

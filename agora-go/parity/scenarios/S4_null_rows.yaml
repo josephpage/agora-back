@@ -1,0 +1,30 @@
+# Written by the lead (review batch 2): rows only direct SQL can produce. Hibernate fills the
+# entities' non-null Kotlin fields by reflection, so a NULL column fails only where the value is
+# passed on (dto.copy), and a NULL answered consultation id makes the Strapi request builder fail.
+name: "S4-feedback-null-updated-date"
+tags: ["S4"]
+dbdiff: "step"
+setup: {"sql": ["INSERT INTO feedbacks_consultation_update (id, consultation_update_id, created_date, is_positive, updated_date, user_id) VALUES ('bbbbbbbb-0000-4000-a000-0000000000a1', 'up0000000000000000000405', now(), 1, NULL, '00000000-0000-4000-9000-000000000021')"]}
+steps:
+  - {"id": "details", "path": "/v2/consultations/{{seed.Consultation4}}", "as": "00000000-0000-4000-9000-000000000021"}
+  - {"id": "update", "path": "/v2/consultations/{{seed.Consultation4}}/updates/up0000000000000000000405", "as": "00000000-0000-4000-9000-000000000021"}
+  - {"id": "post-negative", "method": "POST", "path": "/consultations/{{seed.Consultation4}}/updates/up0000000000000000000405/feedback", "body": {"isPositive": false}, "as": "00000000-0000-4000-9000-000000000021"}
+  - {"id": "details-after", "path": "/v2/consultations/{{seed.Consultation4}}", "as": "00000000-0000-4000-9000-000000000021"}
+---
+name: "S4-feedback-null-created-date"
+tags: ["S4"]
+dbdiff: "step"
+setup: {"sql": ["INSERT INTO feedbacks_consultation_update (id, consultation_update_id, created_date, is_positive, updated_date, user_id) VALUES ('bbbbbbbb-0000-4000-a000-0000000000a2', 'up0000000000000000000405', NULL, 0, now(), '00000000-0000-4000-9000-000000000022')"]}
+steps:
+  - {"id": "details", "path": "/v2/consultations/{{seed.Consultation4}}", "as": "00000000-0000-4000-9000-000000000022"}
+  - {"id": "update", "path": "/v2/consultations/{{seed.Consultation4}}/updates/up0000000000000000000405", "as": "00000000-0000-4000-9000-000000000022"}
+  - {"id": "post-positive", "method": "POST", "path": "/consultations/{{seed.Consultation4}}/updates/up0000000000000000000405/feedback", "body": {"isPositive": true}, "as": "00000000-0000-4000-9000-000000000022"}
+---
+name: "S5-answered-null-consultation-id"
+tags: ["S5"]
+dbdiff: "step"
+setup: {"sql": ["INSERT INTO user_answered_consultation (id, consultation_id, participation_date, user_id) VALUES ('cccccccc-0000-4000-a000-0000000000a1', NULL, now(), '00000000-0000-4000-9000-000000000001'), ('cccccccc-0000-4000-a000-0000000000a2', 'co0000000000000000000001', now(), '00000000-0000-4000-9000-000000000001')", "ANALYZE user_answered_consultation"]}
+steps:
+  - {"id": "consultations", "path": "/consultations", "as": "00000000-0000-4000-9000-000000000001"}
+  - {"id": "answered-page-1", "path": "/consultations/answered/1", "as": "00000000-0000-4000-9000-000000000001"}
+  - {"id": "consultations-other-user", "path": "/consultations", "as": "00000000-0000-4000-9000-000000000002"}

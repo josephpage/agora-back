@@ -95,9 +95,11 @@ type LinkNode struct {
 func (n *LinkNode) ToHTML() string {
 	var b strings.Builder
 	for _, c := range n.Children {
-		if c != nil {
-			b.WriteString(c.ToHTML())
+		if c == nil {
+			// joinToString { it.toHtml() } on a null element: NullPointerException (HTTP 500)
+			panic("NullPointerException: null child in a rich-text link")
 		}
+		b.WriteString(c.ToHTML())
 	}
 	return `<a href="` + n.URL + `">` + strings.TrimSuffix(b.String(), "<br/>") + "</a>"
 }

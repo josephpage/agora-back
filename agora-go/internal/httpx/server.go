@@ -9,12 +9,14 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"regexp"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
 
 	"agora/internal/auth"
+	"agora/internal/javacompat"
 	"agora/internal/jsonjava"
 )
 
@@ -111,6 +113,9 @@ type responseState struct {
 	// CorsInterceptor of /error processes it when the error is rendered.
 	corsDeferred bool
 	corsOrigin   string
+	// beforeFilters: Tomcat answered sendError before the filter chain ran (too many
+	// cookies), so CharacterEncodingFilter never set the request encoding.
+	beforeFilters bool
 }
 
 func (st *responseState) add(name, value string) {
@@ -147,8 +152,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	m := s.router.match(r.Method, path)
 
-	// 1. StrictHttpFirewall (before HeaderWriterFilter: no security headers).
-	if firewallReject(r.Method, rawURI) {
+	// 1. CoyoteAdapter parses the cookies (session id lookup): more than 200 is a
+	// sendError(400), rendered by the error dispatch like a firewall rejection.
+	// StrictHttpFirewall (before HeaderWriterFilter: no security headers).
+	cookies, cookiesOK := tomcatCookies(r)
+	st.beforeFilters = !cookiesOK
+	if !cookiesOK || firewallReject(r.Method, rawURI) {
 		if origin, cors := corsRequest(r); cors {
 			st.corsDeferred, st.corsOrigin = true, origin
 		}
@@ -167,7 +176,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.writeSpringError(w, r, st, 400, rawPath, now)
 		return
 	}
-	user, authErr := s.authenticate(r)
+	user, authErr := s.authenticate(r, cookies)
 	if authErr != nil {
 		s.log.Error("uncaught exception in AuthenticationTokenFilter", "err", authErr)
 		s.writeSpringError(w, r, st, 500, rawPath, now)
@@ -306,10 +315,31 @@ func (s *Server) writeSpringError(w http.ResponseWriter, r *http.Request, st *re
 			s.writeRejectedEmpty(w, r, st)
 			return
 		case 500:
-			s.writeTomcatPage(w, r, st, status)
-			return
+			// the Content-Type enrichment only throws once a request encoding is set
+			if !st.beforeFilters {
+				s.writeTomcatPage(w, r, st, status)
+				return
+			}
 		}
 		allowOrigin, ok := s.cors.checkOrigin(st.corsOrigin)
+		if isPreflight(r) {
+			// the /error handler is a PreFlightHandler; FrameworkServlet.doOptions then
+			// adds HttpServlet's Allow (plus PATCH). The status stays the error's.
+			allowHeaders, headersOK := corsAllowHeaders(r.Header.Values("Access-Control-Request-Headers"))
+			if !ok || !methodAllowed(r.Header.Get("Access-Control-Request-Method")) || !headersOK {
+				s.rejectCORS(w, r, st)
+				return
+			}
+			st.add("Access-Control-Allow-Origin", allowOrigin)
+			st.add("Access-Control-Allow-Methods", strings.Join(corsAllowedMethods, ","))
+			if len(allowHeaders) > 0 {
+				st.add("Access-Control-Allow-Headers", strings.Join(allowHeaders, ", "))
+			}
+			st.add("Access-Control-Max-Age", "1800")
+			st.add("Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS, TRACE, PATCH")
+			s.finish(w, r, st, Empty(status), now, rawPath)
+			return
+		}
 		if !ok || !methodAllowed(r.Method) {
 			s.rejectCORS(w, r, st)
 			return
@@ -443,24 +473,34 @@ func cacheControlNoStore(st *responseState) bool {
 	return false
 }
 
-// ifNoneMatchMatches reproduces ServletWebRequest.validateIfNoneMatch for GET.
+// etagHeaderValue is ServletWebRequest.ETAG_HEADER_VALUE_PATTERN,
+// `\*|\s*((W\/)?("[^"]*"))\s*,?`, with Java's \s (ASCII, \x0B included).
+var etagHeaderValue = regexp.MustCompile(`\*|[ \t\n\x0B\f\r]*((W/)?("[^"]*"))[ \t\n\x0B\f\r]*,?`)
+
+// ifNoneMatchMatches reproduces ServletWebRequest.validateIfNoneMatch for GET
+// (matchRequestedETags with a weak comparison): every match of the pattern in each
+// If-None-Match line, wherever it is, is compared with the ETag; "*" only counts for
+// unsafe methods, so never here.
 func ifNoneMatchMatches(values []string, etag string) bool {
-	strip := func(t string) string {
-		t = strings.TrimSpace(t)
-		return strings.TrimPrefix(t, "W/")
-	}
-	target := strip(etag)
 	for _, v := range values {
-		for _, tok := range strings.Split(v, ",") {
-			tok = strings.TrimSpace(tok)
-			// Spring 6.0 (ETAG_HEADER_VALUE_PATTERN): "*" is NOT a match,
-			// only quoted (optionally weak) tags are compared.
-			if tok != "" && strip(tok) == target {
+		for _, m := range etagHeaderValue.FindAllStringSubmatch(v, -1) {
+			if m[0] == "*" {
+				continue
+			}
+			if etagWeakMatch(etag, m[1]) {
 				return true
 			}
 		}
 	}
 	return false
+}
+
+// etagWeakMatch is ServletWebRequest.eTagWeakMatch.
+func etagWeakMatch(first, second string) bool {
+	if first == "" || second == "" {
+		return false
+	}
+	return strings.TrimPrefix(first, "W/") == strings.TrimPrefix(second, "W/")
 }
 
 // addSecurityHeaders reproduces Spring Security's default HeaderWriters
@@ -488,15 +528,16 @@ func (s *Server) renderError(status int, rawPath string, now time.Time, format s
 }
 
 // authenticate reproduces AuthenticationTokenFilter.extractJwt + validation.
-func (s *Server) authenticate(r *http.Request) (*User, error) {
+func (s *Server) authenticate(r *http.Request, cookies []tomcatCookie) (*User, error) {
 	var token string
 	if vals, ok := r.Header["Authorization"]; ok && len(vals) > 0 {
-		t, ok := auth.ExtractBearer(vals[0])
+		// getHeader: Tomcat decodes the value as ISO-8859-1, each byte one char
+		t, ok := auth.ExtractBearer(javacompat.Latin1(vals[0]))
 		if !ok {
 			return nil, nil
 		}
 		token = t
-	} else if c := firstCookie(r, auth.JWTCookieName); c != nil {
+	} else if c := tomcatCookieValue(cookies, auth.JWTCookieName); c != nil {
 		token = *c
 	} else {
 		return nil, nil
@@ -513,16 +554,6 @@ func (s *Server) authenticate(r *http.Request) (*User, error) {
 		return nil, nil
 	}
 	return s.opts.Users(r, userID)
-}
-
-func firstCookie(r *http.Request, name string) *string {
-	for _, c := range r.Cookies() {
-		if c.Name == name {
-			v := c.Value
-			return &v
-		}
-	}
-	return nil
 }
 
 // savesRequest reproduces HttpSessionRequestCache's default matcher (CSRF

@@ -910,6 +910,24 @@ steps:
     headers:
     - Access-Control-Allow-Origin
     - Content-Language
+- id: auth-nbsp-only
+  path: /thematiques
+  headers:
+    Authorization: b64:QmVhcmVyIKA=
+  method: GET
+  compare:
+    headers:
+    - Access-Control-Allow-Origin
+    - Content-Language
+- id: auth-nbsp-around
+  path: /thematiques
+  headers:
+    Authorization: b64:QmVhcmVyIKCgeC55Lnqg
+  method: GET
+  compare:
+    headers:
+    - Access-Control-Allow-Origin
+    - Content-Language
 - id: unread-header-tab
   path: /thematiques
   headers:

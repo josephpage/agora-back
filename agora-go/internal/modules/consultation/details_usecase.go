@@ -99,30 +99,32 @@ func (u *DetailsUseCase) participantCount(ctx context.Context, consultationID st
 
 // userState reads, in one query, whether the user answered the consultation and
 // the feedback of the user on an update (updateID nil: none asked). A user id
-// that is not a UUID is neither (no query). A feedback row with a NULL date
-// crashes the Kotlin entity mapping.
+// that is not a UUID is neither (no query). Only is_positive is read: Hibernate
+// fills the entity's non-null Kotlin fields by reflection, so a NULL date column
+// fails nothing as long as it is not passed on (getUserFeedback never does).
 func (u *DetailsUseCase) userState(ctx context.Context, consultationID, userID string, updateID *string) (answered bool, feedback *bool, err error) {
 	uid, ok := javacompat.ToUUIDOrNull(userID)
 	if !ok {
 		return false, nil, nil
 	}
 	var positive *int32
-	var broken *bool
+	var found bool
 	err = u.a.DB.Pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM user_answered_consultation
             WHERE consultation_id = $1
-            AND user_id = $2), f.is_positive, (f.created_date IS NULL OR f.updated_date IS NULL)
-        FROM (SELECT 1) x LEFT JOIN LATERAL (SELECT is_positive, created_date, updated_date FROM feedbacks_consultation_update
+            AND user_id = $2), f.is_positive, f.id IS NOT NULL
+        FROM (SELECT 1) x LEFT JOIN LATERAL (SELECT id, is_positive FROM feedbacks_consultation_update
             WHERE consultation_update_id = $3
             AND user_id = $2
-            LIMIT 1) f ON true`, consultationID, uid, updateID).Scan(&answered, &positive, &broken)
+            LIMIT 1) f ON true`, consultationID, uid, updateID).Scan(&answered, &positive, &found)
 	if err != nil {
 		return false, nil, err
 	}
-	if positive == nil {
+	if !found {
 		return answered, nil, nil
 	}
-	if broken != nil && *broken {
-		return false, nil, errNullColumn("feedbacks_consultation_update", "created_date/updated_date")
+	if positive == nil {
+		// is_positive is an Int column of the entity: a NULL cannot be read into it
+		return false, nil, errNullColumn("feedbacks_consultation_update", "is_positive")
 	}
 	b := int(*positive) == isPositiveTrueValue
 	return answered, &b, nil

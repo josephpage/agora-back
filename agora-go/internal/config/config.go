@@ -86,12 +86,19 @@ func LoadFrom(lookup func(string) (string, bool)) (*Config, error) {
 	get := func(k string) string { v, _ := lookup(k); return v }
 	c := &Config{lookup: lookup}
 
-	if v, ok := lookup("AGORA_PORT"); ok {
-		c.Port = v
-	} else if v, ok := lookup("PORT"); ok {
-		c.Port = v
-	} else {
-		c.Port = "8080"
+	// ServerPortCustomizer: (AGORA_PORT ?: PORT)?.toInt(): Integer.parseInt, so "+8080"
+	// is 8080 and an empty or invalid value stops the boot; unset: Spring's 8080.
+	c.Port = "8080"
+	v, ok := lookup("AGORA_PORT")
+	if !ok {
+		v, ok = lookup("PORT")
+	}
+	if ok {
+		n, valid := javacompat.KotlinToIntOrNull(v)
+		if !valid {
+			return nil, fmt.Errorf("invalid port %q (NumberFormatException: the Kotlin app failed to start too)", v)
+		}
+		c.Port = strconv.Itoa(n)
 	}
 
 	// CrossOriginConfig: System.getenv("ALLOWED_ORIGINS").split("\n") — NPE if unset.
@@ -208,9 +215,10 @@ func (c *Config) Getenv(name string) string { v, _ := c.lookup(name); return v }
 // Lookup returns a raw environment variable and whether it is set.
 func (c *Config) Lookup(name string) (string, bool) { return c.lookup(name) }
 
-// springBoolean reproduces Spring's StringToBooleanConverter.
+// springBoolean reproduces Spring's StringToBooleanConverter (String.trim(): chars
+// <= U+0020 only).
 func springBoolean(v string) (bool, error) {
-	switch strings.ToLower(strings.TrimSpace(v)) {
+	switch strings.ToLower(javacompat.JavaStringTrim(v)) {
 	case "true", "on", "yes", "1":
 		return true, nil
 	case "false", "off", "no", "0":
@@ -221,19 +229,6 @@ func springBoolean(v string) (bool, error) {
 	return false, fmt.Errorf("invalid boolean value %q", v)
 }
 
-// kotlinToDoubleOrNull reproduces String.toDoubleOrNull() for common inputs
-// (Java Double.parseDouble grammar, via a screening regex in Kotlin).
-func kotlinToDoubleOrNull(s string) (float64, bool) {
-	t := javacompat.JavaStringTrim(s)
-	if t != s || t == "" {
-		// Kotlin screens with a regex that does not allow surrounding spaces
-		if javacompat.JavaStringTrim(s) == "" {
-			return 0, false
-		}
-	}
-	f, err := strconv.ParseFloat(strings.TrimSuffix(strings.TrimSuffix(t, "d"), "D"), 64)
-	if err != nil {
-		return 0, false
-	}
-	return f, true
-}
+// kotlinToDoubleOrNull is String.toDoubleOrNull() (Kotlin's screening regex, then
+// Double.parseDouble).
+func kotlinToDoubleOrNull(s string) (float64, bool) { return javacompat.KotlinToDoubleOrNull(s) }

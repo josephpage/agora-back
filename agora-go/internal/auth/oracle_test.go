@@ -95,7 +95,13 @@ func TestOracleLoginTokenInterop(t *testing.T) {
 			t.Errorf("decode(%q): %q %v", uid, got, err)
 		}
 	}
-	for _, bad := range []string{"", "abc", "!!!!", "AAAAAAAAAAAAAAAAAAAAAA==", "AAAAAAAAAAAAAAAAAAAAAA", "AAAAAAAAAAAAAAAAAAAAAA=", " AAAAAAAAAAAAAAAAAAAAAA=="} {
+	good, _ := lt.Build("00000000-0000-4000-9000-000000000001")
+	bads := []string{"", "abc", "!!!!", "AAAAAAAAAAAAAAAAAAAAAA==", "AAAAAAAAAAAAAAAAAAAAAA", "AAAAAAAAAAAAAAAAAAAAAA=", " AAAAAAAAAAAAAAAAAAAAAA=="}
+	// line breaks inside a genuine token (4 of them keep the length a multiple of 4)
+	for _, nl := range []string{"\n\n\n\n", "\r\r\r\r", "\r\n\r\n", "\n"} {
+		bads = append(bads, good[:1]+nl+good[1:], good+nl, nl+good)
+	}
+	for _, bad := range bads {
 		_, gerr := lt.Decode(bad)
 		var r struct {
 			UserID string `json:"userId"`

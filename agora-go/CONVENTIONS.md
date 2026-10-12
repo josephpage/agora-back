@@ -85,6 +85,10 @@ bodies). Your handler only reproduces the controller method:
   (Tomcat), join repeated `@RequestHeader` values with `,`, apply the lazy Spring Security firewall (a tab or a
   C1 control character in a header the application reads → 400) and decode query parameters like Tomcat
   (invalid UTF-8 → U+FFFD, malformed escape → parameter skipped).
+- **Never read cookies with `r.Cookies()`** (Go's parser accepts `,` and spaces that Tomcat rejects, and
+  handles tabs and invalid pairs differently): use `tomcatCookies` / `tomcatCookieValue`
+  (`internal/httpx/cookies.go`, Tomcat 10.1's RFC 6265 parser, oracle `tomcatCookies`). More than 200
+  cookies is already a 400 before any filter.
 - Return values:
   - `ResponseEntity.ok().body(x)` → `httpx.OK(x)`; other status → `httpx.JSON(status, x)`
   - `.body(Unit)` → `httpx.Unit(status)` (writes `{}`)

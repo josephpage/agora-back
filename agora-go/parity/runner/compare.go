@@ -364,10 +364,51 @@ func (b *Binder) compareText(ref, gov []byte) []Diff {
 			return m
 		})
 	}
-	if mask(string(ref)) == mask(g) {
+	rm, gm := mask(string(ref)), mask(g)
+	if rm == gm || b.sameButNowDates(rm, gm) {
 		return nil
 	}
 	return []Diff{{Where: "body", Ref: short(ref), Go: short([]byte(g))}}
+}
+
+// textDateRe finds the date-times of a text body (XML), like dateRe for JSON strings.
+var textDateRe = regexp.MustCompile(`\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?`)
+
+// dateShape is the format of a date-time: its digits masked.
+func dateShape(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r >= '0' && r <= '9' {
+			return 'd'
+		}
+		return r
+	}, s)
+}
+
+// sameButNowDates reports whether two text bodies only differ by date-times generated
+// "now" by each backend: same text around them, and each pair in the same format,
+// near now and at most 5 s apart (the JSON rule of equivalentStrings).
+func (b *Binder) sameButNowDates(ref, gov string) bool {
+	rd, gd := textDateRe.FindAllString(ref, -1), textDateRe.FindAllString(gov, -1)
+	if len(rd) == 0 || len(rd) != len(gd) {
+		return false
+	}
+	if textDateRe.ReplaceAllString(ref, "<date>") != textDateRe.ReplaceAllString(gov, "<date>") {
+		return false
+	}
+	for i := range rd {
+		if rd[i] == gd[i] {
+			continue
+		}
+		if dateShape(rd[i]) != dateShape(gd[i]) || !b.nearNow(rd[i]) || !b.nearNow(gd[i]) {
+			return false
+		}
+		rt, _ := parseLooseDate(rd[i])
+		gt, _ := parseLooseDate(gd[i])
+		if math.Abs(rt.Sub(gt).Seconds()) > 5 {
+			return false
+		}
+	}
+	return true
 }
 
 // default headers compared on every step (case-insensitive names).

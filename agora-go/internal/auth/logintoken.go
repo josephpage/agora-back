@@ -151,6 +151,11 @@ func decodeJavaBasicBase64(s string) ([]byte, error) {
 	if len(trimmed)%4 == 1 {
 		return nil, errors.New("last unit does not have enough valid bits")
 	}
+	// Go's decoder skips '\r' and '\n'; Java's basic decoder refuses them like any
+	// other character outside the alphabet
+	if strings.ContainsAny(trimmed, "\r\n") {
+		return nil, errors.New("illegal base64 character")
+	}
 	return base64.RawStdEncoding.DecodeString(trimmed)
 }
 

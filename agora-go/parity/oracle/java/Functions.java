@@ -440,6 +440,23 @@ final class Functions {
             return map("valid", valid, "userId", userId);
         });
 
+        // AuthenticationTokenFilter.doFilterInternal for a token (before the user lookup):
+        // "auth" (+ the subject, maybe null), "expired" (isCorrectSignatureAndTokenNotExpired false),
+        // "anonymous" (JwtException caught) or "500" (any other exception escapes the filter).
+        F.put("jwtFilter", a -> {
+            String token = s(a, "token");
+            try {
+                if (JwtTokenUtils.INSTANCE.isCorrectSignatureAndTokenNotExpired(token)) {
+                    return map("outcome", "auth", "userId", JwtTokenUtils.INSTANCE.extractUserId(token));
+                }
+                return map("outcome", "expired");
+            } catch (io.jsonwebtoken.JwtException e) {
+                return map("outcome", "anonymous", "error", e.getClass().getName());
+            } catch (RuntimeException e) {
+                return map("outcome", "500", "error", e.getClass().getName() + ": " + e.getMessage());
+            }
+        });
+
         // ---- ACME AES-GCM (AcmeCryptoHelper with AcmeConfig.encryptionKey = key) ---------------------
         F.put("aesGcmEncrypt", a -> acmeHelper(s(a, "key")).encrypt(s(a, "plaintext")));
         F.put("aesGcmDecrypt", a -> acmeHelper(s(a, "key")).decrypt(s(a, "ciphertext")));

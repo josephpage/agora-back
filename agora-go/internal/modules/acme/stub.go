@@ -517,7 +517,7 @@ func (s *Service) stubCloudflareDeploy(c *httpx.Ctx) *httpx.Response {
 	c.BindBody(&body)
 	certPem, _ := body["certificate"].(string)
 	preview := "N/A"
-	for _, line := range strings.Split(strings.ReplaceAll(certPem, "\r\n", "\n"), "\n") {
+	for _, line := range javacompat.KotlinLines(certPem) {
 		if !javacompat.KotlinIsBlank(line) && !strings.HasPrefix(line, "-----") {
 			preview = javacompat.Take16(line, 40)
 			break

@@ -73,15 +73,38 @@ func (r *Repository) GetParticipantCount(ctx context.Context, consultationID str
 }
 
 // GetAnsweredConsultationIDs is getAnsweredConsultationIds(userId): empty when
-// the user id is not a UUID.
+// the user id is not a UUID. A NULL consultation_id is kept as "" (Kotlin keeps the
+// null in the list): both make the Strapi request builder fail (isNullOrEmpty), so
+// getConsultationsByIds of that list is empty and sends nothing.
 func (r *Repository) GetAnsweredConsultationIDs(ctx context.Context, userID string) ([]string, error) {
 	uid, ok := javacompat.ToUUIDOrNull(userID)
 	if !ok {
 		return []string{}, nil
 	}
-	return r.distinctIDs(ctx, `SELECT DISTINCT consultation_id FROM user_answered_consultation
+	return r.distinctIDsKeepingNull(ctx, `SELECT DISTINCT consultation_id FROM user_answered_consultation
             WHERE user_id = $1
         `, uid)
+}
+
+func (r *Repository) distinctIDsKeepingNull(ctx context.Context, sql string, args ...any) ([]string, error) {
+	rows, err := r.a.DB.Pool.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []string{}
+	for rows.Next() {
+		var id *string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		if id == nil {
+			out = append(out, "")
+		} else {
+			out = append(out, *id)
+		}
+	}
+	return out, rows.Err()
 }
 
 func (r *Repository) distinctIDs(ctx context.Context, sql string, args ...any) ([]string, error) {

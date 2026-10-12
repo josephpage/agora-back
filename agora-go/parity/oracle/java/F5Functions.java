@@ -19,8 +19,41 @@ final class F5Functions {
     private F5Functions() {
     }
 
+    // org.apache.catalina.connector.Request.unescape
+    private static String tomcatUnescape(String s) {
+        if (s == null || s.indexOf('\\') == -1) {
+            return s;
+        }
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c != '\\') {
+                buf.append(c);
+            } else {
+                if (++i >= s.length()) {
+                    throw new IllegalArgumentException();
+                }
+                buf.append(s.charAt(i));
+            }
+        }
+        return buf.toString();
+    }
+
     private static byte[] bytes(JsonNode a) {
         return Base64.getDecoder().decode(Functions.s(a, "b64"));
+    }
+
+    private static Object defaultValue(Class<?> t) {
+        if (t == boolean.class) {
+            return false;
+        }
+        if (t == int.class) {
+            return 0;
+        }
+        if (t == long.class) {
+            return 0L;
+        }
+        return null;
     }
 
     private static int[] units(String s) {
@@ -61,6 +94,108 @@ final class F5Functions {
             cal.set(w.getYear(), w.getMonthValue() - 1, w.getDayOfMonth(), w.getHour(), w.getMinute(), w.getSecond());
             cal.set(java.util.Calendar.MILLISECOND, w.getNano() / 1_000_000);
             return cal.getTimeInMillis();
+        });
+
+        // ShallowEtagHeaderFilter → ServletWebRequest.checkNotModified(etag) for a GET whose
+        // If-None-Match lines are "values" (servlet request/response stubbed with proxies).
+        F.put("springCheckNotModified", a -> {
+            List<String> vals = new ArrayList<>();
+            for (JsonNode n : a.get("values")) {
+                vals.add(n.asText());
+            }
+            String method = Functions.s(a, "method");
+            jakarta.servlet.http.HttpServletRequest req = (jakarta.servlet.http.HttpServletRequest) java.lang.reflect.Proxy.newProxyInstance(
+                    F5Functions.class.getClassLoader(), new Class<?>[]{jakarta.servlet.http.HttpServletRequest.class}, (p, m, args) -> {
+                        switch (m.getName()) {
+                            case "getHeaders":
+                                return "If-None-Match".equalsIgnoreCase((String) args[0]) ? java.util.Collections.enumeration(vals) : java.util.Collections.emptyEnumeration();
+                            case "getHeader":
+                                return "If-None-Match".equalsIgnoreCase((String) args[0]) && !vals.isEmpty() ? vals.get(0) : null;
+                            case "getMethod":
+                                return method;
+                            case "getDateHeader":
+                                return -1L;
+                            default:
+                                return defaultValue(m.getReturnType());
+                        }
+                    });
+            int[] status = {200};
+            jakarta.servlet.http.HttpServletResponse resp = (jakarta.servlet.http.HttpServletResponse) java.lang.reflect.Proxy.newProxyInstance(
+                    F5Functions.class.getClassLoader(), new Class<?>[]{jakarta.servlet.http.HttpServletResponse.class}, (p, m, args) -> {
+                        switch (m.getName()) {
+                            case "getStatus":
+                                return status[0];
+                            case "setStatus":
+                                status[0] = (Integer) args[0];
+                                return null;
+                            default:
+                                return defaultValue(m.getReturnType());
+                        }
+                    });
+            return new org.springframework.web.context.request.ServletWebRequest(req, resp).checkNotModified(Functions.s(a, "etag"));
+        });
+
+        // DefaultCorsProcessor for a preflight: HttpHeaders.getAccessControlRequestHeaders of the
+        // request lines (bytes read as ISO-8859-1 like Tomcat) then CorsConfiguration.checkHeaders
+        // with the registry default "*": the Access-Control-Allow-Headers value (ISO-8859-1 bytes,
+        // base64), "" when absent, or {"rejected": true}.
+        F.put("springCorsAllowHeaders", a -> {
+            org.springframework.http.HttpHeaders h = new org.springframework.http.HttpHeaders();
+            for (JsonNode n : a.get("values")) {
+                h.add("Access-Control-Request-Headers", new String(Base64.getDecoder().decode(n.asText()), java.nio.charset.StandardCharsets.ISO_8859_1));
+            }
+            org.springframework.web.cors.CorsConfiguration c = new org.springframework.web.cors.CorsConfiguration();
+            c.addAllowedHeader("*");
+            List<String> allowed = c.checkHeaders(h.getAccessControlRequestHeaders());
+            if (allowed == null) {
+                return Functions.map("rejected", true);
+            }
+            org.springframework.http.HttpHeaders out = new org.springframework.http.HttpHeaders();
+            if (!allowed.isEmpty()) {
+                out.setAccessControlAllowHeaders(allowed);
+            }
+            String v = out.getFirst("Access-Control-Allow-Headers");
+            return Functions.map("value", v == null ? "" : Base64.getEncoder().encodeToString(v.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1)));
+        });
+
+        // Tomcat 10.1 cookies: Rfc6265CookieProcessor.parseCookieHeader on the Cookie header lines
+        // (raw bytes, base64) with the connector's limit of 200, then Request.convertCookies
+        // (servlet Cookie name validation, values decoded with the processor's UTF-8, unescape).
+        // {"tooMany": true} when ServerCookies.addCookie throws (CoyoteAdapter: 400).
+        F.put("tomcatCookies", a -> {
+            org.apache.tomcat.util.http.MimeHeaders mh = new org.apache.tomcat.util.http.MimeHeaders();
+            for (JsonNode n : a.get("values")) {
+                byte[] b = Base64.getDecoder().decode(n.asText());
+                mh.addValue("Cookie").setBytes(b, 0, b.length);
+            }
+            org.apache.tomcat.util.http.ServerCookies sc = new org.apache.tomcat.util.http.ServerCookies(4);
+            sc.setLimit(200);
+            org.apache.tomcat.util.http.Rfc6265CookieProcessor p = new org.apache.tomcat.util.http.Rfc6265CookieProcessor();
+            try {
+                p.parseCookieHeader(mh, sc);
+            } catch (IllegalArgumentException e) {
+                return Functions.map("tooMany", true);
+            }
+            List<Object> out = new ArrayList<>();
+            for (int i = 0; i < sc.getCookieCount(); i++) {
+                org.apache.tomcat.util.http.ServerCookie s = sc.getCookie(i);
+                try {
+                    jakarta.servlet.http.Cookie c = new jakarta.servlet.http.Cookie(s.getName().toString(), null);
+                    s.getValue().getByteChunk().setCharset(p.getCharset());
+                    c.setValue(tomcatUnescape(s.getValue().toString()));
+                    out.add(List.of(c.getName(), c.getValue()));
+                } catch (IllegalArgumentException e) {
+                    // Request.convertCookies: ignore bad cookie
+                }
+            }
+            return Functions.map("cookies", out);
+        });
+
+        // Kotlin CharSequence.lines() and String.toDoubleOrNull() (kotlin-stdlib of the reference).
+        F.put("kotlinLines", a -> kotlin.text.StringsKt.lines(Functions.s(a, "s")));
+        F.put("kotlinToDoubleOrNull", a -> {
+            Double d = kotlin.text.StringsKt.toDoubleOrNull(Functions.s(a, "s"));
+            return d == null ? Functions.map("null", true) : Functions.map("bits", Long.toString(Double.doubleToRawLongBits(d)));
         });
 
         // Tomcat request.getRemoteAddr(): InetAddress.getHostAddress() of the peer socket address

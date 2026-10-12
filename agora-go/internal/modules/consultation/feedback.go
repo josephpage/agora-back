@@ -38,45 +38,44 @@ func boolToInt(b bool) int {
 }
 
 // userFeedback reads the feedback row of a user (getUserConsultationUpdateFeedback):
-// nil when there is none or when the user id is not a UUID. A NULL date column
-// crashes the Kotlin entity mapping.
-func (r *FeedbackRepository) userFeedback(ctx context.Context, updateID, userID string) (isPositive *int, id *string, err error) {
+// nil when there is none or when the user id is not a UUID. created reports a
+// non-NULL created_date: the update (dto.copy) needs it, the reads do not (Hibernate
+// sets the non-null Kotlin fields by reflection, without a null check).
+func (r *FeedbackRepository) userFeedback(ctx context.Context, updateID, userID string) (isPositive *int, id *string, created bool, err error) {
 	uid, ok := javacompat.ToUUIDOrNull(userID)
 	if !ok {
-		return nil, nil, nil
+		return nil, nil, false, nil
 	}
-	rows, err := r.a.DB.Pool.Query(ctx, `SELECT id, is_positive, created_date, updated_date FROM feedbacks_consultation_update
+	rows, err := r.a.DB.Pool.Query(ctx, `SELECT id, is_positive, created_date FROM feedbacks_consultation_update
             WHERE consultation_update_id = $1
             AND user_id = $2
             LIMIT 1
         `, updateID, uid)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 	defer rows.Close()
 	if !rows.Next() {
-		return nil, nil, rows.Err()
+		return nil, nil, false, rows.Err()
 	}
 	var rowID string
-	var positive int32
-	var created, updated *time.Time
-	if err := rows.Scan(&rowID, &positive, &created, &updated); err != nil {
-		return nil, nil, err
+	var positive *int32
+	var createdDate *time.Time
+	if err := rows.Scan(&rowID, &positive, &createdDate); err != nil {
+		return nil, nil, false, err
 	}
-	if created == nil {
-		return nil, nil, errNullColumn("feedbacks_consultation_update", "created_date")
+	if positive == nil {
+		// is_positive is an Int (primitive) field of the entity
+		return nil, nil, false, errNullColumn("feedbacks_consultation_update", "is_positive")
 	}
-	if updated == nil {
-		return nil, nil, errNullColumn("feedbacks_consultation_update", "updated_date")
-	}
-	p := int(positive)
-	return &p, &rowID, nil
+	p := int(*positive)
+	return &p, &rowID, createdDate != nil, nil
 }
 
 // GetUserFeedback is getUserFeedback(consultationUpdateId, userId): nil when the
 // user gave no feedback.
 func (r *FeedbackRepository) GetUserFeedback(ctx context.Context, updateID, userID string) (*bool, error) {
-	p, _, err := r.userFeedback(ctx, updateID, userID)
+	p, _, _, err := r.userFeedback(ctx, updateID, userID)
 	if err != nil || p == nil {
 		return nil, err
 	}
@@ -86,9 +85,14 @@ func (r *FeedbackRepository) GetUserFeedback(ctx context.Context, updateID, user
 
 // UpdateFeedback is updateFeedback: false when the user has no feedback yet.
 func (r *FeedbackRepository) UpdateFeedback(ctx context.Context, updateID, userID string, isPositive bool) (bool, error) {
-	p, id, err := r.userFeedback(ctx, updateID, userID)
+	p, id, created, err := r.userFeedback(ctx, updateID, userID)
 	if err != nil || p == nil {
 		return false, err
+	}
+	if !created {
+		// dto.copy(isPositive, updatedDate = Date()) passes the NULL createdDate to a
+		// non-null parameter: NullPointerException
+		return false, errNullColumn("feedbacks_consultation_update", "created_date")
 	}
 	_, err = r.a.DB.Pool.Exec(ctx, "UPDATE feedbacks_consultation_update SET is_positive = $1, updated_date = $2 WHERE id = $3",
 		boolToInt(isPositive), store.Millis(r.a.Now()), *id)

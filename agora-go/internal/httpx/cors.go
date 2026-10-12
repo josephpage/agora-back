@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"agora/internal/javacompat"
 )
 
 // corsConfig is the global CorsRegistration("/**") of CrossOriginConfig:
@@ -169,12 +171,10 @@ func (s *Server) handleCORS(w http.ResponseWriter, r *http.Request, st *response
 	}
 	var allowHeaders []string
 	if preflight {
-		for _, v := range r.Header.Values("Access-Control-Request-Headers") {
-			for _, h := range strings.Split(v, ",") {
-				if t := strings.TrimSpace(h); t != "" {
-					allowHeaders = append(allowHeaders, t)
-				}
-			}
+		var ok bool
+		if allowHeaders, ok = corsAllowHeaders(r.Header.Values("Access-Control-Request-Headers")); !ok {
+			s.rejectCORS(w, r, st)
+			return true
 		}
 	}
 	st.add("Access-Control-Allow-Origin", allowOrigin)
@@ -217,4 +217,86 @@ func (s *Server) writeRejectedEmpty(w http.ResponseWriter, r *http.Request, st *
 func (s *Server) writeTomcatPage(w http.ResponseWriter, r *http.Request, st *responseState, status int) {
 	page := tomcatErrorPage(status, ReasonPhrase(status))
 	s.finish(w, r, st, Bytes(status, "text/html;charset=utf-8", []byte(page)).With("Content-Language", "en"), s.opts.Now(), "")
+}
+
+// corsAllowHeaders is HttpHeaders.getAccessControlRequestHeaders (tokenizeQuoted of
+// each line) then CorsConfiguration.checkHeaders with the default "*": the tokens
+// that have text, String.trim()-ed. ok is false when headers were requested but none
+// has text (checkHeaders returns null: the preflight is rejected). Header values are
+// Tomcat's ISO-8859-1 chars, one per byte, so the tokens are worked on as bytes and
+// echoed with the same bytes.
+func corsAllowHeaders(values []string) ([]string, bool) {
+	var requested []string
+	for _, v := range values {
+		requested = append(requested, springTokenizeQuoted(v)...)
+	}
+	if len(requested) == 0 {
+		return nil, true
+	}
+	var out []string
+	for _, t := range requested {
+		if latin1HasText(t) {
+			out = append(out, javacompat.JavaStringTrim(t))
+		}
+	}
+	return out, len(out) > 0
+}
+
+// latin1IsWhitespace is Character.isWhitespace for an ISO-8859-1 char.
+func latin1IsWhitespace(c byte) bool {
+	return c == ' ' || (c >= '\t' && c <= '\r') || (c >= 0x1C && c <= 0x1F)
+}
+
+// latin1HasText is StringUtils.hasText on ISO-8859-1 chars.
+func latin1HasText(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if !latin1IsWhitespace(s[i]) {
+			return true
+		}
+	}
+	return false
+}
+
+// springTokenizeQuoted is HttpHeaders.tokenizeQuoted (Spring 6.0): comma separated
+// tokens, double quotes group (with backslash escapes inside), the first token is
+// String.trim()-ed, and outside quotes the later tokens drop every whitespace char.
+func springTokenizeQuoted(s string) []string {
+	var tokens []string
+	quoted, trim := false, true
+	var sb []byte
+	add := func() {
+		t := string(sb)
+		if trim {
+			t = javacompat.JavaStringTrim(t)
+		}
+		if t != "" {
+			tokens = append(tokens, t)
+		}
+	}
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case c == '"':
+			if len(sb) == 0 {
+				quoted = true
+			} else if quoted {
+				quoted, trim = false, false
+			} else {
+				sb = append(sb, c)
+			}
+		case c == '\\' && quoted && i < len(s)-1:
+			i++
+			sb = append(sb, s[i])
+		case c == ',' && !quoted:
+			add()
+			sb = sb[:0]
+			trim = false
+		case quoted || (len(sb) > 0 && trim) || !latin1IsWhitespace(c):
+			sb = append(sb, c)
+		}
+	}
+	if len(sb) > 0 {
+		add()
+	}
+	return tokens
 }

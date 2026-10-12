@@ -237,7 +237,8 @@ func bindScalar(v reflect.Value, tree any, path string) error {
 			}
 			v.SetBool(strings.Trim(strings.TrimPrefix(txt, "-"), "0") != "")
 		case string:
-			switch strings.TrimSpace(t) {
+			// Jackson trims with String.trim() (chars <= U+0020), not Unicode spaces
+			switch javacompat.JavaStringTrim(t) {
 			case "true", "True", "TRUE":
 				v.SetBool(true)
 			case "false", "False", "FALSE", "":
@@ -265,7 +266,7 @@ func bindScalar(v reflect.Value, tree any, path string) error {
 			}
 			v.SetFloat(f)
 		case string:
-			f, err := strconv.ParseFloat(strings.TrimSpace(t), 64)
+			f, err := strconv.ParseFloat(javacompat.JavaStringTrim(t), 64)
 			if err != nil {
 				return fail("%s: cannot coerce %q to double", path, t)
 			}
@@ -307,7 +308,7 @@ func coerceInt(tree any, kotlinInt bool) (int64, error) {
 			n = int64(f) // ACCEPT_FLOAT_AS_INT: truncation
 		}
 	case string:
-		s := strings.TrimSpace(t)
+		s := javacompat.JavaStringTrim(t)
 		if s == "" {
 			return 0, nil
 		}
