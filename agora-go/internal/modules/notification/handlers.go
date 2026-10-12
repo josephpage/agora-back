@@ -58,7 +58,12 @@ func result(res Result) *httpx.Response {
 // typeParam is `@RequestParam("type", defaultValue = def) type: TypeNotification`: an absent or empty
 // parameter takes the default value; several values are an array converted to the enum through its
 // first element (ArrayToObjectConverter); the text is converted with Enum.valueOf(source.trim()), an
-// empty text is a null (missing parameter). Any failure is a 400 Spring error body.
+// empty text is a null. Any failure is a 400 Spring error body.
+//
+// A null is not a 400 here: the parameter has a default value, so Spring does not report it as missing
+// (the check is skipped when defaultValue is set) and the null reaches the Kotlin method, whose
+// non-null parameter check throws a NullPointerException (500). Only a first element that is the
+// empty text gets there (`type=&type=HOME_QAGS`; a single empty value takes the default).
 func typeParam(c *httpx.Ctx, name, def string) TypeNotification {
 	vals := c.ParamValues(name)
 	var source string
@@ -69,7 +74,7 @@ func typeParam(c *httpx.Ctx, name, def string) TypeNotification {
 		source = vals[0]
 	}
 	if source == "" {
-		panic(&httpx.SpringError{Status: 400, Cause: "MissingServletRequestParameterException: " + name})
+		panic(errors.New("NullPointerException: Parameter specified as non-null is null: parameter type of " + name))
 	}
 	t, ok := TypeByName(javacompat.JavaStringTrim(source))
 	if !ok {
