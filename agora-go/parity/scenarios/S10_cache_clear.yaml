@@ -20,7 +20,7 @@ steps:
   - {"id": "consultations-after", "path": "/consultations", "as": "{{seed.UserRegular2}}"}
   - {"id": "profile-after", "path": "/profile", "as": "{{seed.UserRegular2}}"}
 ---
-name: "S10-cache-clear-no-rights-no-flush"
+name: "S10-cache-clear-refused-to-non-admins"
 tags: ["S10"]
 dbdiff: "step"
 steps:
@@ -36,7 +36,7 @@ tags: ["S10"]
 dbdiff: "step"
 steps:
   - {"id": "ongoing-before", "path": "/consultations"}
-  - {"id": "finished-before", "path": "/consultations/finished/1?territory=Paris"}
+  - {"id": "finished-before", "path": "/consultations/finished/1?territory=Paris", "as": "{{seed.UserRegular1}}"}
   - {"id": "clear", "method": "POST", "path": "/admin/cache/clear", "as": "{{seed.UserAdmin}}"}
   - {"id": "ongoing-after", "path": "/consultations"}
-  - {"id": "finished-after", "path": "/consultations/finished/1?territory=Paris"}
+  - {"id": "finished-after", "path": "/consultations/finished/1?territory=Paris", "as": "{{seed.UserRegular1}}"}

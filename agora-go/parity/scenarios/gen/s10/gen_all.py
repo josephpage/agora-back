@@ -216,7 +216,7 @@ def upgrade_downgrade():
         step("moderator-moderate-after", "/moderate/qags", **{"as": MODERATOR}),
         step("moderator-preview-after", "/consultations", **{"as": MODERATOR}),
     ], tags=TAG, dbdiff="step"))
-    out.append(scenario("S10-upgrade-banned-user-stays-banned", [
+    out.append(scenario("S10-upgrade-banned-user-keeps-the-ban", [
         step("upgrade-banned", "/admin/upgrade_users_to_publisher", method="POST", **{"as": ADMIN}, body={"usersID": [BANNED]}),
         step("banned-after-upgrade", "/profile", **{"as": BANNED}),
         step("banned-consultations-after", "/consultations", **{"as": BANNED}),
@@ -324,7 +324,7 @@ def cache_clear():
         step("consultations-after", "/consultations", **{"as": R[2]}),
         step("profile-after", "/profile", **{"as": R[2]}),
     ], tags=TAG, dbdiff="step"))
-    out.append(scenario("S10-cache-clear-no-rights-no-flush", [
+    out.append(scenario("S10-cache-clear-refused-to-non-admins", [
         step("consultations-before", "/consultations", **{"as": R[1]}),
         step("clear-user", "/admin/cache/clear", method="POST", **{"as": R[1]}),
         step("clear-moderator", "/admin/cache/clear", method="POST", **{"as": MODERATOR}),
@@ -334,10 +334,10 @@ def cache_clear():
     ], tags=TAG, dbdiff="step"))
     out.append(scenario("S10-cache-clear-ongoing-and-finished", [
         step("ongoing-before", "/consultations"),
-        step("finished-before", "/consultations/finished/1?territory=Paris"),
+        step("finished-before", "/consultations/finished/1?territory=Paris", **{"as": R[1]}),
         step("clear", "/admin/cache/clear", method="POST", **{"as": ADMIN}),
         step("ongoing-after", "/consultations"),
-        step("finished-after", "/consultations/finished/1?territory=Paris"),
+        step("finished-after", "/consultations/finished/1?territory=Paris", **{"as": R[1]}),
     ], tags=TAG, dbdiff="step"))
     return out
 

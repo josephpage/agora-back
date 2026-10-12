@@ -23,7 +23,7 @@ steps:
   - {"id": "moderator-moderate-after", "path": "/moderate/qags", "as": "{{seed.UserModerator}}"}
   - {"id": "moderator-preview-after", "path": "/consultations", "as": "{{seed.UserModerator}}"}
 ---
-name: "S10-upgrade-banned-user-stays-banned"
+name: "S10-upgrade-banned-user-keeps-the-ban"
 tags: ["S10"]
 dbdiff: "step"
 steps:
