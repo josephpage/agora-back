@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"agora/internal/app"
+	"agora/internal/javacompat"
 	"agora/internal/modules/consultationresponse"
 	"agora/internal/modules/login"
 	"agora/internal/modules/notification"
@@ -46,7 +47,16 @@ func deleteUsersInOrder(ctx context.Context, steps []deletionStep, userIDs []str
 func deleteUserSteps(a *app.App) []deletionStep {
 	return []deletionStep{
 		{"notifications", notification.Get(a).DeleteUsersNotifications},
-		{"consultation responses", consultationresponse.Get(a).DeleteUserConsultationResponses},
+		{"consultation responses", func(ctx context.Context, ids []string) error {
+			// The reference runs the empty `IN` of this native delete without error
+			// (DELETE /admin/delete_users with ["not-a-uuid"] answers 200 and changes
+			// nothing), while consultationresponse raises a syntax error for it (S6).
+			// With no UUID there is nothing to delete: the call is skipped.
+			if !hasUserUUID(ids) {
+				return nil
+			}
+			return consultationresponse.Get(a).DeleteUserConsultationResponses(ctx, ids)
+		}},
 		{"supports", func(ctx context.Context, ids []string) error {
 			return qag.Get(a).Supports.DeleteUsersSupportQag(ctx, ids)
 		}},
@@ -77,6 +87,16 @@ func DeleteUsers(ctx context.Context, a *app.App, userIDs []string) error {
 // DowngradeUsersUseCase.execute: the number of rows updated by the UPDATE.
 func changeUserAuthorizationLevel(ctx context.Context, a *app.App, userIDs []string, level int) (int, error) {
 	return users.Get(a).ChangeAuthorizationLevel(context.WithoutCancel(ctx), userIDs, level)
+}
+
+// hasUserUUID tells whether one of the ids is a UUID (toUuidOrNull is not null).
+func hasUserUUID(ids []string) bool {
+	for _, id := range ids {
+		if _, ok := javacompat.ToUUIDOrNull(id); ok {
+			return true
+		}
+	}
+	return false
 }
 
 // errNullUserID is the NullPointerException of `String.toUuidOrNull()` (UuidUtils)

@@ -2,13 +2,11 @@ package admin
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 
 	"agora/internal/app"
 	"agora/internal/httpx"
-	"agora/internal/javacompat"
 	"agora/internal/modules/users"
 	"agora/internal/tasks"
 )
@@ -17,19 +15,14 @@ type handlers struct {
 	a *app.App
 }
 
-// boolParam is `@RequestParam(defaultValue = def) x: Boolean`. An absent value or a
-// single empty value takes the default. Otherwise the first value is converted with
-// StringToBooleanConverter, which turns a blank text into null: with a default value
-// Spring does not report that null, and the non-null Kotlin parameter fails
-// (NullPointerException, 500). Other texts are a 400 (SpringBoolParam).
+// boolParam is `@RequestParam(defaultValue = def) x: Boolean`: an absent value or a
+// single empty value takes the default; otherwise the first value is converted
+// (SpringBoolParam: a blank text is a 400, not a null, for a Boolean).
 func boolParam(c *httpx.Ctx, name, def string) bool {
 	vals := c.ParamValues(name)
 	source := def
 	if len(vals) > 0 && !(len(vals) == 1 && vals[0] == "") {
 		source = vals[0]
-	}
-	if javacompat.JavaStringTrim(source) == "" {
-		panic(errors.New("NullPointerException: Parameter specified as non-null is null: parameter " + name))
 	}
 	return httpx.SpringBoolParam(source)
 }
