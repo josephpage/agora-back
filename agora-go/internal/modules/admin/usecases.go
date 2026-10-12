@@ -47,16 +47,7 @@ func deleteUsersInOrder(ctx context.Context, steps []deletionStep, userIDs []str
 func deleteUserSteps(a *app.App) []deletionStep {
 	return []deletionStep{
 		{"notifications", notification.Get(a).DeleteUsersNotifications},
-		{"consultation responses", func(ctx context.Context, ids []string) error {
-			// The reference runs the empty `IN` of this native delete without error
-			// (DELETE /admin/delete_users with ["not-a-uuid"] answers 200 and changes
-			// nothing), while consultationresponse raises a syntax error for it (S6).
-			// With no UUID there is nothing to delete: the call is skipped.
-			if !hasUserUUID(ids) {
-				return nil
-			}
-			return consultationresponse.Get(a).DeleteUserConsultationResponses(ctx, ids)
-		}},
+		{"consultation responses", withUUIDsOnly(consultationresponse.Get(a).DeleteUserConsultationResponses)},
 		{"supports", func(ctx context.Context, ids []string) error {
 			return qag.Get(a).Supports.DeleteUsersSupportQag(ctx, ids)
 		}},
@@ -87,6 +78,19 @@ func DeleteUsers(ctx context.Context, a *app.App, userIDs []string) error {
 // DowngradeUsersUseCase.execute: the number of rows updated by the UPDATE.
 func changeUserAuthorizationLevel(ctx context.Context, a *app.App, userIDs []string, level int) (int, error) {
 	return users.Get(a).ChangeAuthorizationLevel(context.WithoutCancel(ctx), userIDs, level)
+}
+
+// withUUIDsOnly skips the step when no id is a UUID. The reference runs the empty `IN` of
+// the consultation responses delete without error (DELETE /admin/delete_users with
+// ["not-a-uuid"] answers 200 and changes nothing), while consultationresponse raises a
+// syntax error for an empty list (S6): with nothing to delete, the call is skipped.
+func withUUIDsOnly(step func(ctx context.Context, userIDs []string) error) func(ctx context.Context, userIDs []string) error {
+	return func(ctx context.Context, userIDs []string) error {
+		if !hasUserUUID(userIDs) {
+			return nil
+		}
+		return step(ctx, userIDs)
+	}
 }
 
 // hasUserUUID tells whether one of the ids is a UUID (toUuidOrNull is not null).
