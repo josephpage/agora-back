@@ -61,7 +61,17 @@ public final class Oracle {
         PROTO.getFactory().configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
     }
 
-    static final Map<String, Fn> FNS = new TreeMap<>();
+    // One name per function: a second registration would silently replace the first one
+    // (and change its result shape under the tests written for it).
+    static final Map<String, Fn> FNS = new TreeMap<>() {
+        @Override
+        public Fn put(String name, Fn fn) {
+            if (containsKey(name)) {
+                throw new IllegalStateException("duplicate oracle function " + name);
+            }
+            return super.put(name, fn);
+        }
+    };
 
     public static void main(String[] argv) throws Exception {
         // Keep the real stdout for the protocol and make sure nothing else can reach it.

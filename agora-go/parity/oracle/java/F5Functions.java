@@ -193,7 +193,8 @@ final class F5Functions {
 
         // Kotlin CharSequence.lines() and String.toDoubleOrNull() (kotlin-stdlib of the reference).
         F.put("kotlinLines", a -> kotlin.text.StringsKt.lines(Functions.s(a, "s")));
-        F.put("kotlinToDoubleOrNull", a -> {
+        // (kotlinToDoubleOrNull of Functions gives the bits as a JSON number; here as text, exact for any long)
+        F.put("kotlinToDoubleOrNullBits", a -> {
             Double d = kotlin.text.StringsKt.toDoubleOrNull(Functions.s(a, "s"));
             return d == null ? Functions.map("null", true) : Functions.map("bits", Long.toString(Double.doubleToRawLongBits(d)));
         });

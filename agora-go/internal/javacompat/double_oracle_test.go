@@ -29,7 +29,7 @@ func TestKotlinToDoubleOrNullOracle(t *testing.T) {
 			Null bool   `json:"null"`
 			Bits string `json:"bits"`
 		}
-		oracle.MustCall(t, "kotlinToDoubleOrNull", map[string]any{"s": s}, &want)
+		oracle.MustCall(t, "kotlinToDoubleOrNullBits", map[string]any{"s": s}, &want)
 		got, ok := KotlinToDoubleOrNull(s)
 		if want.Null {
 			if ok {
