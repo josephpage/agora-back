@@ -180,9 +180,14 @@ func rowsBindable(b *Binder, r, g dbRow) bool {
 			return false
 		}
 		b.mu.Lock()
-		_, rb := b.refToGo[r.vals[i]]
+		rg, rb := b.refToGo[r.vals[i]]
 		_, gb := b.goToRef[g.vals[i]]
 		b.mu.Unlock()
+		if rb && rg == g.vals[i] {
+			// already bound to each other (several rows sharing a generated id,
+			// e.g. the participation_id of the rows of one answer)
+			continue
+		}
 		if rb || gb {
 			return false
 		}
