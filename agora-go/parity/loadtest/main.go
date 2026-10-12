@@ -21,6 +21,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+
 	"agora/internal/auth"
 )
 
@@ -108,6 +110,7 @@ func main() {
 	users := flag.Int("users", 1000, "distinct bulk users (seed scale ≥ users/40)")
 	secret := flag.String("jwt-secret", os.Getenv("JWT_SECRET"), "JWT secret (base64)")
 	report := flag.String("report", "", "JSON report path")
+	usersDB := flag.String("users-db", "", "take the -users first active users (logged in, not banned) of this database instead of the bulk ids 1..users")
 	flag.Parse()
 
 	reqs, ok := profiles[*profile]
@@ -120,9 +123,23 @@ func main() {
 		total += r.weight
 	}
 	jwt := auth.NewJWT(*secret, nil)
+	ids := make([]string, *users)
+	for i := range ids {
+		ids[i] = bulkUser(i + 1)
+	}
+	if *usersDB != "" {
+		// the token filter of both backends fails (500) for a user without last_connection_date:
+		// real clients always have one (it is set at login)
+		var err error
+		if ids, err = activeUsers(*usersDB, *users); err != nil {
+			fmt.Fprintln(os.Stderr, "users-db:", err)
+			os.Exit(2)
+		}
+		*users = len(ids)
+	}
 	tokens := make([]string, *users)
 	for i := range tokens {
-		tokens[i], _, _ = jwt.Generate(bulkUser(i + 1))
+		tokens[i], _, _ = jwt.Generate(ids[i])
 	}
 	tr := &http.Transport{
 		MaxIdleConns:        *conc * 2,
@@ -249,4 +266,23 @@ func main() {
 			"rps": float64(len(all)) / dur.Seconds(), "p50ms": p(.5), "p90ms": p(.9), "p99ms": p(.99), "errors": totalErrors, "non2xx": non2xx, "endpoints": lines}, "", "  ")
 		_ = os.WriteFile(*report, b, 0o644)
 	}
+}
+
+// activeUsers returns up to n user ids that can authenticate (last connection known, not banned).
+func activeUsers(dbURL string, n int) ([]string, error) {
+	ctx := context.Background()
+	conn, err := pgx.Connect(ctx, dbURL)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close(ctx)
+	rows, err := conn.Query(ctx, `SELECT id::text FROM agora_users WHERE last_connection_date IS NOT NULL AND is_banned = 0 ORDER BY id LIMIT $1`, n)
+	if err != nil {
+		return nil, err
+	}
+	ids, err := pgx.CollectRows(rows, pgx.RowTo[string])
+	if err == nil && len(ids) == 0 {
+		err = fmt.Errorf("no active user")
+	}
+	return ids, err
 }
