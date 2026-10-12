@@ -180,4 +180,3 @@ func (n *qagNotifier) sendBatch(msg fcm.Message, batchIndex, batchCount int) {
 	}
 	n.logf("📩 Send multi-notification n°%d/%d results: %d successes, %d failures", batchIndex+1, batchCount, resp.SuccessCount, resp.FailureCount)
 }
-
