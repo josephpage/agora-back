@@ -30,6 +30,7 @@ import (
 	"agora/internal/httpx"
 	"agora/internal/modules/all"
 	"agora/internal/modules/users"
+	"agora/internal/runtimecfg"
 	"agora/internal/store"
 	"agora/internal/strapi"
 	"agora/internal/tasks"
@@ -38,6 +39,11 @@ import (
 func main() {
 	logger := newLogger()
 	slog.SetDefault(logger)
+	// GOMAXPROCS already follows the CPU quota of the container (Go >= 1.25); the
+	// heap limit does not: 85 % of the container memory unless GOMEMLIMIT is set.
+	if l := runtimecfg.SetMemoryLimit(); l > 0 {
+		logger.Info("memory limit", "bytes", l)
+	}
 
 	// Go-only performance migrations (indexes): needs DATABASE_URL only.
 	for _, arg := range os.Args[1:] {
