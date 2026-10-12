@@ -25,7 +25,7 @@ Références :
   scalingo --app <app-go> run 'bin/agora --migrate=up'
   ```
 - [ ] **Charge de la base vérifiée** : `max_connections` du plan Postgres ≥ `(conteneurs Kotlin × pool) + (conteneurs Go × DATABASE_MAX_POOL_SIZE) + crons + outils (Metabase…)`, avec une marge de 20 %.
-  - **Pool de l'app Go : `DATABASE_MAX_POOL_SIZE=20` dès la bascule** (décision du 12 oct.), dans l'app Go seulement : le Kotlin garde 5. Avec 5 connexions par conteneur, l'ouverture de l'app attend la base dès environ 600 req/s ; avec 20, on passe à 760 req/s (`PERF.md` §2.3). Le budget ci-dessus doit donc tenir avec 20 par conteneur Go, Kotlin encore en place.
+  - **Pool de l'app Go : `DATABASE_MAX_POOL_SIZE=10` pendant toute la coexistence, puis 20 une fois le Kotlin éteint** (décision du 12 oct.), dans l'app Go seulement : le Kotlin garde 5. Le budget ci-dessus doit tenir avec 10 par conteneur Go, Kotlin encore en place. Avec 5 connexions par conteneur, l'ouverture de l'app attend la base dès environ 600 req/s ; avec 20, on passe à 760 req/s (`PERF.md` §2.3).
   - **Ce qu'il faut surveiller ensuite.** Une fois le Go en place, la limite devient le CPU du plan Postgres, et non plus les conteneurs. En particulier la page « soutenues », dont le SQL est identique à celui du Kotlin et parcourt toute la table `qags`.
 
 ## 1. Création de l'app Go (aucun trafic)
@@ -36,7 +36,8 @@ Références :
    - `AGORA_COEXISTENCE=true` : chaque écriture Go supprime aussi les clés de cache Kotlin concernées, et les caches Go des données modifiables sont plafonnés à 5 s ;
    - `AGORA_CRON_DISABLED=true` : les crons de l'app Go s'arrêtent immédiatement, tant que le Kotlin les exécute ;
    - `ACME_CRON_ENABLED=false` : le renouvellement ACME reste côté Kotlin ;
-   - `NGINX_API_ACCESS_RULES` : même valeur que l'app Kotlin.
+   - `NGINX_API_ACCESS_RULES` : même valeur que l'app Kotlin ;
+   - `DATABASE_MAX_POOL_SIZE=10` (coexistence, voir § 0).
 3. Déployer, puis vérifier :
    - `GET /thematiques` et `GET /v3/api-docs` répondent ;
    - aucun log ERROR au démarrage ;
@@ -84,7 +85,7 @@ Alternative sans Cloudflare : un `split_clients` dans le nginx de l'app Kotlin, 
    - `AGORA_CRON_DISABLED=false` et `ACME_CRON_ENABLED=true` côté Go ;
    - désactiver `cron.json` côté Kotlin (ou le vider), dans le même créneau, **jamais les deux actifs**.
 3. Après 24 h sans incident, passer `AGORA_COEXISTENCE=false` : les caches Go retrouvent leurs TTL Kotlin, et la suppression des clés Kotlin s'arrête.
-4. Garder l'app Kotlin déployée, à 0 trafic, pendant 2 semaines.
+4. Garder l'app Kotlin déployée, à 0 trafic, pendant 2 semaines. Ramenée à 0 conteneur, elle ne tient plus de connexions : passer alors `DATABASE_MAX_POOL_SIZE=20` sur l'app Go si `max_connections ≥ (conteneurs Go × 20 + crons + Metabase) × 1,2` (gain mesuré sur l'ouverture de l'app : 612 → 762 req/s, `PERF.md` §2.3).
 
 **Envois de notifications à beaucoup d'utilisateurs** (`/admin/notify*`, servis par l'app Go dès le palier 5). Les lots FCM partent :
 - de 500 jetons, à `AGORA_NOTIFICATION_FANOUT_PER_MINUTE` jetons par minute (16 700 par défaut, soit environ 1 h pour un million d'utilisateurs, contre 56 h côté Kotlin ; C-S8-FANOUT) ;
